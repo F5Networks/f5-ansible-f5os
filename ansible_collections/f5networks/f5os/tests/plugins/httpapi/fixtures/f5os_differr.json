@@ -1,0 +1,11 @@
+{
+    "ietf-restconf:errors": {
+        "error": [
+            {
+                "error-type": "application",
+                "error-tag": "invalid-value",
+                "error-message": "This is a different error type"
+            }
+        ]
+    }
+}

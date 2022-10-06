@@ -1,0 +1,38 @@
+{
+    "name": "Arista",
+    "config": {
+        "name": "Arista",
+        "type": "iana-if-type:ieee8023adLag",
+        "enabled": true
+    },
+    "state": {
+        "name": "Arista",
+        "type": "iana-if-type:ieee8023adLag",
+        "mtu": 9600,
+        "enabled": true,
+        "oper-status": "UP",
+        "f5-interface:forward-error-correction": "auto"
+    },
+    "openconfig-if-aggregate:aggregation": {
+        "config": {
+            "lag-type": "LACP",
+            "f5-if-aggregate:distribution-hash": "src-dst-ipport"
+        },
+        "state": {
+            "lag-type": "LACP",
+            "lag-speed": 100,
+            "f5-if-aggregate:distribution-hash": "src-dst-ipport",
+            "f5-if-aggregate:mac-address": "00:94:a1:af:64:1a",
+            "f5-if-aggregate:lagid": 2
+        },
+        "openconfig-vlan:switched-vlan": {
+            "config": {
+                "native-vlan": 579,
+                "trunk-vlans": [
+                    580,
+                    590
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,112 @@
+{
+    "openconfig-interfaces:interfaces": {
+        "interface": [
+            {
+                "name": "1/1.0",
+                "config": {
+                    "name": "1/1.0",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "enabled": true
+                },
+                "state": {
+                    "name": "1/1.0",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "mtu": 9600,
+                    "enabled": true,
+                    "oper-status": "UP",
+                    "counters": {
+                        "in-octets": "5649041502",
+                        "in-unicast-pkts": "21125399",
+                        "in-broadcast-pkts": "82102",
+                        "in-multicast-pkts": "2876044",
+                        "in-discards": "113283",
+                        "in-errors": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "5530423919",
+                        "out-unicast-pkts": "21110227",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    },
+                    "f5-interface:forward-error-correction": "auto",
+                    "f5-lacp:lacp_state": "LACP_DEFAULTED"
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "port-speed": "openconfig-if-ethernet:SPEED_100GB",
+                        "hw-mac-address": "00:94:a1:af:64:00",
+                        "counters": {
+                            "in-mac-control-frames": "0",
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-control-frames": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        },
+                        "f5-if-ethernet:flow-control": {
+                            "rx": "on"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/2.0",
+                "config": {
+                    "name": "1/2.0",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "enabled": false
+                },
+                "state": {
+                    "name": "1/2.0",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "mtu": 9600,
+                    "enabled": false,
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "8144",
+                        "in-errors": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    },
+                    "f5-interface:forward-error-correction": "auto",
+                    "f5-lacp:lacp_state": "LACP_DEFAULTED"
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "port-speed": "openconfig-if-ethernet:SPEED_100GB",
+                        "hw-mac-address": "00:94:a1:af:64:01",
+                        "counters": {
+                            "in-mac-control-frames": "0",
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-control-frames": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        },
+                        "f5-if-ethernet:flow-control": {
+                            "rx": "on"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
