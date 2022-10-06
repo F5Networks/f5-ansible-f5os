@@ -468,7 +468,7 @@ class VlansFactManager(BaseManager):
         for item in facts:
             attrs = item.to_return()
             results.append(attrs)
-        results = sorted(results, key=lambda k: k['name'])
+        results = sorted(results, key=lambda k: k['vlan_id'])
         return results
 
     def read_facts(self):
