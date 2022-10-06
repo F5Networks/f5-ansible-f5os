@@ -446,7 +446,7 @@ class VlansParameters(BaseParameters):
 
     @property
     def name(self):
-        return self._values['config']['name']
+        return self._values['config'].get('name')
 
 
 class VlansFactManager(BaseManager):
