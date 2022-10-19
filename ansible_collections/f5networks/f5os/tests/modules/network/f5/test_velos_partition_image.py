@@ -17,7 +17,7 @@ from ansible_collections.f5networks.f5os.plugins.modules.velos_partition_image i
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
 from ansible_collections.f5networks.f5os.tests.compat import unittest
-from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch, MagicMock
+from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
 from ansible_collections.f5networks.f5os.tests.modules.utils import set_module_args
 
 
@@ -73,11 +73,15 @@ class TestManager(unittest.TestCase):
         self.p2 = patch('time.sleep')
         self.p2.start()
         self.m1 = self.p1.start()
-        self.m1.return_value = MagicMock()
+        self.m1.return_value = Mock()
+        self.p3 = patch('ansible_collections.f5networks.f5os.plugins.modules.velos_partition_image.send_teem')
+        self.m3 = self.p3.start()
+        self.m3.return_value = True
 
     def tearDown(self):
         self.p1.stop()
         self.p2.stop()
+        self.p3.stop()
 
     def test_import_image(self, *args):
         set_module_args(dict(

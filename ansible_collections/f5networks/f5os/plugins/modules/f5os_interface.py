@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2021, F5 Networks Inc.
+# Copyright: (c) 2022, F5 Networks Inc.
 # GNU General Public License v3.0 (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -29,14 +29,13 @@ options:
       - The C(trunk_vlans) parameter is used for tagged traffic.
       - VLANs should not be assigned to interfaces if Link Aggregation Groups. In that case, VLANs should be added to
         the the LAG configuration with C(f5os_lag) module instead.
-      - The C(native_vlan) and C(trunk_vlans) parameters are mutually exclusive.
       - The order of these VLANs is ignored, the module orders the VLANs automatically.
     type: list
     elements: int
   native_vlan:
     description:
       - Configures the VLAN ID to associate with the interface.
-      - The C(native_vlan) and C(trunk_vlans) parameters are mutually exclusive.
+      - The C(native_vlans) parameter is used for untagged traffic.
     type: int
   state:
     description:
@@ -121,21 +120,30 @@ name:
   type: str
   sample: 1.0
 trunk_vlans:
-  description: trunk_vlans to attach to Interface.
+  description: Trunk vlans to attach to interface
+  returned: changed
+  type: list
+  sample: [444,555]
+native_vlan:
+  description: Native vlan to attach to interface
   returned: changed
   type: int
-  sample: [444,555]
+  sample: 222
 '''
+import datetime
 import re
 from urllib.parse import quote
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 
-from ansible_collections.f5networks.f5os.plugins.module_utils.client import F5Client
+from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
+    F5Client, send_teem
+)
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import (
     F5ModuleError, AnsibleF5Parameters,
 )
+from ansible_collections.f5networks.f5os.plugins.module_utils.compare import cmp_simple_list
 
 
 class Parameters(AnsibleF5Parameters):
@@ -143,22 +151,19 @@ class Parameters(AnsibleF5Parameters):
         'type': 'interface_type'
     }
 
-    api_attributes = [
-        'name',
-        'type',
-        'interface',
-        'switched_vlan'
-    ]
+    api_attributes = []
 
     returnables = [
+        'name',
+        'native_vlan',
         'interface_type',
-        'switched_vlan'
+        'trunk_vlans',
     ]
 
     updatables = [
         'name',
-        'interface_type',
-        'switched_vlan'
+        'native_vlan',
+        'trunk_vlans',
     ]
 
 
@@ -169,21 +174,32 @@ class ApiParameters(Parameters):
         return re.sub(r'^{0}'.format(re.escape('iana-if-type:')), '', self._values['config']['type'])
 
     @property
-    def switched_vlan(self):
-        if self._values['name'] is None:
+    def trunk_vlans(self):
+        interface = self._values['openconfig-if-ethernet:ethernet']
+        if interface is None:
             return None
-        iftype = 'openconfig-if-ethernet:ethernet'
-        if self._values[iftype] is None:
+        if 'openconfig-vlan:switched-vlan' not in interface:
             return None
-        if 'openconfig-vlan:switched-vlan' not in self._values[iftype]:
+        return interface['openconfig-vlan:switched-vlan']['config'].get('trunk-vlans', None)
+
+    @property
+    def native_vlan(self):
+        interface = self._values['openconfig-if-ethernet:ethernet']
+        if interface is None:
             return None
-        if 'trunk-vlans' in self._values[iftype]['openconfig-vlan:switched-vlan']['config']:
-            return self._values[iftype]['openconfig-vlan:switched-vlan']['config']['trunk-vlans']
-        if 'native-vlan' in self._values[iftype]['openconfig-vlan:switched-vlan']['config']:
-            return self._values[iftype]['openconfig-vlan:switched-vlan']['config']['native-vlan']
+        if 'openconfig-vlan:switched-vlan' not in interface:
+            return None
+        return interface['openconfig-vlan:switched-vlan']['config'].get('native-vlan', None)
 
 
 class ModuleParameters(Parameters):
+    @staticmethod
+    def _validate_vlan_ids(vlan):
+        if 0 > vlan > 4095:
+            raise F5ModuleError(
+                "Valid 'vlan_id' must be in range 0 - 4095."
+            )
+
     @property
     def name(self):
         interface_format = re.compile(r'(?P<blade>\d+)\/(?P<port>\d+\.\d+)')
@@ -196,30 +212,21 @@ class ModuleParameters(Parameters):
         return self._values['name']
 
     @property
-    def switched_vlan(self):
-        if self._values['native_vlan'] is not None:
-            vlan = self._values['native_vlan']
-            if vlan < 0 or vlan > 4095:
-                raise F5ModuleError(
-                    "Valid 'vlan_id' must be in range 0 - 4095."
-                )
-            return vlan
+    def native_vlan(self):
+        if self._values['native_vlan'] is None:
+            return None
+        self._validate_vlan_ids(self._values['native_vlan'])
+        return self._values['native_vlan']
 
+    @property
+    def trunk_vlans(self):
         if self._values['trunk_vlans'] is None:
             return None
-
-        # Ensure valid vlan id's are passed in.
         vlans = self._values['trunk_vlans']
-        if len(vlans) > 0:
-            if min(vlans) < 0 or max(vlans) > 4095:
-                raise F5ModuleError(
-                    "Valid vlan id must be in range 0 - 4095."
-                )
-        if len(self._values['trunk_vlans']) > 1:
-            self._values['trunk_vlans'].sort()
-            return self._values['trunk_vlans']
-
-        return self._values['trunk_vlans']
+        for vlan in vlans:
+            self._validate_vlan_ids(vlan)
+        vlans.sort()
+        return vlans
 
 
 class Changes(Parameters):
@@ -235,32 +242,15 @@ class Changes(Parameters):
 
 
 class UsableChanges(Changes):
-    @property
-    def switched_vlan(self):
-        if self._values['switched_vlan'] is None:
-            return None
-        if isinstance(self._values['switched_vlan'], list):
-            result = {
-                "openconfig-vlan:switched-vlan": {
-                    "config": {
-                        "trunk-vlans": self._values['switched_vlan'],
-                    }
-                }
-            }
-            return result
-        if isinstance(self._values['switched_vlan'], int):
-            result = {
-                "openconfig-vlan:switched-vlan": {
-                    "config": {
-                        "native-vlan": self._values['switched_vlan'],
-                    }
-                }
-            }
-            return result
+    pass
 
 
 class ReportableChanges(Changes):
-    pass
+    returnables = [
+        'name',
+        'native_vlan',
+        'trunk_vlans'
+    ]
 
 
 class Difference(object):
@@ -285,10 +275,8 @@ class Difference(object):
             return attr1
 
     @property
-    def switched_vlan(self):
-        if self.want.switched_vlan == self.have.switched_vlan:
-            return None
-        return self.want.switched_vlan
+    def trunk_vlan(self):
+        return cmp_simple_list(self.want.trunk_vlan, self.have.trunk_vlan)
 
 
 class ModuleManager(object):
@@ -329,6 +317,7 @@ class ModuleManager(object):
     def exec_module(self):
         if self.client.platform == 'Velos Controller':
             raise F5ModuleError("Target device is a VELOS controller, aborting.")
+        start = datetime.datetime.now().isoformat()
         changed = False
         result = dict()
         state = self.want.state
@@ -343,6 +332,7 @@ class ModuleManager(object):
         result.update(**changes)
         result.update(dict(changed=changed))
         self._announce_deprecations(result)
+        send_teem(self.client, start)
         return result
 
     def present(self):
@@ -356,7 +346,7 @@ class ModuleManager(object):
             )
 
     def absent(self):
-        if self.exists() and self._get_switched_vlan():
+        if self.exists() and self._vlans_exist_on_interface():
             return self.remove()
         return False
 
@@ -394,33 +384,44 @@ class ModuleManager(object):
 
         return True
 
-    def update_on_device(self):
-        params = self.changes.api_params()
-        payload = {
-            'openconfig-interfaces:interfaces': {
-                'interface': [
-                    {
-                        'name': self.want.name,
-                        'openconfig-if-ethernet:ethernet': params.get('switched_vlan')
-                    }
-                ]
+    @staticmethod
+    def _populate_vlans(params, intf):
+        if params.get('trunk_vlans', None):
+            trunk_vlan = {
+                "trunk-vlans": params['trunk_vlans'],
             }
-        }
-
-        uri = "/openconfig-interfaces:interfaces/"
-        response = self.client.patch(uri, data=payload)
-
-        if response['code'] not in [200, 201, 202, 204]:
-            raise F5ModuleError(
-                "Failed to update Vlans {0} to interface {1}".format(
-                    self.want.switched_vlan, self.want.name
+            intf['openconfig-if-ethernet:ethernet']['openconfig-vlan:switched-vlan'] = dict(config=trunk_vlan)
+        if params.get('native_vlan', None):
+            native_vlan = {
+                "native-vlan": params['native_vlan'],
+            }
+            if 'config' in intf['openconfig-if-ethernet:ethernet']['openconfig-vlan:switched-vlan']:
+                intf['openconfig-if-ethernet:ethernet']['openconfig-vlan:switched-vlan']['config'].update(
+                    native_vlan
                 )
-            )
-        return True
+            intf['openconfig-if-ethernet:ethernet']['openconfig-vlan:switched-vlan'] = dict(
+                config=native_vlan)
+        return intf
+
+    def update_on_device(self):
+        params = self.changes.to_return()
+        interface_encoded = self._encode_interface_name()
+        vlans = dict()
+        if params.get('trunk_vlans', None):
+            vlans['trunk-vlans'] = params['trunk_vlans']
+        if params.get('native_vlan', None):
+            vlans['native-vlan'] = params['native_vlan']
+        if vlans:
+            uri = f"/openconfig-interfaces:interfaces/interface={interface_encoded}" \
+                  f"/openconfig-if-ethernet:ethernet/openconfig-vlan:switched-vlan"
+            payload = {"openconfig-vlan:switched-vlan": {"config": vlans}}
+            response = self.client.put(uri, data=payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+            return True
 
     def remove_from_device(self):
-        if self._get_switched_vlan():
-            self._update_switched_vlan(self.want.switched_vlan)
+        self.remove_vlans()
         return True
 
     def _remove_trunk_vlans(self, vlan):
@@ -462,20 +463,15 @@ class ModuleManager(object):
         """
         return quote(self.want.name, safe='')
 
-    def _update_switched_vlan(self, switched_vlan_want):
-        if switched_vlan_want is None:
-            # nothing to do.
-            return
-
-        if self.have.switched_vlan is not None:
-            if isinstance(self.have.switched_vlan, list):
-                for vlan in self.have.switched_vlan:
-                    self._remove_trunk_vlans(vlan)
-            if isinstance(self.have.switched_vlan, int):
-                self._remove_native_vlan()
+    def remove_vlans(self):
+        if self.have.trunk_vlans is not None:
+            for vlan in self.have.trunk_vlans:
+                self._remove_trunk_vlans(vlan)
+        if self.have.native_vlan is not None:
+            self._remove_native_vlan()
         return True
 
-    def _get_switched_vlan(self):
+    def _vlans_exist_on_interface(self):
         interface_encoded = self._encode_interface_name()
         iftype = 'openconfig-if-ethernet:ethernet'
         uri = f"/openconfig-interfaces:interfaces/interface={interface_encoded}" \
@@ -509,9 +505,6 @@ class ArgumentSpec(object):
         )
         self.argument_spec = {}
         self.argument_spec.update(argument_spec)
-        self.mutually_exclusive = [
-            ['trunk_vlans', 'native_vlan']
-        ]
 
 
 def main():
@@ -519,8 +512,7 @@ def main():
 
     module = AnsibleModule(
         argument_spec=spec.argument_spec,
-        supports_check_mode=spec.supports_check_mode,
-        mutually_exclusive=spec.mutually_exclusive
+        supports_check_mode=spec.supports_check_mode
     )
 
     try:

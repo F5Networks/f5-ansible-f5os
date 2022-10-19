@@ -25,10 +25,7 @@ Please open a case (https://support.f5.com/csp/article/K2633) with F5 if this is
 ```
 
 ```
-##### BIGIP VERSION
-<!---
-Paste verbatim output from “tmsh show sys version” between quotes below
--->
+##### F5OS VERSION
 ```
 
 ```

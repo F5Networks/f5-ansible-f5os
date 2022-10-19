@@ -17,7 +17,7 @@ from ansible_collections.f5networks.f5os.plugins.modules.velos_partition import 
 )
 
 from ansible_collections.f5networks.f5os.tests.compat import unittest
-from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch, MagicMock
+from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
 from ansible_collections.f5networks.f5os.tests.modules.utils import set_module_args
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -77,10 +77,14 @@ class TestManager(unittest.TestCase):
         self.spec = ArgumentSpec()
         self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.velos_partition.F5Client')
         self.m1 = self.p1.start()
-        self.m1.return_value = MagicMock()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.velos_partition.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
 
     def tearDown(self):
         self.p1.stop()
+        self.p2.stop()
 
     def test_partition_create(self, *args):
         set_module_args(dict(

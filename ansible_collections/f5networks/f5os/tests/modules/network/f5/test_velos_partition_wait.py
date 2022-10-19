@@ -18,7 +18,7 @@ from ansible_collections.f5networks.f5os.plugins.modules.velos_partition_wait im
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
 from ansible_collections.f5networks.f5os.tests.compat import unittest
-from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch, MagicMock
+from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
 from ansible_collections.f5networks.f5os.tests.modules.utils import (
     set_module_args, exit_json, fail_json, AnsibleFailJson
 )
@@ -73,7 +73,18 @@ class TestManager(unittest.TestCase):
                                                  exit_json=exit_json,
                                                  fail_json=fail_json)
         self.mock_module_helper.start()
-        self.addCleanup(self.mock_module_helper.stop)
+        self.mock_module_helper.start()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.velos_partition_wait.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.velos_partition_wait.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def teardown(self):
+        self.p1.patch()
+        self.p2.patch()
+        self.mock_module_helper.stop()
 
     def test_wait_running(self, *args):
         """ Transition to running state. """
@@ -123,7 +134,7 @@ class TestManager(unittest.TestCase):
         # indicating ssh is not ready, followed by a second connection which
         # raises AuthenticationException, indicating ssh server is up.
         with patch.object(paramiko, 'SSHClient', autospec=True) as mock_ssh:
-            mocked_client = MagicMock()
+            mocked_client = Mock()
             attrs = {
                 'connect.side_effect': [
                     paramiko.ssh_exception.SSHException,

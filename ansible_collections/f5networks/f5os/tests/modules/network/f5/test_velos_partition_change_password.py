@@ -17,7 +17,7 @@ from ansible_collections.f5networks.f5os.plugins.modules.velos_partition_change_
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
 from ansible_collections.f5networks.f5os.tests.compat import unittest
-from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch, MagicMock
+from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
 from ansible_collections.f5networks.f5os.tests.modules.utils import set_module_args
 
 
@@ -64,10 +64,16 @@ class TestManager(unittest.TestCase):
             'ansible_collections.f5networks.f5os.plugins.modules.velos_partition_change_password.F5Client'
         )
         self.m1 = self.p1.start()
-        self.m1.return_value = MagicMock()
+        self.m1.return_value = Mock()
+        self.p2 = patch(
+            'ansible_collections.f5networks.f5os.plugins.modules.velos_partition_change_password.send_teem'
+        )
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
 
     def tearDown(self):
         self.p1.stop()
+        self.p2.stop()
 
     def test_change_password_success(self, *args):
         set_module_args(dict(

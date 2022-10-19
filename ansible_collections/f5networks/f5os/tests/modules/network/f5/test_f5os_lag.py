@@ -16,7 +16,7 @@ from ansible_collections.f5networks.f5os.plugins.modules.f5os_lag import (
     ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager
 )
 from ansible_collections.f5networks.f5os.tests.compat import unittest
-from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch, MagicMock
+from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
 from ansible_collections.f5networks.f5os.tests.modules.utils import set_module_args
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -60,7 +60,7 @@ class TestParameters(unittest.TestCase):
         p = ApiParameters(params=args)
 
         assert p.interface_type == 'ieee8023adLag'
-        assert 580 and 590 in p.trunk_vlans
+        assert 580 in p.trunk_vlans and 590 in p.trunk_vlans
         assert p.native_vlan == 579
         assert p.lag_type == 'LACP'
 
@@ -70,10 +70,14 @@ class TestManager(unittest.TestCase):
         self.spec = ArgumentSpec()
         self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_lag.F5Client')
         self.m1 = self.p1.start()
-        self.m1.return_value = MagicMock()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_lag.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
 
     def tearDown(self):
         self.p1.stop()
+        self.p2.stop()
 
     def test_partition_interface_create_switched_vlan(self, *args):
         set_module_args(dict(

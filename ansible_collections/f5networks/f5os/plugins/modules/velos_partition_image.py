@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2021, F5 Networks Inc.
+# Copyright: (c) 2022, F5 Networks Inc.
 # GNU General Public License v3.0 (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -152,6 +152,7 @@ iso_version:
   type: dict
   sample: 1.1.0-3198
 '''
+import datetime
 import re
 import time
 from ipaddress import ip_interface
@@ -159,7 +160,9 @@ from ipaddress import ip_interface
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 
-from ansible_collections.f5networks.f5os.plugins.module_utils.client import F5Client
+from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
+    F5Client, send_teem
+)
 
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import (
     F5ModuleError, AnsibleF5Parameters,
@@ -301,6 +304,7 @@ class ModuleManager(object):
             )
 
     def exec_module(self):
+        start = datetime.datetime.now().isoformat()
         changed = False
         result = dict()
         state = self.want.state
@@ -317,6 +321,7 @@ class ModuleManager(object):
         result.update(**changes)
         result.update(dict(changed=changed))
         self._announce_deprecations(result)
+        send_teem(self.client, start)
         return result
 
     def import_image(self):

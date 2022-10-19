@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright: (c) 2021, F5 Networks Inc.
+# Copyright: (c) 2022, F5 Networks Inc.
 # GNU General Public License v3.0 (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -18,7 +18,7 @@ version_added: "1.0.0"
 options:
   name:
     description:
-      - Name of the chassis partition interface to configure.
+      - Name of the interface to configure.
     type: str
     required: true
   trunk_vlans:
@@ -128,11 +128,27 @@ name:
   type: str
   sample: new_name
 trunk_vlans:
-  description: trunk_vlans to attach to the interface
+  description: Trunk vlans to attach to LAG interface
+  returned: changed
+  type: list
+  sample: [444,555]
+native_vlan:
+  description: Native vlan to attach to LAG interface
   returned: changed
   type: int
-  sample: [444,555]
+  sample: 222
+lag_type:
+  description: The LAG type of the interface to be created.
+  returned: changed
+  type: str
+  sample: static
+config_members:
+  description: The list of interfaces to be grouped for the Link Aggregation Group
+  returned: changed
+  type: list
+  sample: ["1.0", "2.0"]
 '''
+import datetime
 import re
 
 from urllib.parse import quote
@@ -140,7 +156,9 @@ from urllib.parse import quote
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 
-from ansible_collections.f5networks.f5os.plugins.module_utils.client import F5Client
+from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
+    F5Client, send_teem
+)
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import (
     F5ModuleError, AnsibleF5Parameters,
 )
@@ -274,8 +292,6 @@ class ReportableChanges(Changes):
         'name',
         'native_vlan',
         'trunk_vlans',
-        'interface',
-        'interface_type',
         'config_members',
         'lag_type'
     ]
@@ -357,6 +373,7 @@ class ModuleManager(object):
     def exec_module(self):
         if self.client.platform == 'Velos Controller':
             raise F5ModuleError("Target device is a VELOS controller, aborting.")
+        start = datetime.datetime.now().isoformat()
         changed = False
         result = dict()
         state = self.want.state
@@ -371,6 +388,7 @@ class ModuleManager(object):
         result.update(**changes)
         result.update(dict(changed=changed))
         self._announce_deprecations(result)
+        send_teem(self.client, start)
         return result
 
     def present(self):

@@ -16,7 +16,7 @@ from ansible_collections.f5networks.f5os.plugins.modules.f5os_interface import (
     ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager
 )
 from ansible_collections.f5networks.f5os.tests.compat import unittest
-from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch, MagicMock
+from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
 from ansible_collections.f5networks.f5os.tests.modules.utils import set_module_args
 
 
@@ -51,7 +51,7 @@ class TestParameters(unittest.TestCase):
         )
         p = ModuleParameters(params=args)
         assert p.name == '2/1.0'
-        assert p.switched_vlan == [444]
+        assert p.trunk_vlans == [444]
 
     def test_api_parameters(self):
         args = load_fixture('load_velos_partition_interface_config.json')
@@ -59,7 +59,7 @@ class TestParameters(unittest.TestCase):
         p = ApiParameters(params=args)
 
         assert p.interface_type == 'ethernetCsmacd'
-        assert p.switched_vlan == [444]
+        assert p.trunk_vlans == [444]
 
 
 class TestManager(unittest.TestCase):
@@ -67,15 +67,19 @@ class TestManager(unittest.TestCase):
         self.spec = ArgumentSpec()
         self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_interface.F5Client')
         self.m1 = self.p1.start()
-        self.m1.return_value = MagicMock()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_interface.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
 
     def tearDown(self):
         self.p1.stop()
+        self.p2.stop()
 
-    def test_partition_interface_create_switched_vlan(self, *args):
+    def test_partition_interface_add_vlan(self, *args):
         set_module_args(dict(
             name="2/1.0",
-            trunk_vlans=[444],
+            native_vlan=666,
             state='present'
         ))
 
@@ -85,7 +89,7 @@ class TestManager(unittest.TestCase):
         )
         mm = ModuleManager(module=module)
         mm.exists = Mock(return_value=True)
-        mm.client.patch = Mock(return_value=dict(code=201, contents={}))
+        mm.client.put = Mock(return_value=dict(code=201, contents={}))
         fixdata = list()
         fixdata.append(load_fixture("load_velos_partition_interface_config.json"))
         newdata = {
@@ -95,12 +99,14 @@ class TestManager(unittest.TestCase):
             return_value=dict(code=200, contents=dict(newdata)))
 
         results = mm.exec_module()
-        assert results['changed'] is False
+        assert results['changed'] is True
+        assert results['native_vlan'] == 666
 
-    def test_partition_interface_update_switched_vlan(self, *args):
+    def test_partition_interface_update_vlans(self, *args):
         set_module_args(dict(
             name="2/1.0",
             trunk_vlans=[444, 555],
+            native_vlan=222,
             state='present'
         ))
 
@@ -110,7 +116,7 @@ class TestManager(unittest.TestCase):
         )
         mm = ModuleManager(module=module)
         mm.exists = Mock(return_value=True)
-        mm.client.patch = Mock(return_value=dict(code=204, contents=""))
+        mm.client.put = Mock(return_value=dict(code=204, contents=""))
         fixdata = list()
         fixdata.append(load_fixture("load_velos_partition_interface_config.json"))
         newdata = {
@@ -118,16 +124,16 @@ class TestManager(unittest.TestCase):
         }
         mm.client.get = Mock(
             return_value=dict(code=200, contents=dict(newdata)))
-        mm.client.delete = Mock(return_value=dict(code=204, contents=""))
 
         results = mm.exec_module()
 
         assert results['changed'] is True
+        assert results['native_vlan'] == 222
+        assert results['trunk_vlans'] == [444, 555]
 
     def test_partition_interface_delete_switched_vlan(self, *args):
         set_module_args(dict(
             name="2/1.0",
-            trunk_vlans=[444],
             state='absent'
         ))
 
