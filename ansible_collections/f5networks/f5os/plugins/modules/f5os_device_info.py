@@ -876,15 +876,20 @@ class PlatformSoftwareInfoParameters(BaseParameters):
     returnables = [
         'os_version',
         'service_version',
+        'software_installation_status',
     ]
 
     @property
     def os_version(self):
-        return self._values['config']['os-version']
+        return self._values['state']['install'].get('install-os-version')
 
     @property
     def service_version(self):
-        return self._values['config']['service-version']
+        return self._values['state']['install'].get('install-service-version')
+
+    @property
+    def software_installation_status(self):
+        return self._values['state']['install'].get('install-status')
 
 
 class ControllerSoftwareInfoParameters(BaseParameters):
