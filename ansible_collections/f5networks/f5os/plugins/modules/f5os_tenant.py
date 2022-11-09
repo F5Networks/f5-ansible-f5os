@@ -19,6 +19,10 @@ options:
   name:
     description:
       - Name of the tenant.
+      - The first character must be a letter.
+      - Only lowercase alphanumeric characters are allowed.
+      - No special or extended characters are allowed except for hyphens.
+      - The name cannot exceed 50 characters in length.
     type: str
     required: True
   image_name:
@@ -205,6 +209,7 @@ running_state:
   sample: provisioned
 '''
 import datetime
+import re
 
 from ipaddress import ip_interface
 
@@ -288,6 +293,26 @@ class ApiParameters(Parameters):
 
 
 class ModuleParameters(Parameters):
+
+    @property
+    def name(self):
+        if self._values['name'] is None:
+            return None
+        if len(self._values['name']) > 50:
+            raise F5ModuleError('The name parameter must not exceed 50 characters.')
+
+        invalid_chars = r'[^a-z\d-]'
+        if re.search(invalid_chars, self._values['name']):
+            raise F5ModuleError(
+                'Invalid characters detected in name parameter, check documentation for rules regarding naming.'
+            )
+
+        start_with_letters = r'^[a-z]'
+        if re.match(start_with_letters, self._values['name']):
+            return self._values['name']
+        else:
+            raise F5ModuleError('The name parameter must begin with a lowercase letter.')
+
     @property
     def nodes(self):
         if self._values['nodes'] is None:

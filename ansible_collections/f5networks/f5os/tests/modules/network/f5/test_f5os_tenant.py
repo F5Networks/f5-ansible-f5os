@@ -89,6 +89,40 @@ class TestParameters(unittest.TestCase):
         assert p.cryptos == 'disabled'
         assert p.running_state == 'configured'
 
+    def test_module_parameters_name_invalid_chars(self):
+        args = dict(
+            name='Services&_%$'
+        )
+
+        p = ModuleParameters(params=args)
+        with self.assertRaises(F5ModuleError) as err:
+            p.name()
+
+        assert 'Invalid characters detected in name parameter,' \
+               ' check documentation for rules regarding naming.' in str(err.exception)
+
+    def test_module_parameters_name_not_starting_with_letter(self):
+        args = dict(
+            name='5ervices-foo-bar'
+        )
+
+        p = ModuleParameters(params=args)
+        with self.assertRaises(F5ModuleError) as err:
+            p.name()
+
+        assert 'The name parameter must begin with a lowercase letter.' in str(err.exception)
+
+    def test_module_parameters_name_exceed_length(self):
+        args = dict(
+            name='this-is-a-very-long-name-to-cause-errors-or-give-you-a-headache-just-from-looking-at-it'
+        )
+
+        p = ModuleParameters(params=args)
+        with self.assertRaises(F5ModuleError) as err:
+            p.name()
+
+        assert 'The name parameter must not exceed 50 characters.' in str(err.exception)
+
 
 class TestManager(unittest.TestCase):
     def setUp(self):

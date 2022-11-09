@@ -6,8 +6,8 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
-DOCUMENTATION = """
-author: Wojciech Wypior <w.wypior@f5.com>
+DOCUMENTATION = r'''
+---
 httpapi: f5os
 short_description: HttpApi Plugin for F5OS devices
 description:
@@ -24,7 +24,10 @@ options:
       - name: F5_TELEMETRY_OFF
     vars:
       - name: f5_telemetry
-"""
+version_added: "1.0.0"
+author:
+  - Wojciech Wypior <w.wypior@f5.com>
+'''
 
 import json
 

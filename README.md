@@ -3,6 +3,10 @@
 A collection focusing on managing F5 OS devices through API. The collection includes key imperative modules for 
 managing Velos chassis and rSeries platform lifecycles as well as F5OS tenant and partition management.
 
+## Requirements
+
+ - ansible >= 2.11
+
 ## Python Version
 This collection is supported on Python 3.8 and above.
 
@@ -41,7 +45,7 @@ can be found here [execenv]. Use the below requirements.yml file when building E
 collections:
   - name: ansible.netcommon
     version: ">=2.0.0"
-  - name: f5networks.f5_os
+  - name: f5networks.f5os
     source: https://github.com/F5Networks/f5-ansible-f5os#ansible_collections/f5networks/f5os
     type: git
     version: devel
