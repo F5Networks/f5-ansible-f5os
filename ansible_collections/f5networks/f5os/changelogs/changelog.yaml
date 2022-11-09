@@ -1,0 +1,45 @@
+ancestor: null
+releases:
+  1.0.0:
+    modules:
+    - description: Collect information from F5OS devices
+      name: f5os_device_info
+      namespace: ''
+    - description: Manage network interfaces on F5OS based systems
+      name: f5os_interface
+      namespace: ''
+    - description: Manage LAG interfaces on F5OS based systems
+      name: f5os_lag
+      namespace: ''
+    - description: Manage F5OS tenants
+      name: f5os_tenant
+      namespace: ''
+    - description: Manage F5OS tenant images
+      name: f5os_tenant_image
+      namespace: ''
+    - description: Wait for a F5OS tenant condition before continuing
+      name: f5os_tenant_wait
+      namespace: ''
+    - description: Manage VLANs on F5OS based systems
+      name: f5os_vlan
+      namespace: ''
+    - description: Manage VELOS chassis partitions
+      name: velos_partition
+      namespace: ''
+    - description: Provides access to VELOS chassis partition user authentication
+        methods
+      name: velos_partition_change_password
+      namespace: ''
+    - description: Manage VELOS chassis partition images
+      name: velos_partition_image
+      namespace: ''
+    - description: Wait for a VELOS chassis partition to match a condition before
+        continuing
+      name: velos_partition_wait
+      namespace: ''
+    plugins:
+      httpapi:
+      - description: HttpApi Plugin for F5OS devices
+        name: f5os
+        namespace: null
+    release_date: '2022-11-09'
