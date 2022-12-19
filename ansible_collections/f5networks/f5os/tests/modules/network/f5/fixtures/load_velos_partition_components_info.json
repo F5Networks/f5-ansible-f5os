@@ -1,0 +1,465 @@
+{
+    "openconfig-platform:components": {
+        "component": [
+            {
+                "name": "blade-1",
+                "config": {
+                    "name": "blade-1"
+                },
+                "state": {
+                    "serial-no": "bld427173s",
+                    "part-no": "403-0086-02 REV C",
+                    "empty": false,
+                    "f5-platform:tpm-integrity-status": "Valid",
+                    "f5-platform:memory": {
+                        "available": "18555600896",
+                        "free": "14542594048",
+                        "used-percent": 86,
+                        "platform-total": "26843996160",
+                        "platform-used": "7608725504"
+                    },
+                    "f5-platform:temperature": {
+                        "current": "26.0",
+                        "average": "26.0",
+                        "minimum": "26.0",
+                        "maximum": "26.0"
+                    }
+                },
+                "properties": {
+                    "property": [
+                        {
+                            "name": "QAT0",
+                            "config": {
+                                "name": "QAT0"
+                            },
+                            "state": {
+                                "value": "Lewisburg C62X Crypto/Compression",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "QAT1",
+                            "config": {
+                                "name": "QAT1"
+                            },
+                            "state": {
+                                "value": "Lewisburg C62X Crypto/Compression",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "QAT2",
+                            "config": {
+                                "name": "QAT2"
+                            },
+                            "state": {
+                                "value": "Lewisburg C62X Crypto/Compression",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-bios",
+                            "config": {
+                                "name": "fw-version-bios"
+                            },
+                            "state": {
+                                "value": "2.03.008.1",
+                                "configurable": false,
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-bios-me",
+                            "config": {
+                                "name": "fw-version-bios-me"
+                            },
+                            "state": {
+                                "value": "4.0.4.128",
+                                "configurable": false,
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-cpld",
+                            "config": {
+                                "name": "fw-version-cpld"
+                            },
+                            "state": {
+                                "value": "05.04.00",
+                                "configurable": false,
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-drives-nvme0n1",
+                            "config": {
+                                "name": "fw-version-drives-nvme0n1"
+                            },
+                            "state": {
+                                "configurable": false,
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-app",
+                            "config": {
+                                "name": "fw-version-lop-app"
+                            },
+                            "state": {
+                                "value": "1.00.972.0.1",
+                                "configurable": false,
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-bootloader",
+                            "config": {
+                                "name": "fw-version-lop-bootloader"
+                            },
+                            "state": {
+                                "value": "1.02.868.0.1",
+                                "configurable": false,
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-sirr",
+                            "config": {
+                                "name": "fw-version-sirr"
+                            },
+                            "state": {
+                                "value": "1.1.8",
+                                "configurable": false,
+                                "f5-platform:update-status": "none"
+                            }
+                        }
+                    ]
+                },
+                "storage": {
+                    "state": {
+                        "f5-platform:disks": {
+                            "disk": [
+                                {
+                                    "disk-name": "nvme0n1",
+                                    "state": {
+                                        "model": "SAMSUNG MZ1LB960HAJQ-00007",
+                                        "vendor": "Samsung",
+                                        "version": "EDA7602Q",
+                                        "serial-no": "S435NE0N109615",
+                                        "size": "733.00GB",
+                                        "type": "nvme",
+                                        "disk-io": {
+                                            "total-iops": "28333142",
+                                            "read-iops": "247897",
+                                            "read-merged": "101",
+                                            "read-bytes": "14405265",
+                                            "read-latency-ms": "45589",
+                                            "write-iops": "228089008",
+                                            "write-merged": "167744729",
+                                            "write-bytes": "5982956511",
+                                            "write-latency-ms": "57073376"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "cpu": {
+                    "state": {
+                        "f5-platform:processors": {
+                            "processor": [
+                                {
+                                    "cpu-index": 0,
+                                    "state": {
+                                        "cachesize": "19712(KB)",
+                                        "core-cnt": "14",
+                                        "freq": "2299.969(MHz)",
+                                        "stepping": "4",
+                                        "thread-cnt": "28",
+                                        "modelname": "Intel(R) Xeon(R) D-2177NT CPU @ 1.90GHz"
+                                    }
+                                }
+                            ]
+                        },
+                        "f5-platform:cpu-utilization": {
+                            "thread": "cpu",
+                            "current": 8,
+                            "five-second-avg": 8,
+                            "one-minute-avg": 8,
+                            "five-minute-avg": 8
+                        },
+                        "f5-platform:cpu-threads": {
+                            "cpu-thread": [
+                                {
+                                    "thread-index": 0,
+                                    "thread": "cpu0",
+                                    "current": 5,
+                                    "five-second-avg": 5,
+                                    "one-minute-avg": 6,
+                                    "five-minute-avg": 6
+                                },
+                                {
+                                    "thread-index": 1,
+                                    "thread": "cpu1",
+                                    "current": 8,
+                                    "five-second-avg": 10,
+                                    "one-minute-avg": 9,
+                                    "five-minute-avg": 11
+                                },
+                                {
+                                    "thread-index": 2,
+                                    "thread": "cpu2",
+                                    "current": 8,
+                                    "five-second-avg": 7,
+                                    "one-minute-avg": 9,
+                                    "five-minute-avg": 8
+                                },
+                                {
+                                    "thread-index": 3,
+                                    "thread": "cpu3",
+                                    "current": 15,
+                                    "five-second-avg": 15,
+                                    "one-minute-avg": 15,
+                                    "five-minute-avg": 13
+                                },
+                                {
+                                    "thread-index": 4,
+                                    "thread": "cpu4",
+                                    "current": 4,
+                                    "five-second-avg": 20,
+                                    "one-minute-avg": 9,
+                                    "five-minute-avg": 9
+                                },
+                                {
+                                    "thread-index": 5,
+                                    "thread": "cpu5",
+                                    "current": 14,
+                                    "five-second-avg": 8,
+                                    "one-minute-avg": 7,
+                                    "five-minute-avg": 8
+                                },
+                                {
+                                    "thread-index": 6,
+                                    "thread": "cpu6",
+                                    "current": 7,
+                                    "five-second-avg": 10,
+                                    "one-minute-avg": 12,
+                                    "five-minute-avg": 12
+                                },
+                                {
+                                    "thread-index": 7,
+                                    "thread": "cpu7",
+                                    "current": 3,
+                                    "five-second-avg": 4,
+                                    "one-minute-avg": 6,
+                                    "five-minute-avg": 7
+                                },
+                                {
+                                    "thread-index": 8,
+                                    "thread": "cpu8",
+                                    "current": 2,
+                                    "five-second-avg": 4,
+                                    "one-minute-avg": 7,
+                                    "five-minute-avg": 8
+                                },
+                                {
+                                    "thread-index": 9,
+                                    "thread": "cpu9",
+                                    "current": 6,
+                                    "five-second-avg": 7,
+                                    "one-minute-avg": 7,
+                                    "five-minute-avg": 7
+                                },
+                                {
+                                    "thread-index": 10,
+                                    "thread": "cpu10",
+                                    "current": 12,
+                                    "five-second-avg": 6,
+                                    "one-minute-avg": 5,
+                                    "five-minute-avg": 6
+                                },
+                                {
+                                    "thread-index": 11,
+                                    "thread": "cpu11",
+                                    "current": 8,
+                                    "five-second-avg": 7,
+                                    "one-minute-avg": 7,
+                                    "five-minute-avg": 7
+                                },
+                                {
+                                    "thread-index": 12,
+                                    "thread": "cpu12",
+                                    "current": 6,
+                                    "five-second-avg": 6,
+                                    "one-minute-avg": 6,
+                                    "five-minute-avg": 6
+                                },
+                                {
+                                    "thread-index": 13,
+                                    "thread": "cpu13",
+                                    "current": 6,
+                                    "five-second-avg": 6,
+                                    "one-minute-avg": 7,
+                                    "five-minute-avg": 6
+                                },
+                                {
+                                    "thread-index": 14,
+                                    "thread": "cpu14",
+                                    "current": 4,
+                                    "five-second-avg": 7,
+                                    "one-minute-avg": 7,
+                                    "five-minute-avg": 5
+                                },
+                                {
+                                    "thread-index": 15,
+                                    "thread": "cpu15",
+                                    "current": 15,
+                                    "five-second-avg": 15,
+                                    "one-minute-avg": 15,
+                                    "five-minute-avg": 15
+                                },
+                                {
+                                    "thread-index": 16,
+                                    "thread": "cpu16",
+                                    "current": 7,
+                                    "five-second-avg": 4,
+                                    "one-minute-avg": 5,
+                                    "five-minute-avg": 5
+                                },
+                                {
+                                    "thread-index": 17,
+                                    "thread": "cpu17",
+                                    "current": 13,
+                                    "five-second-avg": 9,
+                                    "one-minute-avg": 10,
+                                    "five-minute-avg": 8
+                                },
+                                {
+                                    "thread-index": 18,
+                                    "thread": "cpu18",
+                                    "current": 10,
+                                    "five-second-avg": 12,
+                                    "one-minute-avg": 12,
+                                    "five-minute-avg": 12
+                                },
+                                {
+                                    "thread-index": 19,
+                                    "thread": "cpu19",
+                                    "current": 11,
+                                    "five-second-avg": 5,
+                                    "one-minute-avg": 5,
+                                    "five-minute-avg": 5
+                                },
+                                {
+                                    "thread-index": 20,
+                                    "thread": "cpu20",
+                                    "current": 14,
+                                    "five-second-avg": 14,
+                                    "one-minute-avg": 13,
+                                    "five-minute-avg": 13
+                                },
+                                {
+                                    "thread-index": 21,
+                                    "thread": "cpu21",
+                                    "current": 5,
+                                    "five-second-avg": 3,
+                                    "one-minute-avg": 4,
+                                    "five-minute-avg": 5
+                                },
+                                {
+                                    "thread-index": 22,
+                                    "thread": "cpu22",
+                                    "current": 4,
+                                    "five-second-avg": 2,
+                                    "one-minute-avg": 3,
+                                    "five-minute-avg": 4
+                                },
+                                {
+                                    "thread-index": 23,
+                                    "thread": "cpu23",
+                                    "current": 4,
+                                    "five-second-avg": 5,
+                                    "one-minute-avg": 5,
+                                    "five-minute-avg": 5
+                                },
+                                {
+                                    "thread-index": 24,
+                                    "thread": "cpu24",
+                                    "current": 3,
+                                    "five-second-avg": 3,
+                                    "one-minute-avg": 3,
+                                    "five-minute-avg": 4
+                                },
+                                {
+                                    "thread-index": 25,
+                                    "thread": "cpu25",
+                                    "current": 18,
+                                    "five-second-avg": 15,
+                                    "one-minute-avg": 14,
+                                    "five-minute-avg": 12
+                                },
+                                {
+                                    "thread-index": 26,
+                                    "thread": "cpu26",
+                                    "current": 13,
+                                    "five-second-avg": 8,
+                                    "one-minute-avg": 12,
+                                    "five-minute-avg": 11
+                                },
+                                {
+                                    "thread-index": 27,
+                                    "thread": "cpu27",
+                                    "current": 10,
+                                    "five-second-avg": 8,
+                                    "one-minute-avg": 15,
+                                    "five-minute-avg": 13
+                                }
+                            ]
+                        }
+                    }
+                },
+                "integrated-circuit": {
+                    "state": {
+                        "f5-platform:fpgas": {
+                            "fpga": [
+                                {
+                                    "fpga-index": "atse_0",
+                                    "state": {
+                                        "version": "7.8.5"
+                                    }
+                                },
+                                {
+                                    "fpga-index": "vqf_0",
+                                    "state": {
+                                        "version": "8.9.1"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "f5-platform:software": {
+                    "state": {
+                        "software-components": {
+                            "software-component": [
+                                {
+                                    "software-index": "blade-os",
+                                    "state": {
+                                        "version": "1.5.1-10014"
+                                    }
+                                },
+                                {
+                                    "software-index": "partition-services",
+                                    "state": {
+                                        "version": "1.5.1-10014"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

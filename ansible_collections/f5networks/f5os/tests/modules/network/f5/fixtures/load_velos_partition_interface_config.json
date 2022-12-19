@@ -52,6 +52,7 @@
         },
         "openconfig-vlan:switched-vlan": {
             "config": {
+                "native-vlan": 666,
                 "trunk-vlans": [
                     444
                 ]

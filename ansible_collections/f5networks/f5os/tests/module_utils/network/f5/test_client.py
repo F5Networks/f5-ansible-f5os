@@ -8,7 +8,7 @@ __metaclass__ = type
 
 import json
 import os
-from unittest.mock import MagicMock
+from unittest.mock import Mock, patch
 from unittest import TestCase
 
 from ansible.playbook.play_context import PlayContext
@@ -17,7 +17,9 @@ from ansible.plugins.loader import connection_loader
 from ansible_collections.f5networks.f5os.plugins.module_utils.constants import (
     BASE_HEADERS, ROOT
 )
-from ansible_collections.f5networks.f5os.plugins.module_utils.client import F5Client
+from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
+    F5Client, send_teem
+)
 
 from ansible_collections.f5networks.f5os.tests.utils.common import connection_response
 
@@ -44,12 +46,12 @@ def load_fixture(name):
     return data
 
 
-class TestVelosClient(TestCase):
+class TestF5osClient(TestCase):
     def setUp(self):
         self.pc = PlayContext()
         self.pc.network_os = "f5networks.f5os.f5os"
         self.connection = connection_loader.get("httpapi", self.pc, "/dev/null")
-        self.mock_send = MagicMock()
+        self.mock_send = Mock()
         self.connection.send = self.mock_send
         self.client = F5Client(client=self.connection.httpapi)
 
@@ -230,12 +232,24 @@ class TestVelosClient(TestCase):
 
         assert platform == 'Velos Partition'
 
+    def test_send_teem(self):
+        mock_response = Mock()
+        self.connection.httpapi.get_option = mock_response
+        self.connection.httpapi.get_option.side_effect = [True, False]
 
-def test_ansible_version_module_name():
-    fake_module = MagicMock()
-    fake_module._name = 'fake_module'
-    fake_module.ansible_version = '3.10'
-    f5_client = F5Client(module=fake_module)
+        with patch('ansible_collections.f5networks.f5os.plugins.module_utils.client.TeemClient') as patched:
+            send_teem(self.client, 12345)
+            result = send_teem(self.client, 12345)
 
-    assert f5_client.module_name == 'fake_module'
-    assert f5_client.ansible_version == '3.10'
+        patched.assert_called_once()
+        patched.return_value.send.assert_called_once()
+        assert result is False
+
+    def test_ansible_version_module_name(self):
+        fake_module = Mock()
+        fake_module._name = 'fake_module'
+        fake_module.ansible_version = '3.10'
+        f5_client = F5Client(module=fake_module)
+
+        assert f5_client.module_name == 'fake_module'
+        assert f5_client.ansible_version == '3.10'

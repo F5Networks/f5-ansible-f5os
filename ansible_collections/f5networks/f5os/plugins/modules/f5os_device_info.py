@@ -99,6 +99,72 @@ interfaces:
       returned: queried
       type: dict
       sample: hash/dictionary of values
+      contains:
+        in-octets:
+          description: Number of octets received.
+          returned: queried
+          type: str
+          sample: 0
+        in-unicast-pkts:
+          description: Number of unicast packets received.
+          returned: queried
+          type: str
+          sample: 0
+        in-broadcast-pkts:
+          description: Number of broadcasts packets received.
+          returned: queried
+          type: str
+          sample: 0
+        in-multicast-pkts:
+          description: Number of multicast packets received.
+          returned: queried
+          type: str
+          sample: 0
+        in-discards:
+          description: Number of inbound packets discarded for reasons other than content error.
+          returned: queried
+          type: str
+          sample: 0
+        in-errors:
+          description: Number of inbound packets discarded for content error.
+          returned: queried
+          type: str
+          sample: 0
+        in-fcs-errors:
+          description: Number of inbound packets with frame check sequence error.
+          returned: queried
+          type: str
+          sample: 0
+        out-octets:
+          description: Number of outbound octets.
+          returned: queried
+          type: str
+          sample: 0
+        out-unicast-pkts:
+          description: Number of outbound unicast packets.
+          returned: queried
+          type: str
+          sample: 0
+        out-broadcast-pkts:
+          description: Number of outbound broadcast packets.
+          returned: queried
+          type: str
+          sample: 0
+        out-multicast-pkts:
+          description: Number of outbound multicast packets.
+          returned: queried
+          type: str
+          sample: 0
+        out-discards:
+          description: Number of outbound packets discarded for reasons other than content error.
+          returned: queried
+          type: str
+          sample: 0
+        out-errors:
+          description: Number of outbound packets discarded for content errors.
+          returned: queried
+          type: str
+          sample: 0
     loopback_mode:
       description:
         - Indicates if the interface is set in loopback mode.
@@ -125,7 +191,7 @@ interfaces:
       sample: 25G
     mac_address:
       description:
-        - Returns the mac address of the interface.
+        - Returns the MAC address of the interface.
       returned: queried
       type: str
       sample: 00:94:a1:69:4f:02
@@ -134,21 +200,72 @@ interfaces:
       returned: queried
       type: dict
       sample: hash/dictionary of values
+      contains:
+        in-mac-control-frames:
+          description: Number of incoming mac control frames.
+          returned: queried
+          type: str
+          sample: 0
+        in-mac-pause-frames:
+          description: Number of incoming mac pause frames.
+          returned: queried
+          type: str
+          sample: 0
+        in-oversize-frames:
+          description: Number of incoming oversize frames.
+          returned: queried
+          type: str
+          sample: 0
+        in-jabber-frames:
+          description: Number of incoming jabber frames.
+          returned: queried
+          type: str
+          sample: 0
+        in-fragment-frames:
+          description: Number of incoming fragment frames.
+          returned: queried
+          type: str
+          sample: 0
+        in-8021q-frames:
+          description: Number of incoming 802.1Q frames.
+          returned: queried
+          type: str
+          sample: 0
+        in-crc-errors:
+          description: Number of incoming frames with cyclic redundancy check error
+          returned: queried
+          type: str
+          sample: 0
+        out-mac-control-frames:
+          description: Number of outbound mac control frames.
+          returned: queried
+          type: str
+          sample: 0
+        out-mac-pause-frames:
+          description: Number of outbound mac pause frames.
+          returned: queried
+          type: str
+          sample: 0
+        out-8021q-frames:
+          description: Number of outbound 802.1Q frames.
+          returned: queried
+          type: str
+          sample: 0
   sample: hash/dictionary of values
 vlans:
-  description: Information about vlans on the platform.
+  description: Information about VLANs on the platform.
   returned: When C(vlans) is specified in C(gather_subset).
   type: complex
   contains:
     name:
       description:
-        - Name of the vlan
+        - Name of the VLAN
       returned: queried
       type: str
       sample: vlan-444
     vlan_id:
       description:
-        - Vlan tag as configured on device.
+        - VLAN tag as configured on device.
       returned: queried
       type: int
       sample: 444
@@ -214,7 +331,7 @@ tenant_images:
       sample: BIGIP-15.1.5-0.0.10.ALL-F5OS.qcow2.zip.bundle
     in_use:
       description:
-        - Indicates if the tenant image is currently in use
+        - Indicates if the tenant image is currently in use.
       returned: queried
       type: bool
       sample: no
@@ -233,7 +350,7 @@ system_info:
     components:
       description:
         - Specifies a list of components of the target platform.
-        - Currently only blade, chassis, controller components information is collected on VELOS platform.
+        - Currently only blade, chassis, and controller components information is collected on VELOS platform.
         - General platform information is collected for rSeries devices.
       returned: queried
       type: complex
@@ -269,12 +386,12 @@ system_info:
           type: complex
           contains:
             total:
-              description: Total memory in bytes that is present on the platform.
+              description: Total memory in bytes present on the platform.
               returned: queried
               type: int
               sample: 19356536832
             free:
-              description: Free memory in bytes that is available on the platform.
+              description: Free memory in bytes available on the platform.
               returned: queried
               type: int
               sample: 17659666432
@@ -300,7 +417,7 @@ system_info:
               type: float
               sample: 35.4
             minimum:
-              description: Minimum temperature recorded on the system during its uptime
+              description: Minimum temperature recorded on the system during its uptime.
               returned: queried
               type: float
               sample: 20.1
@@ -326,18 +443,18 @@ system_info:
           type: str
           sample: 01350fe7daea9e21a4ee
         service_check_date:
-          description: Date when last service check was performed on the license
+          description: Date when last service check was performed on the license.
           returned: queried
           type: str
           sample: 2021/12/01
         license_date:
-          description: Date when the system was licensed
+          description: Date when the system was licensed.
           returned: queried
           type: str
           sample: 2021/08/01
       sample: hash/dictionary of values
     platform_type:
-      description: Type of platform that the info is being gathered on.
+      description: Type of platform on which the info is being gathered.
       returned: queried
       type: str
       sample: rSeries Platform
@@ -397,16 +514,6 @@ class BaseManager(object):
         self.module = kwargs.get('module', None)
         self.client = kwargs.get('client', None)
         self.kwargs = kwargs
-
-    def exec_module(self):
-        start = datetime.datetime.now().isoformat()
-        results = []
-        facts = self.read_facts()
-        for item in facts:
-            attrs = item.to_return()
-            results.append(attrs)
-        send_teem(self.client, start)
-        return results
 
 
 class Parameters(AnsibleF5Parameters):
@@ -482,7 +589,6 @@ class VlansFactManager(BaseManager):
     def read_collection_from_device(self):
         uri = "/openconfig-vlan:vlans"
         response = self.client.get(uri)
-
         if response['code'] == 204:
             return []
         if response['code'] not in [200, 201, 202]:
@@ -1080,14 +1186,9 @@ class ModuleManager(object):
         }
 
     def exec_module(self):
+        start = datetime.datetime.now().isoformat()
         self.handle_all_keyword()
         self.filter_excluded_meta_facts()
-        res = self.check_valid_gather_subset(self.want.gather_subset)
-        if res:
-            invalid = ','.join(res)
-            raise F5ModuleError(
-                "The specified 'gather_subset' options are invalid: {0}".format(invalid)
-            )
         result = self.filter_excluded_facts()
 
         managers = []
@@ -1098,7 +1199,7 @@ class ModuleManager(object):
 
         if not managers:
             result = dict(
-                changed=False
+                queried=False
             )
             return result
 
@@ -1107,6 +1208,7 @@ class ModuleManager(object):
             result['queried'] = True
         else:
             result['queried'] = False
+        send_teem(F5Client(self.connection), start)
         return result
 
     def filter_excluded_facts(self):
@@ -1131,26 +1233,6 @@ class ModuleManager(object):
         managers = list(self.managers.keys()) + self.want.gather_subset
         managers.remove('all')
         self.want.update({'gather_subset': managers})
-
-    def check_valid_gather_subset(self, includes):
-        """Check that the specified subset is valid
-
-        The ``gather_subset`` parameter is specified as a "raw" field which means that
-        any Python type could technically be provided
-
-        :param includes:
-        :return:
-        """
-        keys = self.managers.keys()
-        result = []
-        for x in includes:
-            if x not in keys:
-                if x[0] == '!':
-                    if x[1:] not in keys:
-                        result.append(x)
-                else:
-                    result.append(x)
-        return result
 
     def execute_managers(self, managers):
         results = dict()
@@ -1233,5 +1315,5 @@ def main():
         module.fail_json(msg=str(ex))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

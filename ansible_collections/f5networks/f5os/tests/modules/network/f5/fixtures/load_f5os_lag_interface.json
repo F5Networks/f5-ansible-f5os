@@ -1,0 +1,52 @@
+{
+    "openconfig-interfaces:interface": [
+        {
+            "name": "foobar",
+            "config": {
+                "name": "foobar",
+                "type": "iana-if-type:ieee8023adLag",
+                "enabled": true
+            },
+            "state": {
+                "name": "foobar",
+                "type": "iana-if-type:ieee8023adLag",
+                "mtu": 9600,
+                "enabled": true,
+                "oper-status": "DOWN",
+                "f5-interface:forward-error-correction": "auto"
+            },
+            "openconfig-if-aggregate:aggregation": {
+                "config": {
+                    "lag-type": "LACP",
+                    "f5-if-aggregate:distribution-hash": "src-dst-ipport"
+                },
+                "state": {
+                    "lag-type": "LACP",
+                    "lag-speed": 0,
+                    "f5-if-aggregate:distribution-hash": "src-dst-ipport",
+                    "f5-if-aggregate:mac-address": "00:94:a1:69:4f:24",
+                    "f5-if-aggregate:lagid": 1
+                },
+                "openconfig-vlan:switched-vlan": {
+                    "config": {
+                        "native-vlan": 500,
+                        "trunk-vlans": [
+                            444,
+                            555
+                        ]
+                    }
+                }
+            },
+            "openconfig-if-ethernet:ethernet": {
+                "config": {
+                    "port-speed": "openconfig-if-ethernet:SPEED_100GB"
+                },
+                "state": {
+                    "f5-if-ethernet:flow-control": {
+                        "rx": "on"
+                    }
+                }
+            }
+        }
+    ]
+}

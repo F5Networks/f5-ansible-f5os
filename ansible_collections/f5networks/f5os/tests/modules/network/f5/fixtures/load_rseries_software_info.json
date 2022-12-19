@@ -1,0 +1,65 @@
+{
+    "f5-system-image:image": {
+        "state": {
+            "os": {
+                "os": [
+                    {
+                        "version-os": "1.0.1-14867",
+                        "status": "ready",
+                        "date": "2022-02-23",
+                        "in-use": false
+                    },
+                    {
+                        "version-os": "1.2.0-10139",
+                        "status": "ready",
+                        "date": "2022-07-28",
+                        "in-use": true
+                    }
+                ]
+            },
+            "services": {
+                "service": [
+                    {
+                        "version-service": "1.0.1-14867",
+                        "status": "ready",
+                        "date": "2022-02-23",
+                        "in-use": false
+                    },
+                    {
+                        "version-service": "1.0.0-11432",
+                        "status": "ready",
+                        "date": "2022-02-23",
+                        "in-use": false
+                    },
+                    {
+                        "version-service": "1.2.0-10139",
+                        "status": "ready",
+                        "date": "2022-07-28",
+                        "in-use": true
+                    }
+                ]
+            },
+            "iso": {
+                "iso": [
+                    {
+                        "version-iso": "1.0.1-14867",
+                        "status": "ready",
+                        "date": "2022-02-23",
+                        "in-use": false
+                    },
+                    {
+                        "version-iso": "1.2.0-10139",
+                        "status": "ready",
+                        "date": "2022-07-28",
+                        "in-use": false
+                    }
+                ]
+            },
+            "install": {
+                "install-os-version": "1.2.0-10139",
+                "install-service-version": "1.2.0-10139",
+                "install-status": "success"
+            }
+        }
+    }
+}

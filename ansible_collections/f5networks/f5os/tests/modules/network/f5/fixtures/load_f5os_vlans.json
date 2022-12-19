@@ -1,0 +1,75 @@
+{
+    "openconfig-vlan:vlans": {
+        "vlan": [
+            {
+                "vlan-id": 444,
+                "config": {
+                    "vlan-id": 444,
+                    "name": "Internal-VLAN"
+                },
+                "members": {
+                    "member": [
+                        {
+                            "state": {
+                                "interface": "foobar"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "vlan-id": 500,
+                "config": {
+                    "vlan-id": 500,
+                    "name": "HA-VLAN"
+                },
+                "members": {
+                    "member": [
+                        {
+                            "state": {
+                                "interface": "foobar"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "vlan-id": 501,
+                "config": {
+                    "vlan-id": 501,
+                    "name": "HA-VLAN-Tenant1"
+                }
+            },
+            {
+                "vlan-id": 502,
+                "config": {
+                    "vlan-id": 502,
+                    "name": "HA-VLAN-Tenant2"
+                }
+            },
+            {
+                "vlan-id": 503,
+                "config": {
+                    "vlan-id": 503,
+                    "name": "HA-VLAN-Tenant3"
+                }
+            },
+            {
+                "vlan-id": 555,
+                "config": {
+                    "vlan-id": 555,
+                    "name": "External-VLAN"
+                },
+                "members": {
+                    "member": [
+                        {
+                            "state": {
+                                "interface": "foobar"
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

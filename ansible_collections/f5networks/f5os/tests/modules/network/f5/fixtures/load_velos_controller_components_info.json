@@ -1,0 +1,1114 @@
+{
+    "openconfig-platform:components": {
+        "component": [
+            {
+                "name": "blade-1",
+                "config": {
+                    "name": "blade-1"
+                },
+                "state": {
+                    "description": "VELOS BX110",
+                    "serial-no": "bld427173s",
+                    "part-no": "403-0086-02 REV C",
+                    "empty": false,
+                    "f5-platform:nebs": {
+                        "capable": true,
+                        "enabled": false
+                    }
+                },
+                "properties": {
+                    "property": [
+                        {
+                            "name": "fw-version-bios",
+                            "config": {
+                                "name": "fw-version-bios"
+                            },
+                            "state": {
+                                "value": "2.03.008.1",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-bios-me",
+                            "config": {
+                                "name": "fw-version-bios-me"
+                            },
+                            "state": {
+                                "value": "4.0.4.128",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-cpld",
+                            "config": {
+                                "name": "fw-version-cpld"
+                            },
+                            "state": {
+                                "value": "05.04.00",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-drive-nvme0n1",
+                            "config": {
+                                "name": "fw-version-drive-nvme0n1"
+                            },
+                            "state": {
+                                "value": "EDA7602Q",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-fpga-atse0",
+                            "config": {
+                                "name": "fw-version-fpga-atse0"
+                            },
+                            "state": {
+                                "value": "7.8.5.0",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-fpga-vqf0",
+                            "config": {
+                                "name": "fw-version-fpga-vqf0"
+                            },
+                            "state": {
+                                "value": "8.9.1.2",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-app",
+                            "config": {
+                                "name": "fw-version-lop-app"
+                            },
+                            "state": {
+                                "value": "1.00.972.0.1",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-bootloader",
+                            "config": {
+                                "name": "fw-version-lop-bootloader"
+                            },
+                            "state": {
+                                "value": "1.02.868.0.1",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-sirr",
+                            "config": {
+                                "name": "fw-version-sirr"
+                            },
+                            "state": {
+                                "value": "1.1.8",
+                                "f5-platform:update-status": "none"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "blade-2",
+                "config": {
+                    "name": "blade-2"
+                },
+                "state": {
+                    "description": "VELOS BX110",
+                    "serial-no": "bld427176s",
+                    "part-no": "403-0086-02 REV C",
+                    "empty": false,
+                    "f5-platform:nebs": {
+                        "capable": true,
+                        "enabled": false
+                    }
+                },
+                "properties": {
+                    "property": [
+                        {
+                            "name": "fw-version-bios",
+                            "config": {
+                                "name": "fw-version-bios"
+                            },
+                            "state": {
+                                "value": "2.03.008.1",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-bios-me",
+                            "config": {
+                                "name": "fw-version-bios-me"
+                            },
+                            "state": {
+                                "value": "4.0.4.128",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-cpld",
+                            "config": {
+                                "name": "fw-version-cpld"
+                            },
+                            "state": {
+                                "value": "05.04.00",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-drive-nvme0n1",
+                            "config": {
+                                "name": "fw-version-drive-nvme0n1"
+                            },
+                            "state": {
+                                "value": "EDA7602Q",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-fpga-atse0",
+                            "config": {
+                                "name": "fw-version-fpga-atse0"
+                            },
+                            "state": {
+                                "value": "7.8.5.0",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-fpga-vqf0",
+                            "config": {
+                                "name": "fw-version-fpga-vqf0"
+                            },
+                            "state": {
+                                "value": "8.9.1.2",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-app",
+                            "config": {
+                                "name": "fw-version-lop-app"
+                            },
+                            "state": {
+                                "value": "1.00.972.0.1",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-bootloader",
+                            "config": {
+                                "name": "fw-version-lop-bootloader"
+                            },
+                            "state": {
+                                "value": "1.02.868.0.1",
+                                "f5-platform:update-status": "none"
+                            }
+                        },
+                        {
+                            "name": "fw-version-sirr",
+                            "config": {
+                                "name": "fw-version-sirr"
+                            },
+                            "state": {
+                                "value": "1.1.8",
+                                "f5-platform:update-status": "none"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "blade-3",
+                "config": {
+                    "name": "blade-3"
+                },
+                "state": {
+                    "serial-no": "Not Available",
+                    "part-no": "Not Available",
+                    "empty": true
+                }
+            },
+            {
+                "name": "blade-4",
+                "config": {
+                    "name": "blade-4"
+                },
+                "state": {
+                    "serial-no": "Not Available",
+                    "part-no": "Not Available",
+                    "empty": true
+                }
+            },
+            {
+                "name": "blade-5",
+                "config": {
+                    "name": "blade-5"
+                },
+                "state": {
+                    "serial-no": "Not Available",
+                    "part-no": "Not Available",
+                    "empty": true
+                }
+            },
+            {
+                "name": "blade-6",
+                "config": {
+                    "name": "blade-6"
+                },
+                "state": {
+                    "serial-no": "Not Available",
+                    "part-no": "Not Available",
+                    "empty": true
+                }
+            },
+            {
+                "name": "blade-7",
+                "config": {
+                    "name": "blade-7"
+                },
+                "state": {
+                    "serial-no": "Not Available",
+                    "part-no": "Not Available",
+                    "empty": true
+                }
+            },
+            {
+                "name": "blade-8",
+                "config": {
+                    "name": "blade-8"
+                },
+                "state": {
+                    "serial-no": "Not Available",
+                    "part-no": "Not Available",
+                    "empty": true
+                }
+            },
+            {
+                "name": "chassis",
+                "config": {
+                    "name": "chassis"
+                },
+                "state": {
+                    "description": "VELOS CX410",
+                    "serial-no": "chs700074s",
+                    "part-no": "403-0087-04 REV B",
+                    "empty": false,
+                    "f5-platform:nebs": {
+                        "capable": false
+                    }
+                },
+                "f5-platform:psu": {
+                    "state": {
+                        "redundancy-mode": "no-redundancy",
+                        "severity": "warning"
+                    }
+                }
+            },
+            {
+                "name": "controller-1",
+                "config": {
+                    "name": "controller-1"
+                },
+                "state": {
+                    "description": "VELOS SX410",
+                    "serial-no": "bld427147s",
+                    "part-no": "SUB-0881-00 REV C",
+                    "empty": false,
+                    "f5-platform:tpm-integrity-status": "Valid",
+                    "f5-platform:nebs": {
+                        "capable": true,
+                        "enabled": false
+                    },
+                    "f5-platform:memory": {
+                        "available": "24792580096",
+                        "free": "10249371648",
+                        "used-percent": 26,
+                        "platform-total": "33594753024",
+                        "platform-used": "10048442368"
+                    },
+                    "f5-platform:temperature": {
+                        "current": "26.3",
+                        "average": "26.1",
+                        "minimum": "25.9",
+                        "maximum": "26.3"
+                    },
+                    "f5-platform:disk-data": {
+                        "stats": [
+                            {
+                                "disk-data-name": "available",
+                                "disk-data-value": "272684859392"
+                            },
+                            {
+                                "disk-data-name": "capacity",
+                                "disk-data-value": "353907200000"
+                            },
+                            {
+                                "disk-data-name": "used",
+                                "disk-data-value": "63221227520"
+                            }
+                        ]
+                    }
+                },
+                "properties": {
+                    "property": [
+                        {
+                            "name": "fw-version-bios",
+                            "config": {
+                                "name": "fw-version-bios"
+                            },
+                            "state": {
+                                "value": "1.03.006.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-bios-me",
+                            "config": {
+                                "name": "fw-version-bios-me"
+                            },
+                            "state": {
+                                "value": "4.0.4.211",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-cpld",
+                            "config": {
+                                "name": "fw-version-cpld"
+                            },
+                            "state": {
+                                "value": "01.03.0A",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-drive",
+                            "config": {
+                                "name": "fw-version-drive"
+                            },
+                            "state": {
+                                "value": "EDA7602Q",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-drive-nvme0n1",
+                            "config": {
+                                "name": "fw-version-drive-nvme0n1"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lcd-app",
+                            "config": {
+                                "name": "fw-version-lcd-app"
+                            },
+                            "state": {
+                                "value": "2.02.141.00.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-lcd-bootloader",
+                            "config": {
+                                "name": "fw-version-lcd-bootloader"
+                            },
+                            "state": {
+                                "value": "2.01.109.00.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-app",
+                            "config": {
+                                "name": "fw-version-lop-app"
+                            },
+                            "state": {
+                                "value": "2.01.1176.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-bootloader",
+                            "config": {
+                                "name": "fw-version-lop-bootloader"
+                            },
+                            "state": {
+                                "value": "1.02.1019.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-sirr",
+                            "config": {
+                                "name": "fw-version-sirr"
+                            },
+                            "state": {
+                                "value": "1.1.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-vfc-app-fanCtrl1",
+                            "config": {
+                                "name": "fw-version-vfc-app-fanCtrl1"
+                            },
+                            "state": {
+                                "value": "2.00.917.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-vfc-bootloader-fanCtrl1",
+                            "config": {
+                                "name": "fw-version-vfc-bootloader-fanCtrl1"
+                            },
+                            "state": {
+                                "value": "1.02.798.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-vpc-app-psuCtrl1",
+                            "config": {
+                                "name": "fw-version-vpc-app-psuCtrl1"
+                            },
+                            "state": {
+                                "value": "2.00.781.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-vpc-app-psuCtrl2",
+                            "config": {
+                                "name": "fw-version-vpc-app-psuCtrl2"
+                            },
+                            "state": {
+                                "value": "2.00.781.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-vpc-bootloader-psuCtrl1",
+                            "config": {
+                                "name": "fw-version-vpc-bootloader-psuCtrl1"
+                            },
+                            "state": {
+                                "value": "1.02.669.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-vpc-bootloader-psuCtrl2",
+                            "config": {
+                                "name": "fw-version-vpc-bootloader-psuCtrl2"
+                            },
+                            "state": {
+                                "value": "1.02.669.0.1",
+                                "configurable": false
+                            }
+                        }
+                    ]
+                },
+                "storage": {
+                    "state": {
+                        "f5-platform:disks": {
+                            "disk": [
+                                {
+                                    "disk-name": "nvme0n1",
+                                    "state": {
+                                        "model": "SAMSUNG MZ1LB960HAJQ-00007",
+                                        "vendor": "Samsung",
+                                        "version": "EDA7602Q",
+                                        "serial-no": "S435NA0N617623",
+                                        "size": "683.00GB",
+                                        "type": "nvme",
+                                        "disk-io": {
+                                            "total-iops": "61086111",
+                                            "read-iops": "313171",
+                                            "read-merged": "533983",
+                                            "read-bytes": "16816196",
+                                            "read-latency-ms": "56757",
+                                            "write-iops": "318114789",
+                                            "write-merged": "248377979",
+                                            "write-bytes": "5779754256",
+                                            "write-latency-ms": "25593584"
+                                        }
+                                    }
+                                },
+                                {
+                                    "disk-name": "sda",
+                                    "state": {
+                                        "model": "DataTraveler",
+                                        "vendor": "Kingston",
+                                        "version": "3.0",
+                                        "serial-no": "0000000005??",
+                                        "size": "28.00GB",
+                                        "type": "usb",
+                                        "disk-io": {
+                                            "total-iops": "2262",
+                                            "read-iops": "199",
+                                            "read-merged": "0",
+                                            "read-bytes": "14018",
+                                            "read-latency-ms": "3467",
+                                            "write-iops": "0",
+                                            "write-merged": "0",
+                                            "write-bytes": "0",
+                                            "write-latency-ms": "0"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "cpu": {
+                    "state": {
+                        "f5-platform:processors": {
+                            "processor": [
+                                {
+                                    "cpu-index": 1,
+                                    "state": {
+                                        "cachesize": "2048(KB)",
+                                        "core-cnt": "8",
+                                        "freq": "2200.000(MHz)",
+                                        "stepping": "1",
+                                        "thread-cnt": "8",
+                                        "modelname": "Intel(R) Atom(TM) CPU C3758 @ 2.20GHz"
+                                    }
+                                }
+                            ]
+                        },
+                        "f5-platform:cpu-utilization": {
+                            "thread": "cpu",
+                            "current": 49,
+                            "five-second-avg": 47,
+                            "one-minute-avg": 39,
+                            "five-minute-avg": 41
+                        },
+                        "f5-platform:cpu-threads": {
+                            "cpu-thread": [
+                                {
+                                    "thread-index": 0,
+                                    "thread": "cpu0",
+                                    "current": 56,
+                                    "five-second-avg": 56,
+                                    "one-minute-avg": 40,
+                                    "five-minute-avg": 42
+                                },
+                                {
+                                    "thread-index": 1,
+                                    "thread": "cpu1",
+                                    "current": 72,
+                                    "five-second-avg": 56,
+                                    "one-minute-avg": 40,
+                                    "five-minute-avg": 41
+                                },
+                                {
+                                    "thread-index": 2,
+                                    "thread": "cpu2",
+                                    "current": 51,
+                                    "five-second-avg": 49,
+                                    "one-minute-avg": 38,
+                                    "five-minute-avg": 41
+                                },
+                                {
+                                    "thread-index": 3,
+                                    "thread": "cpu3",
+                                    "current": 39,
+                                    "five-second-avg": 39,
+                                    "one-minute-avg": 42,
+                                    "five-minute-avg": 43
+                                },
+                                {
+                                    "thread-index": 4,
+                                    "thread": "cpu4",
+                                    "current": 39,
+                                    "five-second-avg": 39,
+                                    "one-minute-avg": 40,
+                                    "five-minute-avg": 41
+                                },
+                                {
+                                    "thread-index": 5,
+                                    "thread": "cpu5",
+                                    "current": 48,
+                                    "five-second-avg": 44,
+                                    "one-minute-avg": 38,
+                                    "five-minute-avg": 40
+                                },
+                                {
+                                    "thread-index": 6,
+                                    "thread": "cpu6",
+                                    "current": 42,
+                                    "five-second-avg": 45,
+                                    "one-minute-avg": 40,
+                                    "five-minute-avg": 41
+                                },
+                                {
+                                    "thread-index": 7,
+                                    "thread": "cpu7",
+                                    "current": 43,
+                                    "five-second-avg": 48,
+                                    "one-minute-avg": 38,
+                                    "five-minute-avg": 40
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "name": "controller-2",
+                "config": {
+                    "name": "controller-2"
+                },
+                "state": {
+                    "description": "VELOS SX410",
+                    "serial-no": "bld425864s",
+                    "part-no": "SUB-0881-00 REV C",
+                    "empty": false,
+                    "f5-platform:tpm-integrity-status": "Valid",
+                    "f5-platform:nebs": {
+                        "capable": true,
+                        "enabled": false
+                    },
+                    "f5-platform:memory": {
+                        "available": "25344647168",
+                        "free": "12149559296",
+                        "used-percent": 25,
+                        "platform-total": "33594753024",
+                        "platform-used": "9469198336"
+                    },
+                    "f5-platform:temperature": {
+                        "current": "28.0",
+                        "average": "28.1",
+                        "minimum": "27.9",
+                        "maximum": "28.5"
+                    },
+                    "f5-platform:disk-data": {
+                        "stats": [
+                            {
+                                "disk-data-name": "available",
+                                "disk-data-value": "278561398784"
+                            },
+                            {
+                                "disk-data-name": "capacity",
+                                "disk-data-value": "353907200000"
+                            },
+                            {
+                                "disk-data-name": "used",
+                                "disk-data-value": "57344688128"
+                            }
+                        ]
+                    }
+                },
+                "properties": {
+                    "property": [
+                        {
+                            "name": "fw-version-bios",
+                            "config": {
+                                "name": "fw-version-bios"
+                            },
+                            "state": {
+                                "value": "1.03.006.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-bios-me",
+                            "config": {
+                                "name": "fw-version-bios-me"
+                            },
+                            "state": {
+                                "value": "4.0.4.211",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-cpld",
+                            "config": {
+                                "name": "fw-version-cpld"
+                            },
+                            "state": {
+                                "value": "01.03.0A",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-drive",
+                            "config": {
+                                "name": "fw-version-drive"
+                            },
+                            "state": {
+                                "value": "EDA7602Q",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-lcd-app",
+                            "config": {
+                                "name": "fw-version-lcd-app"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lcd-bootloader",
+                            "config": {
+                                "name": "fw-version-lcd-bootloader"
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-app",
+                            "config": {
+                                "name": "fw-version-lop-app"
+                            },
+                            "state": {
+                                "value": "2.01.1176.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-lop-bootloader",
+                            "config": {
+                                "name": "fw-version-lop-bootloader"
+                            },
+                            "state": {
+                                "value": "1.02.1019.0.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-sirr",
+                            "config": {
+                                "name": "fw-version-sirr"
+                            },
+                            "state": {
+                                "value": "1.1.1",
+                                "configurable": false
+                            }
+                        },
+                        {
+                            "name": "fw-version-vfc-app-fanCtrl1",
+                            "config": {
+                                "name": "fw-version-vfc-app-fanCtrl1"
+                            }
+                        },
+                        {
+                            "name": "fw-version-vfc-bootloader-fanCtrl1",
+                            "config": {
+                                "name": "fw-version-vfc-bootloader-fanCtrl1"
+                            }
+                        },
+                        {
+                            "name": "fw-version-vpc-app-psuCtrl1",
+                            "config": {
+                                "name": "fw-version-vpc-app-psuCtrl1"
+                            }
+                        },
+                        {
+                            "name": "fw-version-vpc-app-psuCtrl2",
+                            "config": {
+                                "name": "fw-version-vpc-app-psuCtrl2"
+                            }
+                        },
+                        {
+                            "name": "fw-version-vpc-bootloader-psuCtrl1",
+                            "config": {
+                                "name": "fw-version-vpc-bootloader-psuCtrl1"
+                            }
+                        },
+                        {
+                            "name": "fw-version-vpc-bootloader-psuCtrl2",
+                            "config": {
+                                "name": "fw-version-vpc-bootloader-psuCtrl2"
+                            }
+                        }
+                    ]
+                },
+                "storage": {
+                    "state": {
+                        "f5-platform:disks": {
+                            "disk": [
+                                {
+                                    "disk-name": "nvme0n1",
+                                    "state": {
+                                        "model": "SAMSUNG MZ1LB960HAJQ-00007",
+                                        "vendor": "Samsung",
+                                        "version": "EDA7602Q",
+                                        "serial-no": "S435NE0N109753",
+                                        "size": "683.00GB",
+                                        "type": "nvme",
+                                        "disk-io": {
+                                            "total-iops": "56553289",
+                                            "read-iops": "354444",
+                                            "read-merged": "486273",
+                                            "read-bytes": "25086759",
+                                            "read-latency-ms": "193575",
+                                            "write-iops": "293607286",
+                                            "write-merged": "251270459",
+                                            "write-bytes": "5541801065",
+                                            "write-latency-ms": "19761326"
+                                        }
+                                    }
+                                },
+                                {
+                                    "disk-name": "sda",
+                                    "state": {
+                                        "model": "DataTraveler",
+                                        "vendor": "Kingston",
+                                        "version": "3.0",
+                                        "serial-no": "0000000005??",
+                                        "size": "28.00GB",
+                                        "type": "usb",
+                                        "disk-io": {
+                                            "total-iops": "1335",
+                                            "read-iops": "205",
+                                            "read-merged": "0",
+                                            "read-bytes": "15554",
+                                            "read-latency-ms": "1862",
+                                            "write-iops": "0",
+                                            "write-merged": "0",
+                                            "write-bytes": "0",
+                                            "write-latency-ms": "0"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "cpu": {
+                    "state": {
+                        "f5-platform:processors": {
+                            "processor": [
+                                {
+                                    "cpu-index": 1,
+                                    "state": {
+                                        "cachesize": "2048(KB)",
+                                        "core-cnt": "8",
+                                        "freq": "2200.000(MHz)",
+                                        "stepping": "1",
+                                        "thread-cnt": "8",
+                                        "modelname": "Intel(R) Atom(TM) CPU C3758 @ 2.20GHz"
+                                    }
+                                }
+                            ]
+                        },
+                        "f5-platform:cpu-utilization": {
+                            "thread": "cpu",
+                            "current": 52,
+                            "five-second-avg": 37,
+                            "one-minute-avg": 22,
+                            "five-minute-avg": 23
+                        },
+                        "f5-platform:cpu-threads": {
+                            "cpu-thread": [
+                                {
+                                    "thread-index": 0,
+                                    "thread": "cpu0",
+                                    "current": 52,
+                                    "five-second-avg": 39,
+                                    "one-minute-avg": 23,
+                                    "five-minute-avg": 24
+                                },
+                                {
+                                    "thread-index": 1,
+                                    "thread": "cpu1",
+                                    "current": 60,
+                                    "five-second-avg": 44,
+                                    "one-minute-avg": 22,
+                                    "five-minute-avg": 23
+                                },
+                                {
+                                    "thread-index": 2,
+                                    "thread": "cpu2",
+                                    "current": 56,
+                                    "five-second-avg": 33,
+                                    "one-minute-avg": 25,
+                                    "five-minute-avg": 23
+                                },
+                                {
+                                    "thread-index": 3,
+                                    "thread": "cpu3",
+                                    "current": 55,
+                                    "five-second-avg": 48,
+                                    "one-minute-avg": 22,
+                                    "five-minute-avg": 23
+                                },
+                                {
+                                    "thread-index": 4,
+                                    "thread": "cpu4",
+                                    "current": 37,
+                                    "five-second-avg": 30,
+                                    "one-minute-avg": 21,
+                                    "five-minute-avg": 25
+                                },
+                                {
+                                    "thread-index": 5,
+                                    "thread": "cpu5",
+                                    "current": 74,
+                                    "five-second-avg": 36,
+                                    "one-minute-avg": 24,
+                                    "five-minute-avg": 23
+                                },
+                                {
+                                    "thread-index": 6,
+                                    "thread": "cpu6",
+                                    "current": 40,
+                                    "five-second-avg": 30,
+                                    "one-minute-avg": 20,
+                                    "five-minute-avg": 23
+                                },
+                                {
+                                    "thread-index": 7,
+                                    "thread": "cpu7",
+                                    "current": 44,
+                                    "five-second-avg": 34,
+                                    "one-minute-avg": 20,
+                                    "five-minute-avg": 22
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "name": "fantray-1",
+                "config": {
+                    "name": "fantray-1"
+                },
+                "state": {
+                    "firmware-version": "1.02.798.0.1",
+                    "software-version": "2.00.917.0.1",
+                    "serial-no": "sub0772g006e",
+                    "part-no": "SUB-0772-05 REV B",
+                    "empty": false
+                },
+                "properties": {
+                    "f5-platform:fantray-state": {
+                        "fantray-temperature": "32.0",
+                        "inlet-fan-1-speed": 6518,
+                        "inlet-fan-2-speed": 6518,
+                        "inlet-fan-3-speed": 6518,
+                        "exhaust-fan-1-speed": 6533,
+                        "exhaust-fan-2-speed": 6540,
+                        "exhaust-fan-3-speed": 6503
+                    }
+                }
+            },
+            {
+                "name": "lcd",
+                "config": {
+                    "name": "lcd"
+                },
+                "state": {
+                    "serial-no": "sub0811g0050",
+                    "part-no": "SUB-0811-03 REV C",
+                    "empty": false
+                }
+            },
+            {
+                "name": "psu-1",
+                "config": {
+                    "name": "psu-1"
+                },
+                "state": {
+                    "serial-no": "20204BPJ0013",
+                    "part-no": "SPAFFIV-07",
+                    "empty": false
+                },
+                "properties": {
+                    "f5-platform:psu-state": {
+                        "psu-current-in": "2.476",
+                        "psu-current-out": "38.25",
+                        "psu-power-in": "500.5",
+                        "psu-power-out": "473.0",
+                        "psu-voltage-in": "204.75",
+                        "psu-voltage-out": "12.359",
+                        "psu-temperature-1": "22.7",
+                        "psu-temperature-2": "38.2",
+                        "psu-temperature-3": "35.2",
+                        "psu-fan-1-speed": 7392,
+                        "psu-fan-2-speed": 6976
+                    }
+                }
+            },
+            {
+                "name": "psu-2",
+                "config": {
+                    "name": "psu-2"
+                },
+                "state": {
+                    "serial-no": "20203BPJ0008",
+                    "part-no": "SPAFFIV-07",
+                    "empty": false
+                },
+                "properties": {
+                    "f5-platform:psu-state": {
+                        "psu-current-in": "2.632",
+                        "psu-current-out": "41.062",
+                        "psu-power-in": "543.0",
+                        "psu-power-out": "507.0",
+                        "psu-voltage-in": "206.0",
+                        "psu-voltage-out": "12.331",
+                        "psu-temperature-1": "22.7",
+                        "psu-temperature-2": "37.7",
+                        "psu-temperature-3": "35.2",
+                        "psu-fan-1-speed": 7456,
+                        "psu-fan-2-speed": 7008
+                    }
+                }
+            },
+            {
+                "name": "psu-3",
+                "config": {
+                    "name": "psu-3"
+                },
+                "state": {
+                    "serial-no": "Not Available",
+                    "part-no": "Not Available",
+                    "empty": true
+                }
+            },
+            {
+                "name": "psu-4",
+                "config": {
+                    "name": "psu-4"
+                },
+                "state": {
+                    "serial-no": "Not Available",
+                    "part-no": "Not Available",
+                    "empty": true
+                }
+            },
+            {
+                "name": "psu-controller-1",
+                "config": {
+                    "name": "psu-controller-1"
+                },
+                "state": {
+                    "firmware-version": "1.02.669.0.1",
+                    "software-version": "2.00.781.0.1",
+                    "serial-no": "sub0759g00ch",
+                    "part-no": "SUB-0759-05 REV A",
+                    "empty": false
+                }
+            },
+            {
+                "name": "psu-controller-2",
+                "config": {
+                    "name": "psu-controller-2"
+                },
+                "state": {
+                    "firmware-version": "1.02.669.0.1",
+                    "software-version": "2.00.781.0.1",
+                    "serial-no": "sub0759g00cp",
+                    "part-no": "SUB-0759-05 REV A",
+                    "empty": false
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "f5-tenant-images:images": {
+        "image": [
+            {
+                "name": "BIGIP-15.1.5-0.0.10.ALL-F5OS.qcow2.zip.bundle",
+                "in-use": true,
+                "status": "verified"
+            },
+            {
+                "name": "BIGIP-15.1.6.1-0.0.10.ALL-F5OS.qcow2.zip.bundle",
+                "in-use": false,
+                "status": "verified"
+            }
+        ]
+    }
+}

@@ -13,7 +13,7 @@ DOCUMENTATION = r'''
 module: f5os_lag
 short_description: Manage LAG interfaces on F5OS based systems
 description:
-  - Manage LAG interfaces on F5OS like VELOS partitions or rSeries platforms.
+  - Manage LAG interfaces on F5OS systems like VELOS partitions or rSeries platforms.
 version_added: "1.0.0"
 options:
   name:
@@ -128,12 +128,12 @@ name:
   type: str
   sample: new_name
 trunk_vlans:
-  description: Trunk vlans to attach to LAG interface
+  description: Trunk VLANs to attach to LAG interface
   returned: changed
   type: list
   sample: [444,555]
 native_vlan:
-  description: Native vlan to attach to LAG interface
+  description: Native VLAN to attach to LAG interface
   returned: changed
   type: int
   sample: 222
@@ -222,7 +222,7 @@ class ApiParameters(Parameters):
 class ModuleParameters(Parameters):
     @staticmethod
     def _validate_vlan_ids(vlan):
-        if 0 > vlan > 4095:
+        if 0 > vlan or vlan > 4095:
             raise F5ModuleError(
                 "Valid 'vlan_id' must be in range 0 - 4095."
             )
@@ -272,7 +272,7 @@ class ModuleParameters(Parameters):
 
 
 class Changes(Parameters):
-    def to_return(self):
+    def to_return(self):  # pragma: no cover
         result = {}
         try:
             for returnable in self.returnables:
@@ -315,12 +315,12 @@ class Difference(object):
             attr2 = getattr(self.have, param)
             if attr1 != attr2:
                 return attr1
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             return attr1
 
     @property
-    def trunk_vlan(self):
-        return cmp_simple_list(self.want.trunk_vlan, self.have.trunk_vlan)
+    def trunk_vlans(self):
+        return cmp_simple_list(self.want.trunk_vlans, self.have.trunk_vlans)
 
     @property
     def config_members(self):
@@ -353,7 +353,7 @@ class ModuleManager(object):
             if change is None:
                 continue
             else:
-                if isinstance(change, dict):
+                if isinstance(change, dict):  # pragma: no cover
                     changed.update(change)
                 else:
                     changed[k] = change
@@ -362,7 +362,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):
+    def _announce_deprecations(self, result):  # pragma: no cover
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -412,13 +412,13 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.update_on_device()
         return True
 
     def remove(self):
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.remove_from_device()
         if self.exists():
@@ -429,7 +429,7 @@ class ModuleManager(object):
         if self.want.lag_type is None:
             raise F5ModuleError("The parameter lag_type must not be empty when creating new LAG interface.")
         self._set_changed_options()
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.create_on_device()
         return True
@@ -549,8 +549,6 @@ class ModuleManager(object):
     def _encode_interface(self, intfname):
         """
         Helper method -- Encode interface name (/ -> %2F).
-        Use this method after confirming interface is
-            valid using self.verify(interface: str)
         :return interface_encoded: str
         """
         return quote(intfname, safe='')
@@ -610,10 +608,10 @@ class ModuleManager(object):
             return False
         if response['code'] == 404:
             return False
-        if response['contents']['openconfig-if-aggregate:aggregate-id'] == self.want.name:
-            return True
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
+        if response['contents']['openconfig-if-aggregate:aggregate-id'] == self.want.name:
+            return True
 
 
 class ArgumentSpec(object):
@@ -662,5 +660,5 @@ def main():
         module.fail_json(msg=str(ex))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

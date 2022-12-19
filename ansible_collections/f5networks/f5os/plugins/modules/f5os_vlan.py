@@ -19,10 +19,10 @@ options:
   name:
     description:
       - Specifies the name of the VLAN to configure on the F5OS platform.
-      - Parameter is required when creating a resource.
+      - This parameter is required when creating a resource.
       - The first character must be a letter, alphanumeric characters are allowed.
-      - Periods, commas, hyphens and underscores are allowed.
-      - The name cannot exceed 58 characters in length.
+      - Periods, commas, hyphens, and underscores are allowed.
+      - The name cannot exceed 58 characters.
     type: str
   vlan_id:
     description:
@@ -155,7 +155,7 @@ class ModuleParameters(Parameters):
             raise F5ModuleError('The name parameter must begin with a letter.')
 
 
-class Changes(Parameters):
+class Changes(Parameters):  # pragma: no cover
     def to_return(self):
         result = {}
         try:
@@ -186,7 +186,7 @@ class ReportableChanges(Changes):
     pass
 
 
-class Difference(object):
+class Difference(object):  # pragma: no cover
     def __init__(self, want, have=None):
         self.want = want
         self.have = have
@@ -206,12 +206,6 @@ class Difference(object):
                 return attr1
         except AttributeError:
             return attr1
-
-    def vlan_id(self):
-        if self.want.vlan_id != self.have.vlan_id:
-            raise F5ModuleError(
-                "The C(vlan_id) cannot be updated once vlan is created."
-            )
 
 
 class ModuleManager(object):
@@ -240,7 +234,7 @@ class ModuleManager(object):
             if change is None:
                 continue
             else:
-                if isinstance(change, dict):
+                if isinstance(change, dict):  # pragma: no cover
                     changed.update(change)
                 else:
                     changed[k] = change
@@ -249,7 +243,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):
+    def _announce_deprecations(self, result):  # pragma: no cover
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -299,13 +293,13 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.update_on_device()
         return True
 
     def remove(self):
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.remove_from_device()
         if self.exists():
@@ -314,7 +308,7 @@ class ModuleManager(object):
 
     def create(self):
         self._set_changed_options()
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.create_on_device()
         return True
@@ -403,5 +397,5 @@ def main():
         module.fail_json(msg=str(ex))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

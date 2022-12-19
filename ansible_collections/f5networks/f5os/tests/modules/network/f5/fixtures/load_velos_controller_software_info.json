@@ -1,0 +1,25 @@
+{
+    "f5-system-controller-image:image": {
+        "config": {
+            "iso-version": "1.5.1-10014"
+        },
+        "state": {
+            "controllers": {
+                "controller": [
+                    {
+                        "number": 1,
+                        "os-version": "1.5.1-10014",
+                        "service-version": "1.5.1-10014",
+                        "install-status": "success"
+                    },
+                    {
+                        "number": 2,
+                        "os-version": "1.5.1-10014",
+                        "service-version": "1.5.1-10014",
+                        "install-status": "success"
+                    }
+                ]
+            }
+        }
+    }
+}

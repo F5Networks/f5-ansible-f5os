@@ -124,11 +124,12 @@ import traceback
 
 try:
     import paramiko
-except ImportError:
-    IMPORT_ERROR = traceback.format_exc()
-    HAS_SSH = False
+except ImportError:  # pragma: no cover
+    paramiko = None
+    PARAMIKO_IMPORT_ERROR = traceback.format_exc()
+    HAS_PARAMIKO = False
 else:
-    HAS_SSH = True
+    HAS_PARAMIKO = True
 
 from ansible.module_utils.basic import (
     AnsibleModule, missing_required_lib
@@ -147,7 +148,7 @@ paramiko_logger = logging.getLogger("paramiko.transport")
 setattr(paramiko_logger, 'disabled', True)
 
 
-def hard_timeout(module, want, start):
+def hard_timeout(module, want, start):  # pragma: no cover
     elapsed = datetime.datetime.utcnow() - start
     module.fail_json(
         msg=want.msg or "Timeout when waiting for Velos Partition", elapsed=elapsed.seconds
@@ -171,14 +172,14 @@ class Parameters(AnsibleF5Parameters):
 
     ]
 
-    def to_return(self):
+    def to_return(self):  # pragma: no cover
         result = {}
         try:
             for returnable in self.returnables:
                 result[returnable] = getattr(self, returnable)
             result = self._filter_params(result)
         except Exception:
-            pass
+            raise
         return result
 
 
@@ -191,7 +192,7 @@ class ModuleManager(object):
         self.changes = Parameters()
         self.have = None
 
-    def _announce_deprecations(self, result):
+    def _announce_deprecations(self, result):  # pragma: no cover
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -229,7 +230,6 @@ class ModuleManager(object):
         # signal.alarm(int(self.want.timeout))
 
         start = datetime.datetime.utcnow()
-        # partition_state = {}
         if self.want.delay:
             time.sleep(float(self.want.delay))
         end = start + datetime.timedelta(seconds=int(self.want.timeout))
@@ -257,22 +257,19 @@ class ModuleManager(object):
                 if self.want.state == 'running' and self.partition_is_running(partition_state):
                     break
 
-                # elif self.want.state == 'removed' and self.partition_is_removed(partition_state):
-                #     break
-
                 elif self.want.state == 'ssh-ready' and self.partition_ssh_ready(partition_data):
                     break
 
                 # No match - log state data
                 self.module.debug(json.dumps(partition_data))
 
-            except Exception as ex:
+            except Exception as ex:  # pragma: no cover
                 self.module.debug(str(ex))
                 continue
         else:
             elapsed = datetime.datetime.utcnow() - start
             self.module.fail_json(
-                msg=self.want.msg or "Timeout waiting for desired parition state", elapsed=elapsed.seconds,
+                msg=self.want.msg or "Timeout waiting for desired partition state", elapsed=elapsed.seconds,
                 partition_state=partition_state
             )
         return partition_state
@@ -344,7 +341,7 @@ class ModuleManager(object):
         finally:
             try:
                 ssh_client.close()
-            except Exception:
+            except Exception:  # pragma: no cover
                 pass
 
         return ssh_ready
@@ -375,8 +372,10 @@ def main():
         argument_spec=spec.argument_spec,
         supports_check_mode=spec.supports_check_mode,
     )
-    if not HAS_SSH:
-        module.fail_json(msg=missing_required_lib('another_library'), exception=IMPORT_ERROR)
+    if not HAS_PARAMIKO:
+        module.fail_json(
+            msg=missing_required_lib('paramiko'), exception=PARAMIKO_IMPORT_ERROR
+        )
 
     try:
         mm = ModuleManager(module=module, connection=Connection(module._socket_path))
@@ -386,5 +385,5 @@ def main():
         module.fail_json(msg=str(ex))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

@@ -1,0 +1,14 @@
+{
+    "f5-system-licensing:licensing": {
+        "config": {
+            "registration-key": {
+                "base": "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+            },
+            "dossier": "9adf27b9cf444ef0897f9bbd7ac9d4c39adf27b9cf444ef0897f9bbd7ac9d4c39adf27b9cf444ef0897f9bbd7ac9d4c39adf27b9cf444ef0897f9bbd7ac9d4c3",
+            "license": "FAKE INFO"
+        },
+        "state": {
+            "license": "\nLicensed version    1.0.1\nRegistration Key    XXXXX-XXXXX-XXXXX-XXXXX-XXXXX\nLicensed date       2022/09/08\nLicense start       2022/09/07\nLicense end         2022/11/13\nService check date  2022/10/14\n"
+        }
+    }
+}

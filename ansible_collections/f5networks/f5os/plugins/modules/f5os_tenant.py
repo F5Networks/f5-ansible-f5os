@@ -13,7 +13,7 @@ DOCUMENTATION = r'''
 module: f5os_tenant
 short_description: Manage F5OS tenants
 description:
-  - Manage F5OS tenants on Velos Partitions and rSeries platforms.
+  - Manage F5OS tenants on VELOS Partitions and rSeries platforms.
 version_added: "1.0.0"
 options:
   name:
@@ -22,7 +22,7 @@ options:
       - The first character must be a letter.
       - Only lowercase alphanumeric characters are allowed.
       - No special or extended characters are allowed except for hyphens.
-      - The name cannot exceed 50 characters in length.
+      - The name cannot exceed 50 characters.
     type: str
     required: True
   image_name:
@@ -32,7 +32,7 @@ options:
     type: str
   nodes:
     description:
-      - List of integers. Specifies which blades C(nodes) the tenants are deployed on.
+      - List of integers. Specifies on which blades C(nodes) the tenants are deployed.
       - Required for create operations.
       - For single blade platforms like rSeries only the value of 1 should be provided.
     type: list
@@ -84,7 +84,7 @@ options:
     type: int
   cryptos:
     description:
-      - Should crypto and compression hardware offload be enabled on the tenant.
+      - Whether crypto and compression hardware offload should be enabled on the tenant.
       - We recommend it is enabled, otherwise crypto and compression may be processed in CPU.
     type: str
     choices:
@@ -293,7 +293,6 @@ class ApiParameters(Parameters):
 
 
 class ModuleParameters(Parameters):
-
     @property
     def name(self):
         if self._values['name'] is None:
@@ -373,7 +372,7 @@ class ModuleParameters(Parameters):
 
 
 class Changes(Parameters):
-    def to_return(self):
+    def to_return(self):  # pragma: no cover
         result = {}
         try:
             for returnable in self.returnables:
@@ -392,7 +391,7 @@ class ReportableChanges(Changes):
     pass
 
 
-class Difference(object):
+class Difference(object):  # pragma: no cover
     def __init__(self, want, have=None):
         self.want = want
         self.have = have
@@ -440,7 +439,7 @@ class ModuleManager(object):
             if change is None:
                 continue
             else:
-                if isinstance(change, dict):
+                if isinstance(change, dict):  # pragma: no cover
                     changed.update(change)
                 else:
                     changed[k] = change
@@ -449,7 +448,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):
+    def _announce_deprecations(self, result):  # pragma: no cover
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -499,13 +498,13 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.update_on_device()
         return True
 
     def remove(self):
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.remove_from_device()
         if self.exists():
@@ -514,7 +513,7 @@ class ModuleManager(object):
 
     def create(self):
         self._set_changed_options()
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.create_on_device()
         return True
@@ -614,5 +613,5 @@ def main():
         module.fail_json(msg=str(ex))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

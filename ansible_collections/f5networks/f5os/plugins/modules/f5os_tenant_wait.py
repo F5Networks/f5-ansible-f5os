@@ -13,7 +13,7 @@ DOCUMENTATION = r'''
 module: f5os_tenant_wait
 short_description: Wait for a F5OS tenant condition before continuing
 description:
-  - Wait for a F5OS tenant to be C(configured), C(provisioned) or C(deployed).
+  - Wait for a F5OS tenant to be C(configured), C(provisioned), or C(deployed).
 version_added: "1.0.0"
 options:
   name:
@@ -162,11 +162,12 @@ import traceback
 
 try:
     import paramiko
-except ImportError:
-    IMPORT_ERROR = traceback.format_exc()
-    HAS_SSH = False
+except ImportError:  # pragma: no cover
+    paramiko = None
+    PARAMIKO_IMPORT_ERROR = traceback.format_exc()
+    HAS_PARAMIKO = False
 else:
-    HAS_SSH = True
+    HAS_PARAMIKO = True
 
 from ansible.module_utils.basic import (
     AnsibleModule, missing_required_lib
@@ -186,10 +187,10 @@ paramiko_logger = logging.getLogger("paramiko.transport")
 setattr(paramiko_logger, 'disabled', True)
 
 
-def hard_timeout(module, want, start):
+def hard_timeout(module, want, start):  # pragma: no cover
     elapsed = datetime.datetime.utcnow() - start
     module.fail_json(
-        msg=want.msg or "Timeout when waiting for Velos Tenant", elapsed=elapsed.seconds
+        msg=want.msg or "Timeout when waiting for F5OS Tenant", elapsed=elapsed.seconds
     )
 
 
@@ -211,7 +212,7 @@ class Parameters(AnsibleF5Parameters):
 
     ]
 
-    def to_return(self):
+    def to_return(self):  # pragma: no cover
         result = {}
         try:
             for returnable in self.returnables:
@@ -231,7 +232,7 @@ class ModuleManager(object):
         self.changes = Parameters()
         self.have = None
 
-    def _announce_deprecations(self, result):
+    def _announce_deprecations(self, result):  # pragma: no cover
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -307,7 +308,7 @@ class ModuleManager(object):
                 # No match - log state data
                 self.module.debug(json.dumps(tenant_data))
 
-            except Exception as ex:
+            except Exception as ex:  # pragma: no cover
                 self.module.debug(str(ex))
                 continue
         else:
@@ -508,7 +509,7 @@ class ModuleManager(object):
         finally:
             try:
                 ssh_client.close()
-            except Exception:
+            except Exception:  # pragma: no cover
                 pass
 
         return ssh_ready
@@ -540,8 +541,10 @@ def main():
         supports_check_mode=spec.supports_check_mode,
     )
 
-    if not HAS_SSH:
-        module.fail_json(msg=missing_required_lib('another_library'), exception=IMPORT_ERROR)
+    if not HAS_PARAMIKO:
+        module.fail_json(
+            msg=missing_required_lib('paramiko'), exception=PARAMIKO_IMPORT_ERROR
+        )
 
     try:
         mm = ModuleManager(module=module, connection=Connection(module._socket_path))
@@ -551,5 +554,5 @@ def main():
         module.fail_json(msg=str(ex))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

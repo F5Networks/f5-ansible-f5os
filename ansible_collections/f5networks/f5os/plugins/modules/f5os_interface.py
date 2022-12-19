@@ -14,7 +14,7 @@ DOCUMENTATION = r'''
 module: f5os_interface
 short_description: Manage network interfaces on F5OS based systems
 description:
-  - Manage network interfaces on F5OS like VELOS partitions or rSeries platforms.
+  - Manage network interfaces on F5OS systems like VELOS partitions or rSeries platforms.
 version_added: "1.0.0"
 options:
   name:
@@ -120,12 +120,12 @@ name:
   type: str
   sample: 1.0
 trunk_vlans:
-  description: Trunk vlans to attach to interface
+  description: Trunk VLANs to attach to the interface
   returned: changed
   type: list
   sample: [444,555]
 native_vlan:
-  description: Native vlan to attach to interface
+  description: Native VLAN to attach to the interface
   returned: changed
   type: int
   sample: 222
@@ -195,7 +195,7 @@ class ApiParameters(Parameters):
 class ModuleParameters(Parameters):
     @staticmethod
     def _validate_vlan_ids(vlan):
-        if 0 > vlan > 4095:
+        if 0 > vlan or vlan > 4095:
             raise F5ModuleError(
                 "Valid 'vlan_id' must be in range 0 - 4095."
             )
@@ -230,7 +230,7 @@ class ModuleParameters(Parameters):
 
 
 class Changes(Parameters):
-    def to_return(self):
+    def to_return(self):  # pragma: no cover
         result = {}
         try:
             for returnable in self.returnables:
@@ -271,12 +271,12 @@ class Difference(object):
             attr2 = getattr(self.have, param)
             if attr1 != attr2:
                 return attr1
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             return attr1
 
     @property
-    def trunk_vlan(self):
-        return cmp_simple_list(self.want.trunk_vlan, self.have.trunk_vlan)
+    def trunk_vlans(self):
+        return cmp_simple_list(self.want.trunk_vlans, self.have.trunk_vlans)
 
 
 class ModuleManager(object):
@@ -297,7 +297,7 @@ class ModuleManager(object):
             if change is None:
                 continue
             else:
-                if isinstance(change, dict):
+                if isinstance(change, dict):  # pragma: no cover
                     changed.update(change)
                 else:
                     changed[k] = change
@@ -306,7 +306,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):
+    def _announce_deprecations(self, result):  # pragma: no cover
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -360,14 +360,14 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.update_on_device()
         return True
 
     def remove(self):
         self.have = self.read_current_from_device()
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.remove_from_device()
         return True
@@ -383,25 +383,6 @@ class ModuleManager(object):
             raise F5ModuleError(response['contents'])
 
         return True
-
-    @staticmethod
-    def _populate_vlans(params, intf):
-        if params.get('trunk_vlans', None):
-            trunk_vlan = {
-                "trunk-vlans": params['trunk_vlans'],
-            }
-            intf['openconfig-if-ethernet:ethernet']['openconfig-vlan:switched-vlan'] = dict(config=trunk_vlan)
-        if params.get('native_vlan', None):
-            native_vlan = {
-                "native-vlan": params['native_vlan'],
-            }
-            if 'config' in intf['openconfig-if-ethernet:ethernet']['openconfig-vlan:switched-vlan']:
-                intf['openconfig-if-ethernet:ethernet']['openconfig-vlan:switched-vlan']['config'].update(
-                    native_vlan
-                )
-            intf['openconfig-if-ethernet:ethernet']['openconfig-vlan:switched-vlan'] = dict(
-                config=native_vlan)
-        return intf
 
     def update_on_device(self):
         params = self.changes.to_return()
@@ -523,5 +504,5 @@ def main():
         module.fail_json(msg=str(ex))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

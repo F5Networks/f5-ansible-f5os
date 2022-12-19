@@ -14,6 +14,8 @@ from datetime import datetime
 from unittest.mock import Mock, PropertyMock, patch, mock_open
 from unittest import TestCase
 
+from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.six import StringIO
 from ansible.playbook.play_context import PlayContext
 from ansible.plugins.loader import connection_loader
 
@@ -148,7 +150,11 @@ class TestTeemClient(TestCase):
     @patch('ansible_collections.f5networks.f5os.plugins.module_utils.teem.open_url')
     def test_teem_client_send(self, patched):
         self.connection.httpapi._display_message = Mock()
-        patched.return_value = FakeHTTPResponse(200)
+        patched.side_effect = [
+            FakeHTTPResponse(200),
+            HTTPError('https://bigip.local/mgmt/tm/sys/', 400, '', {}, StringIO('{"errorMessage": "ERROR"}')),
+            FakeHTTPResponse(100)
+        ]
 
         teem = TeemClient(self.client, self.start_time)
         teem.send()
@@ -158,6 +164,12 @@ class TestTeemClient(TestCase):
         assert patched.call_args[1]['headers']['F5-ApiKey'] == TEEM_KEY
         assert CURRENT_COLL_VERSION in patched.call_args[1]['data']
         assert self.start_time in patched.call_args[1]['data']
+
+        result = teem.send()
+        assert result is None
+
+        result = teem.send()
+        assert result is False
 
 
 class TestOtherFunctions(TestCase):
@@ -216,7 +228,7 @@ class TestOtherFunctions(TestCase):
     @patch('builtins.open', new_callable=mock_open)
     def test_in_docker_except(self, mo):
         ioerror = mo.return_value
-        ioerror.read.side_effect = IOError('[Errno 2] No such file or directory')
+        ioerror.readlines.side_effect = IOError('[Errno 2] No such file or directory')
         result = in_docker()
 
         assert result is False

@@ -1,0 +1,10 @@
+---
+bug_fixes:
+  - f5os_device_info - removed legacy functions and corrected TEEM call placement
+  - f5os_interface - fixed invalid if statement in validate_vlan_ids function
+  - f5os_lag - fixed invalid if statement in validate_vlan_ids function
+  - velos_partition - fixed remove_slot_from_partition method throwing exception when slots parameter was none
+
+minor_changes:
+  - velos_partition - refactored ipv4_mgmt_address, ipv4_mgmt_gateway, ipv6_mgmt_address and ipv6_mgmt_gateway properties
+  - velos_partition - refactored mgmt-ip parameter parsing in update_on_device method

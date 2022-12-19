@@ -11,14 +11,19 @@ import os
 
 from ansible.module_utils.basic import AnsibleModule
 
+from ansible_collections.f5networks.f5os.plugins.modules import velos_partition_change_password
 from ansible_collections.f5networks.f5os.plugins.modules.velos_partition_change_password import (
     ModuleParameters, ArgumentSpec, ModuleManager
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
 from ansible_collections.f5networks.f5os.tests.compat import unittest
-from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
-from ansible_collections.f5networks.f5os.tests.modules.utils import set_module_args
+from ansible_collections.f5networks.f5os.tests.compat.mock import (
+    Mock, patch
+)
+from ansible_collections.f5networks.f5os.tests.modules.utils import (
+    set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
+)
 
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -52,14 +57,31 @@ class TestParameters(unittest.TestCase):
         )
 
         p = ModuleParameters(params=args)
-        assert p.user_name == 'foo'
-        assert p.old_password == 'barfoo'
-        assert p.new_password == 'abc123@!'
+
+        self.assertEqual(p.user_name, 'foo')
+        self.assertEqual(p.old_password, 'barfoo')
+        self.assertEqual(p.new_password, 'abc123@!')
+
+    def test_new_password_raises(self):
+        args = dict(
+            new_password='foobar',
+            old_password='foobar'
+        )
+
+        p = ModuleParameters(params=args)
+        with self.assertRaises(F5ModuleError) as err:
+            p.new_password()
+
+        self.assertIn('Old and new password cannot be the same', err.exception.args[0])
 
 
 class TestManager(unittest.TestCase):
     def setUp(self):
         self.spec = ArgumentSpec()
+        self.mock_module_helper = patch.multiple(AnsibleModule,
+                                                 exit_json=exit_json,
+                                                 fail_json=fail_json)
+        self.mock_module_helper.start()
         self.p1 = patch(
             'ansible_collections.f5networks.f5os.plugins.modules.velos_partition_change_password.F5Client'
         )
@@ -74,6 +96,7 @@ class TestManager(unittest.TestCase):
     def tearDown(self):
         self.p1.stop()
         self.p2.stop()
+        self.mock_module_helper.stop()
 
     def test_change_password_success(self, *args):
         set_module_args(dict(
@@ -94,9 +117,12 @@ class TestManager(unittest.TestCase):
         mm.client.post = Mock(return_value=dict(code=204, contents=''))
 
         results = mm.exec_module()
-        assert results['changed'] is True
-        assert mm.client.post.call_args_list[0][0][0] == '/authentication/users/user=foo/config/change-password'
-        assert mm.client.post.call_args[1]['data'] == expected
+
+        self.assertTrue(results['changed'])
+        self.assertEqual(
+            '/authentication/users/user=foo/config/change-password', mm.client.post.call_args_list[0][0][0]
+        )
+        self.assertDictEqual(mm.client.post.call_args[1]['data'], expected)
 
     def test_change_password_fail(self, *args):
         set_module_args(dict(
@@ -117,7 +143,7 @@ class TestManager(unittest.TestCase):
         with self.assertRaises(F5ModuleError) as err:
             mm.exec_module()
 
-        assert 'Incorrect old password' in str(err.exception)
+        self.assertIn('Incorrect old password', err.exception.args[0]['errors']['error'][0]['error-message'])
 
     def test_change_password_same_password_raises(self, *args):
         set_module_args(dict(
@@ -137,5 +163,36 @@ class TestManager(unittest.TestCase):
         with self.assertRaises(F5ModuleError) as err:
             mm.exec_module()
 
-        assert 'Old and new password cannot be the same.' in str(err.exception)
-        assert mm.client.post.call_count == 0
+        self.assertIn('Old and new password cannot be the same.', err.exception.args[0])
+        self.assertEqual(mm.client.post.call_count, 0)
+
+    @patch.object(velos_partition_change_password, 'Connection')
+    @patch.object(velos_partition_change_password.ModuleManager, 'exec_module', Mock(return_value={'changed': False}))
+    def test_main_function_success(self, *args):
+        set_module_args(dict(
+            user_name='foo',
+            old_password='barfoo',
+            new_password='abc123@!'
+        ))
+
+        with self.assertRaises(AnsibleExitJson) as result:
+            velos_partition_change_password.main()
+
+        self.assertFalse(result.exception.args[0]['changed'])
+
+    @patch.object(velos_partition_change_password, 'Connection')
+    @patch.object(velos_partition_change_password.ModuleManager, 'exec_module',
+                  Mock(side_effect=F5ModuleError('This module has failed.'))
+                  )
+    def test_main_function_failed(self, *args):
+        set_module_args(dict(
+            user_name='foo',
+            old_password='barfoo',
+            new_password='abc123@!'
+        ))
+
+        with self.assertRaises(AnsibleFailJson) as result:
+            velos_partition_change_password.main()
+
+        self.assertTrue(result.exception.args[0]['failed'])
+        self.assertIn('This module has failed', result.exception.args[0]['msg'])

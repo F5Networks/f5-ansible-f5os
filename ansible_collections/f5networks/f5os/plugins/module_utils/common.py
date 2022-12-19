@@ -16,13 +16,6 @@ from ansible.module_utils.parsing.convert_bool import (
 from collections import defaultdict
 
 
-def is_empty_list(seq):
-    if len(seq) == 1:
-        if seq[0] == '' or seq[0] == 'none':
-            return True
-    return False
-
-
 def fq_name(partition, value, sub_path=''):
     """Returns a 'Fully Qualified' name
 
@@ -81,13 +74,6 @@ def fq_name(partition, value, sub_path=''):
     return value
 
 
-# Fully Qualified name (with partition) for a list
-def fq_list_names(partition, list_names):
-    if list_names is None:
-        return None
-    return map(lambda x: fq_name(partition, x), list_names)
-
-
 def flatten_boolean(value):
     truthy = list(BOOLEANS_TRUE) + ['enabled', 'True', 'true']
     falsey = list(BOOLEANS_FALSE) + ['disabled', 'False', 'false']
@@ -108,91 +94,6 @@ def merge_two_dicts(x, y):
     z = x.copy()
     z.update(y)
     return z
-
-
-def is_valid_hostname(host):
-    """Reasonable attempt at validating a hostname
-
-    Compiled from various paragraphs outlined here
-    https://tools.ietf.org/html/rfc3696#section-2
-    https://tools.ietf.org/html/rfc1123
-
-    Notably,
-    * Host software MUST handle host names of up to 63 characters and
-      SHOULD handle host names of up to 255 characters.
-    * The "LDH rule", after the characters that it permits. (letters, digits, hyphen)
-    * If the hyphen is used, it is not permitted to appear at
-      either the beginning or end of a label
-
-    :param host:
-    :return:
-    """
-    if len(host) > 255:
-        return False
-    host = host.rstrip(".")
-    allowed = re.compile(r'(?!-)[A-Z0-9-]{1,63}(?<!-)$', re.IGNORECASE)
-    result = all(allowed.match(x) for x in host.split("."))
-    return result
-
-
-def is_valid_fqdn(host):
-    """Reasonable attempt at validating a hostname
-
-    Compiled from various paragraphs outlined here
-    https://tools.ietf.org/html/rfc3696#section-2
-    https://tools.ietf.org/html/rfc1123
-
-    Notably,
-    * Host software MUST handle host names of up to 63 characters and
-      SHOULD handle host names of up to 255 characters.
-    * The "LDH rule", after the characters that it permits. (letters, digits, hyphen)
-    * If the hyphen is used, it is not permitted to appear at
-      either the beginning or end of a label
-
-    :param host:
-    :return:
-    """
-    if len(host) > 255:
-        return False
-    host = host.rstrip(".")
-    allowed = re.compile(r'(?!-)[A-Z0-9-]{1,63}(?<!-)$', re.IGNORECASE)
-    result = all(allowed.match(x) for x in host.split("."))
-    if result:
-        parts = host.split('.')
-        if len(parts) > 1:
-            return True
-    return False
-
-
-def transform_name(partition='', name='', sub_path=''):
-    if partition != '':
-        if name.startswith(partition + '/'):
-            name = name.replace(partition + '/', '')
-        if name.startswith('/' + partition + '/'):
-            name = name.replace('/' + partition + '/', '')
-
-    if name:
-        name = name.replace('/', '~')
-        name = name.replace('%', '%25')
-
-    if partition:
-        partition = partition.replace('/', '~')
-        if not partition.startswith('~'):
-            partition = '~' + partition
-    else:
-        if sub_path:
-            raise F5ModuleError(
-                'When giving the subPath component include partition as well.'
-            )
-
-    if sub_path and partition:
-        sub_path = '~' + sub_path
-
-    if name and partition:
-        name = '~' + name
-
-    result = partition + sub_path + name
-    return result
 
 
 class AnsibleF5Parameters:
@@ -226,7 +127,7 @@ class AnsibleF5Parameters:
                         # If the mapped value does not have
                         # an associated setter
                         self._values[map_key] = v
-                    else:
+                    else:  # pragma: no cover
                         # The mapped value has a setter
                         setattr(self, map_key, v)
                 else:

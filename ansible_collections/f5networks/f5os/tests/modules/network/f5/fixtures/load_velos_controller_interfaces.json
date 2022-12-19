@@ -1,0 +1,3020 @@
+{
+    "openconfig-interfaces:interfaces": {
+        "interface": [
+            {
+                "name": "1/1.1",
+                "config": {
+                    "name": "1/1.1",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/1.1",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 10,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "155450985387",
+                    "counters": {
+                        "in-octets": "32232178033",
+                        "in-pkts": "102210493",
+                        "in-unicast-pkts": "66668017",
+                        "in-broadcast-pkts": "8206255",
+                        "in-multicast-pkts": "27336221",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "6469537252",
+                        "out-pkts": "49889638",
+                        "out-unicast-pkts": "32801029",
+                        "out-broadcast-pkts": "14466987",
+                        "out-multicast-pkts": "2621622",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.1"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:01:01",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:01:01",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "1300372",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/1.2",
+                "config": {
+                    "name": "1/1.2",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/1.2",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 11,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "154934737396",
+                    "counters": {
+                        "in-octets": "5848803833",
+                        "in-pkts": "19881620",
+                        "in-unicast-pkts": "13343249",
+                        "in-broadcast-pkts": "5193710",
+                        "in-multicast-pkts": "1344661",
+                        "in-discards": "1",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "13488544959",
+                        "out-pkts": "54403410",
+                        "out-unicast-pkts": "37314753",
+                        "out-broadcast-pkts": "14466929",
+                        "out-multicast-pkts": "2621728",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.2"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:01:02",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:01:02",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/1.3",
+                "config": {
+                    "name": "1/1.3",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/1.3",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 2,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.3"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:01:03",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:01:03",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/1.4",
+                "config": {
+                    "name": "1/1.4",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/1.4",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 3,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.4"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:01:04",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:01:04",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/1.5",
+                "config": {
+                    "name": "1/1.5",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/1.5",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 12,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.5"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:01:05",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:01:05",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/1.6",
+                "config": {
+                    "name": "1/1.6",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/1.6",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 13,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.6"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:01:06",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:01:06",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/1.7",
+                "config": {
+                    "name": "1/1.7",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/1.7",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 4,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.7"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:01:07",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:01:07",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/1.8",
+                "config": {
+                    "name": "1/1.8",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/1.8",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 5,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.8"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:01:08",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:01:08",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/2.2",
+                "config": {
+                    "name": "1/2.2",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/2.2",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 16,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "154964346889",
+                    "counters": {
+                        "in-octets": "161574234784",
+                        "in-pkts": "323557359",
+                        "in-unicast-pkts": "318842425",
+                        "in-broadcast-pkts": "4714889",
+                        "in-multicast-pkts": "45",
+                        "in-discards": "12",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "160066317457",
+                        "out-pkts": "397563662",
+                        "out-unicast-pkts": "342381382",
+                        "out-broadcast-pkts": "29167272",
+                        "out-multicast-pkts": "26015008",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:02:02",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:02:02",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "1300372",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/2.3",
+                "config": {
+                    "name": "1/2.3",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/2.3",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 17,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "154975572175",
+                    "counters": {
+                        "in-octets": "160242093075",
+                        "in-pkts": "322701223",
+                        "in-unicast-pkts": "317980530",
+                        "in-broadcast-pkts": "4720652",
+                        "in-multicast-pkts": "41",
+                        "in-discards": "12",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "142201357041",
+                        "out-pkts": "298880591",
+                        "out-unicast-pkts": "298880571",
+                        "out-broadcast-pkts": "10",
+                        "out-multicast-pkts": "10",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:02:03",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:02:03",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/2.4",
+                "config": {
+                    "name": "1/2.4",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/2.4",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 18,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "154980446846",
+                    "counters": {
+                        "in-octets": "163527988197",
+                        "in-pkts": "325010823",
+                        "in-unicast-pkts": "320290485",
+                        "in-broadcast-pkts": "4720290",
+                        "in-multicast-pkts": "48",
+                        "in-discards": "15",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "144223864399",
+                        "out-pkts": "300894995",
+                        "out-unicast-pkts": "300894979",
+                        "out-broadcast-pkts": "9",
+                        "out-multicast-pkts": "7",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:02:04",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:02:04",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/2.5",
+                "config": {
+                    "name": "1/2.5",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/2.5",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 20,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "155005405045",
+                    "counters": {
+                        "in-octets": "438526593932",
+                        "in-pkts": "903914123",
+                        "in-unicast-pkts": "891088045",
+                        "in-broadcast-pkts": "12825877",
+                        "in-multicast-pkts": "201",
+                        "in-discards": "20",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "502896841860",
+                        "out-pkts": "715674146",
+                        "out-unicast-pkts": "692427693",
+                        "out-broadcast-pkts": "23225205",
+                        "out-multicast-pkts": "21248",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:02:05",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:02:05",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "426312524",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/2.6",
+                "config": {
+                    "name": "1/2.6",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/2.6",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 21,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "155015466698",
+                    "counters": {
+                        "in-octets": "149403397",
+                        "in-pkts": "1332655",
+                        "in-unicast-pkts": "287940",
+                        "in-broadcast-pkts": "1044662",
+                        "in-multicast-pkts": "53",
+                        "in-discards": "24",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "9384638270",
+                        "out-pkts": "34583319",
+                        "out-unicast-pkts": "2362336",
+                        "out-broadcast-pkts": "6227347",
+                        "out-multicast-pkts": "25993636",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:02:06",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:02:06",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "1300372",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/3.1",
+                "config": {
+                    "name": "1/3.1",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/3.1",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 1,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "307465894431",
+                    "counters": {
+                        "in-octets": "19650",
+                        "in-pkts": "240",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "225",
+                        "in-multicast-pkts": "15",
+                        "in-discards": "240",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:03:01",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:03:01",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/3.2",
+                "config": {
+                    "name": "1/3.2",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/3.2",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 105,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "294815983676",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:03:02",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:03:02",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/3.3",
+                "config": {
+                    "name": "1/3.3",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/3.3",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 85,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:03:03",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:03:03",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/3.4",
+                "config": {
+                    "name": "1/3.4",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/3.4",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 53,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:03:04",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:03:04",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/3.5",
+                "config": {
+                    "name": "1/3.5",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/3.5",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 9,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:03:05",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:03:05",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/3.6",
+                "config": {
+                    "name": "1/3.6",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/3.6",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 102,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:03:06",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:03:06",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/3.7",
+                "config": {
+                    "name": "1/3.7",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/3.7",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 69,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:03:07",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:03:07",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/3.8",
+                "config": {
+                    "name": "1/3.8",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/3.8",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 41,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:03:08",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:03:08",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/4.1",
+                "config": {
+                    "name": "1/4.1",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/4.1",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 34,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "155012602674",
+                    "counters": {
+                        "in-octets": "114",
+                        "in-pkts": "1",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "1",
+                        "in-discards": "1",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:01:04:01",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:01:04:01",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "1/mgmt0",
+                "config": {
+                    "name": "1/mgmt0",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "1/mgmt0",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 15,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "306590749439",
+                    "counters": {
+                        "in-octets": "2385117647",
+                        "in-pkts": "10365551",
+                        "in-unicast-pkts": "7751786",
+                        "in-broadcast-pkts": "1896999",
+                        "in-multicast-pkts": "716766",
+                        "in-discards": "1697",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "251061058",
+                        "out-pkts": "2165434",
+                        "out-unicast-pkts": "1279553",
+                        "out-broadcast-pkts": "885798",
+                        "out-multicast-pkts": "83",
+                        "out-discards": "225",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "00:94:a1:af:64:7d",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_1GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "00:94:a1:af:64:7d",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/1.1",
+                "config": {
+                    "name": "2/1.1",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/1.1",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 10,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "159506187955",
+                    "counters": {
+                        "in-octets": "693535570",
+                        "in-pkts": "4028825",
+                        "in-unicast-pkts": "2683728",
+                        "in-broadcast-pkts": "412",
+                        "in-multicast-pkts": "1344685",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "24618226350",
+                        "out-pkts": "44336655",
+                        "out-unicast-pkts": "41092260",
+                        "out-broadcast-pkts": "645902",
+                        "out-multicast-pkts": "2598493",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.1"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:01:01",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:01:01",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/1.2",
+                "config": {
+                    "name": "2/1.2",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/1.2",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 11,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "159511142089",
+                    "counters": {
+                        "in-octets": "2743963160",
+                        "in-pkts": "29448622",
+                        "in-unicast-pkts": "28103622",
+                        "in-broadcast-pkts": "400",
+                        "in-multicast-pkts": "1344600",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "1116024578",
+                        "out-pkts": "7391645",
+                        "out-unicast-pkts": "4147245",
+                        "out-broadcast-pkts": "645904",
+                        "out-multicast-pkts": "2598496",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.2"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:01:02",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:01:02",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/1.3",
+                "config": {
+                    "name": "2/1.3",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/1.3",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 2,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.3"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:01:03",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:01:03",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/1.4",
+                "config": {
+                    "name": "2/1.4",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/1.4",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 3,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.4"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:01:04",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:01:04",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/1.5",
+                "config": {
+                    "name": "2/1.5",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/1.5",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 12,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.5"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:01:05",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:01:05",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/1.6",
+                "config": {
+                    "name": "2/1.6",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/1.6",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 13,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.6"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:01:06",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:01:06",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/1.7",
+                "config": {
+                    "name": "2/1.7",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/1.7",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 4,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.7"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:01:07",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:01:07",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/1.8",
+                "config": {
+                    "name": "2/1.8",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/1.8",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 5,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "config": {
+                        "openconfig-if-aggregate:aggregate-id": "cplagg_1.8"
+                    },
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:01:08",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:01:08",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/2.2",
+                "config": {
+                    "name": "2/2.2",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/2.2",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 16,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "159518231558",
+                    "counters": {
+                        "in-octets": "145872556003",
+                        "in-pkts": "298986755",
+                        "in-unicast-pkts": "294363910",
+                        "in-broadcast-pkts": "4622800",
+                        "in-multicast-pkts": "45",
+                        "in-discards": "14",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "170154153875",
+                        "out-pkts": "354617874",
+                        "out-unicast-pkts": "299149328",
+                        "out-broadcast-pkts": "29453489",
+                        "out-multicast-pkts": "26015057",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:02:02",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:02:02",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "1300372",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/2.3",
+                "config": {
+                    "name": "2/2.3",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/2.3",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 17,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "159523974491",
+                    "counters": {
+                        "in-octets": "145882870310",
+                        "in-pkts": "298990414",
+                        "in-unicast-pkts": "294364920",
+                        "in-broadcast-pkts": "4625452",
+                        "in-multicast-pkts": "42",
+                        "in-discards": "17",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "159189260897",
+                        "out-pkts": "300384777",
+                        "out-unicast-pkts": "300384752",
+                        "out-broadcast-pkts": "10",
+                        "out-multicast-pkts": "15",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:02:03",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:02:03",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/2.4",
+                "config": {
+                    "name": "2/2.4",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/2.4",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 18,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "159529734831",
+                    "counters": {
+                        "in-octets": "145725050302",
+                        "in-pkts": "298899055",
+                        "in-unicast-pkts": "294276900",
+                        "in-broadcast-pkts": "4622113",
+                        "in-multicast-pkts": "42",
+                        "in-discards": "19",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "158954117516",
+                        "out-pkts": "300518932",
+                        "out-unicast-pkts": "300518905",
+                        "out-broadcast-pkts": "7",
+                        "out-multicast-pkts": "20",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:02:04",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:02:04",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/2.5",
+                "config": {
+                    "name": "2/2.5",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/2.5",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 20,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "161733605579",
+                    "counters": {
+                        "in-octets": "502897026777",
+                        "in-pkts": "943759505",
+                        "in-unicast-pkts": "920513051",
+                        "in-broadcast-pkts": "23225206",
+                        "in-multicast-pkts": "21248",
+                        "in-discards": "6",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "438526602664",
+                        "out-pkts": "705686827",
+                        "out-unicast-pkts": "692860746",
+                        "out-broadcast-pkts": "12825880",
+                        "out-multicast-pkts": "201",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:02:05",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:02:05",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "426312525",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/2.6",
+                "config": {
+                    "name": "2/2.6",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/2.6",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 21,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "161743228899",
+                    "counters": {
+                        "in-octets": "9384638711",
+                        "in-pkts": "34583322",
+                        "in-unicast-pkts": "2362336",
+                        "in-broadcast-pkts": "6227347",
+                        "in-multicast-pkts": "25993639",
+                        "in-discards": "5",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "149403560",
+                        "out-pkts": "1332656",
+                        "out-unicast-pkts": "287940",
+                        "out-broadcast-pkts": "1044663",
+                        "out-multicast-pkts": "53",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:02:06",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:02:06",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "1300372",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/3.1",
+                "config": {
+                    "name": "2/3.1",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/3.1",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 1,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "314408123823",
+                    "counters": {
+                        "in-octets": "5878019064",
+                        "in-pkts": "26008997",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "75",
+                        "in-multicast-pkts": "26008922",
+                        "in-discards": "26008997",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:03:01",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:03:01",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/3.2",
+                "config": {
+                    "name": "2/3.2",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/3.2",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 105,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "301057227956",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:03:02",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_UNKNOWN",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:03:02",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/3.3",
+                "config": {
+                    "name": "2/3.3",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/3.3",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 85,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:03:03",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:03:03",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/3.4",
+                "config": {
+                    "name": "2/3.4",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/3.4",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 53,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:03:04",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:03:04",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/3.5",
+                "config": {
+                    "name": "2/3.5",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/3.5",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 9,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:03:05",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:03:05",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/3.6",
+                "config": {
+                    "name": "2/3.6",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/3.6",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 102,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:03:06",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:03:06",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/3.7",
+                "config": {
+                    "name": "2/3.7",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/3.7",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 69,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:03:07",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:03:07",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/3.8",
+                "config": {
+                    "name": "2/3.8",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/3.8",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 41,
+                    "admin-status": "UP",
+                    "oper-status": "DOWN",
+                    "counters": {
+                        "in-octets": "0",
+                        "in-pkts": "0",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "0",
+                        "in-discards": "0",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:03:08",
+                        "auto-negotiate": false,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_25GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:03:08",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/4.1",
+                "config": {
+                    "name": "2/4.1",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/4.1",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 34,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "159554669105",
+                    "counters": {
+                        "in-octets": "114",
+                        "in-pkts": "1",
+                        "in-unicast-pkts": "0",
+                        "in-broadcast-pkts": "0",
+                        "in-multicast-pkts": "1",
+                        "in-discards": "1",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "0",
+                        "out-pkts": "0",
+                        "out-unicast-pkts": "0",
+                        "out-broadcast-pkts": "0",
+                        "out-multicast-pkts": "0",
+                        "out-discards": "0",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "5a:a5:5a:02:04:01",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_10GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "5a:a5:5a:02:04:01",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "2/mgmt0",
+                "config": {
+                    "name": "2/mgmt0",
+                    "type": "iana-if-type:ethernetCsmacd"
+                },
+                "state": {
+                    "name": "2/mgmt0",
+                    "type": "iana-if-type:ethernetCsmacd",
+                    "loopback-mode": false,
+                    "enabled": true,
+                    "ifindex": 15,
+                    "admin-status": "UP",
+                    "oper-status": "UP",
+                    "last-change": "313692037792",
+                    "counters": {
+                        "in-octets": "338722963",
+                        "in-pkts": "3556990",
+                        "in-unicast-pkts": "57430",
+                        "in-broadcast-pkts": "2782727",
+                        "in-multicast-pkts": "716833",
+                        "in-discards": "2862203",
+                        "in-errors": "0",
+                        "in-unknown-protos": "0",
+                        "in-fcs-errors": "0",
+                        "out-octets": "106336",
+                        "out-pkts": "1117",
+                        "out-unicast-pkts": "893",
+                        "out-broadcast-pkts": "208",
+                        "out-multicast-pkts": "16",
+                        "out-discards": "885884",
+                        "out-errors": "0"
+                    }
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-ethernet:ethernet": {
+                    "state": {
+                        "mac-address": "00:94:a1:af:64:7e",
+                        "auto-negotiate": true,
+                        "duplex-mode": "FULL",
+                        "port-speed": "openconfig-if-ethernet:SPEED_1GB",
+                        "enable-flow-control": false,
+                        "hw-mac-address": "00:94:a1:af:64:7e",
+                        "counters": {
+                            "in-mac-pause-frames": "0",
+                            "in-oversize-frames": "0",
+                            "in-jabber-frames": "0",
+                            "in-fragment-frames": "0",
+                            "in-8021q-frames": "0",
+                            "in-crc-errors": "0",
+                            "out-mac-pause-frames": "0",
+                            "out-8021q-frames": "0"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "cplagg_1.1",
+                "config": {
+                    "name": "cplagg_1.1",
+                    "type": "iana-if-type:ieee8023adLag"
+                },
+                "state": {
+                    "loopback-mode": false,
+                    "enabled": true
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-aggregate:aggregation": {
+                    "config": {
+                        "lag-type": "LACP",
+                        "min-links": 1
+                    }
+                }
+            },
+            {
+                "name": "cplagg_1.2",
+                "config": {
+                    "name": "cplagg_1.2",
+                    "type": "iana-if-type:ieee8023adLag"
+                },
+                "state": {
+                    "loopback-mode": false,
+                    "enabled": true
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-aggregate:aggregation": {
+                    "config": {
+                        "lag-type": "LACP",
+                        "min-links": 1
+                    }
+                }
+            },
+            {
+                "name": "cplagg_1.3",
+                "config": {
+                    "name": "cplagg_1.3",
+                    "type": "iana-if-type:ieee8023adLag"
+                },
+                "state": {
+                    "loopback-mode": false,
+                    "enabled": true
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-aggregate:aggregation": {
+                    "config": {
+                        "lag-type": "LACP",
+                        "min-links": 1
+                    }
+                }
+            },
+            {
+                "name": "cplagg_1.4",
+                "config": {
+                    "name": "cplagg_1.4",
+                    "type": "iana-if-type:ieee8023adLag"
+                },
+                "state": {
+                    "loopback-mode": false,
+                    "enabled": true
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-aggregate:aggregation": {
+                    "config": {
+                        "lag-type": "LACP",
+                        "min-links": 1
+                    }
+                }
+            },
+            {
+                "name": "cplagg_1.5",
+                "config": {
+                    "name": "cplagg_1.5",
+                    "type": "iana-if-type:ieee8023adLag"
+                },
+                "state": {
+                    "loopback-mode": false,
+                    "enabled": true
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-aggregate:aggregation": {
+                    "config": {
+                        "lag-type": "LACP",
+                        "min-links": 1
+                    }
+                }
+            },
+            {
+                "name": "cplagg_1.6",
+                "config": {
+                    "name": "cplagg_1.6",
+                    "type": "iana-if-type:ieee8023adLag"
+                },
+                "state": {
+                    "loopback-mode": false,
+                    "enabled": true
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-aggregate:aggregation": {
+                    "config": {
+                        "lag-type": "LACP",
+                        "min-links": 1
+                    }
+                }
+            },
+            {
+                "name": "cplagg_1.7",
+                "config": {
+                    "name": "cplagg_1.7",
+                    "type": "iana-if-type:ieee8023adLag"
+                },
+                "state": {
+                    "loopback-mode": false,
+                    "enabled": true
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-aggregate:aggregation": {
+                    "config": {
+                        "lag-type": "LACP",
+                        "min-links": 1
+                    }
+                }
+            },
+            {
+                "name": "cplagg_1.8",
+                "config": {
+                    "name": "cplagg_1.8",
+                    "type": "iana-if-type:ieee8023adLag"
+                },
+                "state": {
+                    "loopback-mode": false,
+                    "enabled": true
+                },
+                "hold-time": {
+                    "state": {
+                        "up": 0,
+                        "down": 0
+                    }
+                },
+                "openconfig-if-aggregate:aggregation": {
+                    "config": {
+                        "lag-type": "LACP",
+                        "min-links": 1
+                    }
+                }
+            }
+        ]
+    }
+}

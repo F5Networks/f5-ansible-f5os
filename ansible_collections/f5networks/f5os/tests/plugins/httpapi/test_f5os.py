@@ -12,6 +12,8 @@ from unittest.mock import Mock, patch
 from unittest import TestCase
 
 from ansible.errors import AnsibleConnectionFailure
+from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.six import StringIO
 from ansible.playbook.play_context import PlayContext
 from ansible.plugins.loader import connection_loader
 
@@ -19,7 +21,7 @@ from ansible.plugins.loader import connection_loader
 from ansible_collections.f5networks.f5os.tests.utils.common import connection_response
 from ansible_collections.f5networks.f5os.plugins.module_utils.constants import BASE_HEADERS
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
-from ansible_collections.f5networks.f5os.plugins.httpapi.f5os import HttpApi
+from ansible_collections.f5networks.f5os.plugins.httpapi.f5os import HttpApi, handle_errors
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
 fixture_data = {}
@@ -57,9 +59,10 @@ class TestF5OSHttpapi(TestCase):
         assert 'Username and password are required for login.' in str(res.exception)
 
     def test_login_raises_exception_when_invalid_token_response(self):
-        self.connection.send.return_value = connection_response(
-            {'errorMessage': 'ERROR'}, 400, BASE_HEADERS
+        self.connection.send.side_effect = HTTPError(
+            'http://bigip.local', 400, '', {}, StringIO('{"errorMessage": "ERROR"}')
         )
+
         with self.assertRaises(AnsibleConnectionFailure) as res:
             self.connection.httpapi.login('foo', 'bar')
 
@@ -191,3 +194,51 @@ class TestF5OSHttpapi(TestCase):
         self.connection.httpapi.get_option.return_value = False
 
         assert self.connection.httpapi.telemetry() is False
+
+    def test_handle_httperror(self):
+        self.connection._auth = {'X-Auth-Token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'}
+        exc1 = HTTPError('http://bigip.local', 401, '', {}, StringIO('{"errorMessage": "not allowed"}'))
+        res1 = self.connection.httpapi.handle_httperror(exc1)
+        assert res1 is True
+        assert self.connection._auth is None
+
+        exc1 = HTTPError('http://bigip.local', 404, '', {}, StringIO('{"errorMessage": "not found"}'))
+        res1 = self.connection.httpapi.handle_httperror(exc1)
+        assert res1 is False
+
+    def test_resonse_to_json_raises(self):
+        with self.assertRaises(F5ModuleError) as err:
+            self.connection.httpapi._response_to_json('invalid json}')
+        assert 'Invalid JSON response: invalid json}' in str(err.exception)
+
+    def test_display_message_and_logout(self):
+        with patch.object(HttpApi, '_display_message') as mock_msg:
+            mock_msg.return_value = True
+            self.connection.httpapi._display_request('POST', 'foo/url', data='some data')
+
+        mock_msg.assert_called_with('F5OS API Call: POST to foo/url with data some data')
+        # just to cover pass statement
+        self.connection.httpapi.logout()
+
+    def test_handle_errors(self):
+        nested_error = StringIO("""{
+            "errors": {
+                "error": [
+                    {
+                        "error-type": "application",
+                        "error-tag": "invalid-value",
+                        "error-message": "uri keypath not found"
+                    }
+                ]
+            }
+        }""")
+        result1 = handle_errors(nested_error)
+        assert result1 == 'uri keypath not found'
+
+        non_json_error = StringIO('this is an error message not a json')
+        result2 = handle_errors(non_json_error)
+        assert result2 == 'this is an error message not a json'
+
+        byte_error = b'this is an error in byte format'
+        result3 = handle_errors(byte_error)
+        assert result3 == 'this is an error in byte format'

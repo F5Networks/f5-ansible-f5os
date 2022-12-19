@@ -1,6 +1,6 @@
 # F5OS Collection for Ansible
 
-A collection focusing on managing F5 OS devices through API. The collection includes key imperative modules for 
+A collection focusing on managing F5 OS devices through an API. The collection includes key imperative modules for 
 managing Velos chassis and rSeries platform lifecycles as well as F5OS tenant and partition management.
 
 ## Requirements
@@ -14,7 +14,7 @@ This collection is supported on Python 3.8 and above.
 
 We offer a daily build of our most recent collection [dailybuild]. Use this Collection to test the most
 recent Ansible module updates between releases. 
-You can also install development build directly from GitHub into your environment see [repoinstall].
+You can also install the development build directly from GitHub into your environment, see [repoinstall].
 
 ### Install from GitHub
 ```bash
@@ -36,7 +36,7 @@ ansible-galaxy collection install git+https://github.com/F5Networks/f5-ansible-f
 
 ### Running latest devel in EE
 We also offer a new method of running the collection inside Ansible's Execution Environment container. 
-The advantage of such approach is that any required package dependencies and minimum supported pyton versions are 
+The advantage of such approach is that any required package dependencies and minimum supported Python versions are 
 installed in an isolated container which minimizes any environment related issues during runtime. More information on EE
 can be found here [execenv]. Use the below requirements.yml file when building EE container:
 

@@ -11,7 +11,7 @@ DOCUMENTATION = r'''
 httpapi: f5os
 short_description: HttpApi Plugin for F5OS devices
 description:
-- This HttpApi plugin provides methods to connect to F5OS devices over a HTTP(S)-based api.
+- This HttpApi plugin provides methods to connect to F5OS devices over a HTTP(S)-based API.
 options:
   send_telemetry:
     description:
@@ -152,7 +152,13 @@ class HttpApi(HttpApiBase):
 def handle_errors(error):
     try:
         error_data = json.loads(error.read())
+    except AttributeError:
+        # if this is a byte object attempting to use .read()
+        # will result in an attribute error, so we convert it to text and move on
+        return to_text(error)
     except ValueError:
+        # when reading buffer first time we need to rewind so the second read returns the error contents
+        error.seek(0)
         error_data = error.read()
 
     if error_data:
@@ -164,4 +170,3 @@ def handle_errors(error):
         else:
             error_text = error_data
         return error_text
-    return to_text(error)

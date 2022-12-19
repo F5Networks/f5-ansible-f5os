@@ -25,13 +25,13 @@ options:
     description:
       - Specifies the IPv4 address and subnet or subnet mask you use to access
         the chassis partition.
-      - When creating a new chassis partition, if the CIDR notation is not used a default of C(/24) is appended to
+      - When creating a new chassis partition, if the CIDR notation is not used, a default of C(/24) is appended to
         the address.
       - "The address must be specified in CIDR notation e.g. 192.168.1.1/24."
     type: str
   ipv4_mgmt_gateway:
     description:
-      - Desired chassis partition management gateway.
+      - Chassis partition management gateway.
       - The value C(none) can be used during an update to remove this value.
     type: str
   ipv6_mgmt_address:
@@ -44,7 +44,7 @@ options:
     type: str
   ipv6_mgmt_gateway:
     description:
-      - Desired chassis partition management gateway.
+      - Chassis partition management gateway.
       - The value C(none) can be used during an update to remove this value.
     type: str
   os_version:
@@ -58,10 +58,6 @@ options:
       - By default, the chassis partition is not associated with any slots.
     type: list
     elements: int
-  service_version:
-    description:
-      - Chassis partition F5OS-C Service version.
-    type: str
   wait_time:
     description:
       - Max number of seconds to wait after creating a chassis partition for it to
@@ -131,7 +127,7 @@ ipv4_mgmt_address:
   type: str
   sample: 192.168.1.12/24
 ipv4_mgmt_gateway:
-  description: Desired partition management gateway.
+  description: Partition management gateway.
   returned: changed
   type: str
   sample: 192.168.1.1
@@ -194,43 +190,38 @@ class Parameters(AnsibleF5Parameters):
 class ApiParameters(Parameters):
     @property
     def ipv4_mgmt_address(self):
-        local_mgmt_ip = self._values.get('mgmt_ip', None)
-        if local_mgmt_ip is not None:
-            if 'ipv4' in local_mgmt_ip and local_mgmt_ip['ipv4'] is not None:
-                return "{0}/{1}".format(
-                    local_mgmt_ip['ipv4']['address'], local_mgmt_ip['ipv4']['prefix-length']
-                )
-        return local_mgmt_ip
+        if self._values['mgmt_ip'] is None:
+            return None
+        if 'ipv4' in self._values['mgmt_ip'] and self._values['mgmt_ip']['ipv4'] is not None:
+            return "{0}/{1}".format(
+                self._values['mgmt_ip']['ipv4']['address'], self._values['mgmt_ip']['ipv4']['prefix-length']
+            )
 
     @property
     def ipv4_mgmt_gateway(self):
-        local_mgmt_ip = self._values.get('mgmt_ip', None)
-        if local_mgmt_ip is not None:
-            if 'ipv4' in local_mgmt_ip and local_mgmt_ip['ipv4'] is not None:
-                return local_mgmt_ip['ipv4']['gateway']
-        return local_mgmt_ip
+        if self._values['mgmt_ip'] is None:
+            return None
+        if 'ipv4' in self._values['mgmt_ip'] and self._values['mgmt_ip']['ipv4'] is not None:
+            return self._values['mgmt_ip']['ipv4']['gateway']
 
     @property
     def ipv6_mgmt_address(self):
-        local_mgmt_ip = self._values.get('mgmt_ip', None)
-        if local_mgmt_ip is not None:
-            if 'ipv6' in local_mgmt_ip and local_mgmt_ip['ipv6'] is not None:
-                return "{0}/{1}".format(
-                    local_mgmt_ip['ipv6']['address'], local_mgmt_ip['ipv6']['prefix-length']
-                )
-        return local_mgmt_ip
+        if self._values['mgmt_ip'] is None:
+            return None
+        if 'ipv6' in self._values['mgmt_ip'] and self._values['mgmt_ip']['ipv6'] is not None:
+            return "{0}/{1}".format(
+                self._values['mgmt_ip']['ipv6']['address'], self._values['mgmt_ip']['ipv6']['prefix-length']
+            )
 
     @property
     def ipv6_mgmt_gateway(self):
-        local_mgmt_ip = self._values.get('mgmt_ip', None)
-        if local_mgmt_ip is not None:
-            if 'ipv6' in local_mgmt_ip and local_mgmt_ip['ipv6'] is not None:
-                return local_mgmt_ip['ipv6']['gateway']
-        return local_mgmt_ip
+        if self._values['mgmt_ip'] is None:
+            return None
+        if 'ipv6' in self._values['mgmt_ip'] and self._values['mgmt_ip']['ipv6'] is not None:
+            return self._values['mgmt_ip']['ipv6']['gateway']
 
 
 class ModuleParameters(Parameters):
-
     @property
     def ipv4_mgmt_gateway(self):
         if self._values['ipv4_mgmt_gateway'] is None:
@@ -311,7 +302,7 @@ class ModuleParameters(Parameters):
 
 
 class Changes(Parameters):
-    def to_return(self):
+    def to_return(self):   # pragma: no cover
         result = {}
         try:
             for returnable in self.returnables:
@@ -359,7 +350,7 @@ class Difference(object):
         except AttributeError:
             return self.__default(param)
 
-    def __default(self, param):
+    def __default(self, param):  # pragma: no cover
         attr1 = getattr(self.want, param)
         try:
             attr2 = getattr(self.have, param)
@@ -408,7 +399,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):
+    def _announce_deprecations(self, result):   # pragma: no cover
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -455,14 +446,14 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.update_on_device()
         return True
 
     def remove(self):
         self.have = self.read_current_from_device()
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.remove_from_device()
         if self.exists():
@@ -470,16 +461,16 @@ class ModuleManager(object):
         return True
 
     def create(self):
-        if self.want.ipv4_mgmt_address is not None and self.want.ipv4_mgmt_address.split('/')[1] is None:
+        if self.want.ipv4_mgmt_address is not None and len(self.want.ipv4_mgmt_address.split('/')) < 2:
             self.want.update(dict(
                 ipv4_mgmt_address='{0}/24'.format(self.want.ipv4_mgmt_address.split('/', maxsplit=1)[0])
             ))
-        if self.want.ipv6_mgmt_address is not None and self.want.ipv6_mgmt_address.split('/')[1] is None:
+        if self.want.ipv6_mgmt_address is not None and len(self.want.ipv6_mgmt_address.split('/')) < 2:
             self.want.update(dict(
                 ipv6_mgmt_address='{0}/96'.format(self.want.ipv6_mgmt_address.split('/', maxsplit=1)[0])
             ))
         self._set_changed_options()
-        if self.module.check_mode:
+        if self.module.check_mode:  # pragma: no cover
             return True
         self.create_on_device()
         return True
@@ -516,7 +507,7 @@ class ModuleManager(object):
 
         # Update slot assignment.
         slots = params.get('slots')
-        # If you want to just dis-associates slots to partition by provides slots params as empty or not specifying.
+        # If you want to just dis-associate slots to partition by providing slots params as empty.
         # ex: slots: []
         if not self.want.slots:
             self.remove_slot_from_partition()
@@ -531,15 +522,29 @@ class ModuleManager(object):
 
         if params.get('mgmt-ip'):
             if params.get('mgmt-ip').get('ipv4') and params.get('mgmt-ip').get('ipv4').get('address') is None:
-                params['mgmt-ip']['ipv4']['address'] = self.want.ipv4_mgmt_address.split('/', maxsplit=1)[0]
-                params['mgmt-ip']['ipv4']['prefix-length'] = self.want.ipv4_mgmt_address.split('/')[1]
+                if self.want.ipv4_mgmt_address is None and self.have.ipv4_mgmt_address is not None:
+                    params['mgmt-ip']['ipv4']['address'] = self.have.ipv4_mgmt_address.split('/', maxsplit=1)[0]
+                    params['mgmt-ip']['ipv4']['prefix-length'] = self.have.ipv4_mgmt_address.split('/')[1]
+                elif self.want.ipv4_mgmt_address is not None:
+                    params['mgmt-ip']['ipv4']['address'] = self.want.ipv4_mgmt_address.split('/', maxsplit=1)[0]
+                    params['mgmt-ip']['ipv4']['prefix-length'] = self.want.ipv4_mgmt_address.split('/')[1]
             if params.get('mgmt-ip').get('ipv4') and params.get('mgmt-ip').get('ipv4').get('gateway') is None:
-                params['mgmt-ip']['ipv4']['gateway'] = self.want.ipv4_mgmt_gateway
+                if self.want.ipv4_mgmt_gateway is None and self.have.ipv4_mgmt_gateway is not None:
+                    params['mgmt-ip']['ipv4']['gateway'] = self.have.ipv4_mgmt_gateway
+                elif self.want.ipv4_mgmt_gateway is not None:
+                    params['mgmt-ip']['ipv4']['gateway'] = self.want.ipv4_mgmt_gateway
             if params.get('mgmt-ip').get('ipv6') and params.get('mgmt-ip').get('ipv6').get('address') is None:
-                params['mgmt-ip']['ipv6']['address'] = self.want.ipv6_mgmt_address.split('/', maxsplit=1)[0]
-                params['mgmt-ip']['ipv6']['prefix-length'] = self.want.ipv6_mgmt_address.split('/')[1]
+                if self.want.ipv6_mgmt_address is None and self.have.ipv6_mgmt_address is not None:
+                    params['mgmt-ip']['ipv6']['address'] = self.have.ipv6_mgmt_address.split('/', maxsplit=1)[0]
+                    params['mgmt-ip']['ipv6']['prefix-length'] = self.have.ipv6_mgmt_address.split('/')[1]
+                elif self.want.ipv6_mgmt_address is not None:
+                    params['mgmt-ip']['ipv6']['address'] = self.want.ipv6_mgmt_address.split('/', maxsplit=1)[0]
+                    params['mgmt-ip']['ipv6']['prefix-length'] = self.want.ipv6_mgmt_address.split('/')[1]
             if params.get('mgmt-ip').get('ipv6') and params.get('mgmt-ip').get('ipv6').get('gateway') is None:
-                params['mgmt-ip']['ipv6']['gateway'] = self.want.ipv6_mgmt_gateway
+                if self.want.ipv6_mgmt_gateway is None and self.have.ipv6_mgmt_gateway is not None:
+                    params['mgmt-ip']['ipv6']['gateway'] = self.have.ipv6_mgmt_gateway
+                elif self.want.ipv6_mgmt_gateway is not None:
+                    params['mgmt-ip']['ipv6']['gateway'] = self.want.ipv6_mgmt_gateway
 
         payload = dict(config=params)
         uri = f"/f5-system-partition:partitions/partition={self.want.name}/config"
@@ -563,8 +568,7 @@ class ModuleManager(object):
 
     def remove_from_device(self):
         uri = f"/f5-system-partition:partitions/partition={self.want.name}"
-        slots = self.get_slots_associated_with_partition(self.want.name)
-        if len(slots) > 0:
+        if self.have.slots:
             self.remove_slot_from_partition()
         response = self.client.delete(uri)
         if response['code'] in [200, 201, 202, 204]:
@@ -572,9 +576,13 @@ class ModuleManager(object):
         raise F5ModuleError(response['contents'])
 
     def remove_slot_from_partition(self):
-        slots_to_disassociate = list(set(self.have.slots) - set(self.want.slots))
-        if self.want.state == "absent" and self.have.slots is not None:
-            slots_to_disassociate = self.have.slots
+        if self.want.slots is None:
+            if self.want.state == "absent" and self.have.slots is not None:
+                slots_to_disassociate = self.have.slots
+            else:
+                return False
+        else:
+            slots_to_disassociate = list(set(self.have.slots) - set(self.want.slots))
 
         if len(slots_to_disassociate) > 0:
             self.set_slot_config("none", slots_to_disassociate)
@@ -636,7 +644,6 @@ class ArgumentSpec(object):
             ipv6_mgmt_address=dict(),
             ipv6_mgmt_gateway=dict(),
             os_version=dict(),
-            service_version=dict(),
             slots=dict(
                 type='list',
                 elements='int'
@@ -674,5 +681,5 @@ def main():
         module.fail_json(msg=str(ex))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
