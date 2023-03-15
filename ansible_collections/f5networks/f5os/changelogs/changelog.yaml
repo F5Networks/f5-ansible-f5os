@@ -59,3 +59,12 @@ releases:
     fragments:
     - minor-bug-fixes.yaml
     release_date: '2022-12-20'
+  1.0.2:
+    changes:
+      bugfixes:
+      - f5os.py - fixed error parsing method to act on JSONDecoder errors
+      - f5os_device_info.py - fixed client instantiation in the module so send_teem
+        calls are successful
+    fragments:
+    - fix-plugin.yaml
+    release_date: '2023-03-15'

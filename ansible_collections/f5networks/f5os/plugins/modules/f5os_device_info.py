@@ -1208,7 +1208,7 @@ class ModuleManager(object):
             result['queried'] = True
         else:
             result['queried'] = False
-        send_teem(F5Client(self.connection), start)
+        send_teem(F5Client(module=self.module, client=self.connection), start)
         return result
 
     def filter_excluded_facts(self):

@@ -11,7 +11,7 @@ DOCUMENTATION = r'''
 httpapi: f5os
 short_description: HttpApi Plugin for F5OS devices
 description:
-- This HttpApi plugin provides methods to connect to F5OS devices over a HTTP(S)-based API.
+  - This HttpApi plugin provides methods to connect to F5OS devices over a HTTP(S)-based API.
 options:
   send_telemetry:
     description:
@@ -29,6 +29,7 @@ author:
   - Wojciech Wypior <w.wypior@f5.com>
 '''
 
+import io
 import json
 
 from ansible.module_utils.basic import to_text
@@ -51,7 +52,7 @@ class HttpApi(HttpApiBase):
 
     def login(self, username, password):
         if username and password:
-            response = self.send_request(LOGIN, method='GET', headers=BASE_HEADERS)
+            response = self.send_request(path=LOGIN, method='GET', headers=BASE_HEADERS)
         else:
             raise AnsibleConnectionFailure('Username and password are required for login.')
 
@@ -79,8 +80,10 @@ class HttpApi(HttpApiBase):
                 return True
         return False
 
-    def send_request(self, url, method=None, **kwargs):
-        body = kwargs.pop('data', None)
+    def send_request(self, **kwargs):
+        url = kwargs.pop('path', '/')
+        body = kwargs.pop('payload', None)
+        method = kwargs.pop('method', None)
         # allow for empty json to be passed as payload, useful for some endpoints
         data = json.dumps(body) if body or body == {} else None
         try:
@@ -123,10 +126,10 @@ class HttpApi(HttpApiBase):
 
     def _set_platform_type(self):
         velos_uri = ROOT + "/openconfig-platform:components/component=platform/state/description"
-        response = self.send_request(velos_uri, method='GET', headers=BASE_HEADERS)
+        response = self.send_request(path=velos_uri, method='GET', headers=BASE_HEADERS)
         if response['code'] == 404:
             velos_part_uri = ROOT + "/openconfig-vlan:vlans"
-            response = self.send_request(velos_part_uri, method='GET', headers=BASE_HEADERS)
+            response = self.send_request(path=velos_part_uri, method='GET', headers=BASE_HEADERS)
             if response['code'] == 404:
                 if response['contents'].get('ietf-restconf:errors', None):
                     if response['contents']['ietf-restconf:errors']['error'][0]['error-message'] == \
@@ -149,17 +152,31 @@ class HttpApi(HttpApiBase):
         return self.platform_type
 
 
+def _check_seek_raising(error):
+    # small helper function to catch seek unsupported operation
+    # a temporary workaround for an intermittent problem
+    try:
+        error.seek(0)
+        return False
+    except io.UnsupportedOperation:
+        return True
+
+
 def handle_errors(error):
+    if isinstance(error, bytes):
+        return to_text(error)
     try:
         error_data = json.loads(error.read())
-    except AttributeError:
-        # if this is a byte object attempting to use .read()
-        # will result in an attribute error, so we convert it to text and move on
-        return to_text(error)
-    except ValueError:
-        # when reading buffer first time we need to rewind so the second read returns the error contents
-        error.seek(0)
-        error_data = error.read()
+    except json.JSONDecodeError:
+        if _check_seek_raising(error):
+            # seek is raised as unsupported operation on http errors that contain no body payload, for some
+            # reason they are reproduced during integration tests, and completely avoidable during our unit testing
+            # for now we placed a temp workaround until we figure this out
+            return to_text(error.read())
+        else:
+            # for non-empty, non-json responses in body
+            error.seek(0)
+            return to_text(error.read())
 
     if error_data:
         if "errors" in error_data:

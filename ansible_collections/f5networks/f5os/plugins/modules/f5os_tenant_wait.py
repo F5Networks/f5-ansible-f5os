@@ -168,6 +168,7 @@ except ImportError:  # pragma: no cover
     HAS_PARAMIKO = False
 else:
     HAS_PARAMIKO = True
+    PARAMIKO_IMPORT_ERROR = None
 
 from ansible.module_utils.basic import (
     AnsibleModule, missing_required_lib

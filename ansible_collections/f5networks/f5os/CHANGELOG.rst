@@ -5,6 +5,15 @@ F5Networks.F5OS Release Notes
 .. contents:: Topics
 
 
+v1.0.2
+======
+
+Bugfixes
+--------
+
+- f5os.py - fixed error parsing method to act on JSONDecoder errors
+- f5os_device_info.py - fixed client instantiation in the module so send_teem calls are successful
+
 v1.0.1
 ======
 

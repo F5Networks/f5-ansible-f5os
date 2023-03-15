@@ -6,6 +6,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+import io
 import json
 import os
 from unittest.mock import Mock, patch
@@ -221,7 +222,7 @@ class TestF5OSHttpapi(TestCase):
         self.connection.httpapi.logout()
 
     def test_handle_errors(self):
-        nested_error = StringIO("""{
+        b1 = b"""{
             "errors": {
                 "error": [
                     {
@@ -231,14 +232,15 @@ class TestF5OSHttpapi(TestCase):
                     }
                 ]
             }
-        }""")
+        }"""
+        nested_error = HTTPError('foo', 404, 'not found', None, io.BytesIO(b1))
         result1 = handle_errors(nested_error)
         assert result1 == 'uri keypath not found'
 
-        non_json_error = StringIO('this is an error message not a json')
+        non_json_error = HTTPError('foo', 404, 'not found', None, io.BytesIO(b'this is an error message not a json'))
         result2 = handle_errors(non_json_error)
         assert result2 == 'this is an error message not a json'
 
-        byte_error = b'this is an error in byte format'
-        result3 = handle_errors(byte_error)
-        assert result3 == 'this is an error in byte format'
+        empty_payload_error = HTTPError('foo', 404, 'not found', None, io.BytesIO(b''))
+        result3 = handle_errors(empty_payload_error)
+        assert result3 == ''
