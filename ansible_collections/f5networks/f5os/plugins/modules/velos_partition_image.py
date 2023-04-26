@@ -31,6 +31,7 @@ options:
       - The hostname or IP address of the remote server on which the partition image is
         stored.
       - The server must make the image accessible via the specified C(protocol).
+      - The parameter is required when C(state) is C(import) or C(state) is C(present).
     type: str
   remote_port:
     description:
@@ -40,6 +41,7 @@ options:
   protocol:
     description:
       - Protocol to be used for image transfer.
+      - The parameter is required when other than default when C(state) is C(present).
     type: str
     default: scp
     choices:
@@ -57,6 +59,7 @@ options:
   remote_path:
     description:
       - The path to the partition image on the remote server.
+      - The parameter is required when C(state) is C(import) or C(state) is C(present).
     type: path
   timeout:
     description:
@@ -82,6 +85,8 @@ notes:
     has not been found by this module when running the module with C(state) set to C(present) and 20 minutes has
     passed since it was uploaded, the internal import failed. The most common reason for this failure is ISO
     image corruption.
+  - This module supports only bundled type of F5OS images, unbundled types of images for OS or Services
+    are not supported.
 author:
   - Wojciech Wypior (@wojtek0806)
 '''
@@ -112,6 +117,9 @@ EXAMPLES = r'''
     - name: Check for presence of the imported ISO on the Velos controller
       velos_partition_image:
         image_name: F5OS-C-1.1.0-3198.PARTITION.iso
+        remote_host: builds.mydomain.com
+        remote_path: /images/
+        protocol: scp
         timeout: 600
         state: present
 
@@ -147,7 +155,7 @@ message:
   type: dict
   sample: Import success
 iso_version:
-  description: Version of the ISO image.
+  description: Version of the F5OS image.
   returned: changed
   type: dict
   sample: 1.1.0-3198
@@ -345,8 +353,6 @@ class ModuleManager(object):
         if self.module.check_mode:  # pragma: no cover
             return True
         self.remove_from_device()
-        if self.exists():
-            raise F5ModuleError("Failed to delete the resource.")
         return True
 
     def create(self):
@@ -368,7 +374,7 @@ class ModuleManager(object):
     def create_on_device(self):
         params = self.changes.api_params()
         uri = "/f5-utils-file-transfer:file/import"
-        params['local-file'] = "/var/import/staging/",
+        params['local-file'] = "images/import/iso/"
         params['insecure'] = ""
         payload = dict(input=[params])
         response = self.client.post(uri, data=payload)
@@ -394,15 +400,24 @@ class ModuleManager(object):
         )
 
     def check_file_transfer_status(self):
-        uri = "/f5-utils-file-transfer:file/transfer-status"
-        payload = {"f5-utils-file-transfer:file-name": f"/var/import/staging/{self.want.image_name}"}
-        response = self.client.post(uri, data=payload)
+        uri = "/f5-utils-file-transfer:file/transfer-operations/transfer-operation"
+        response = self.client.get(uri)
+        if response['code'] == 204:
+            return False
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
-        r = response['contents']['f5-utils-file-transfer:output']['result']
-        result = r.split('\n')[2].split('|')[-1]
-        if not any(s in result for s in ['Completed', 'File Transfer Initiated']):
-            raise F5ModuleError(f"Error uploading image: {result}")
+        results = response['contents'].get('f5-utils-file-transfer:transfer-operation')
+        if results:
+            for item in results:
+                if item['remote-host'] == self.want.remote_host:
+                    if item['remote-file-path'] == self.want.remote_path:
+                        if item['protocol'].strip().lower() == self.want.protocol:
+                            status = item['status'].strip()
+                            if status == 'Completed' or status.startswith('In Progress'):
+                                return True
+                            else:
+                                raise F5ModuleError(f"File upload failed with the following result: {status}")
+        raise F5ModuleError("File upload job not has not started, check device logs for more information.")
 
     def is_imported(self):
         uri = f"/f5-system-image:image/partition/config/iso/iso={self.want.iso_version}"
@@ -452,7 +467,8 @@ class ArgumentSpec(object):
         self.argument_spec = {}
         self.argument_spec.update(argument_spec)
         self.required_if = [
-            ['state', 'import', ['image_name', 'remote_host', 'remote_path']]
+            ['state', 'import', ['image_name', 'remote_host', 'remote_path']],
+            ['state', 'present', ['remote_host', 'remote_path']]
         ]
 
 

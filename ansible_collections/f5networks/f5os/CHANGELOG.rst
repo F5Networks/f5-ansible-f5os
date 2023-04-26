@@ -5,6 +5,14 @@ F5Networks.F5OS Release Notes
 .. contents:: Topics
 
 
+v1.1.0
+======
+
+Minor Changes
+-------------
+
+- velos_partition_image - fixed invalid internal destination folder, changed progress check functions, added remote_host and remote_path as mandatory parameters for checking import status
+
 v1.0.2
 ======
 

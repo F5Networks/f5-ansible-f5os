@@ -51,6 +51,7 @@ options:
     description:
       - Chassis partition F5OS-C OS version.
       - The value C(none) can be used during an update to remove this value.
+      - This value must be in ISO format on the VELOS controller, otherwise you receive an illegal reference error message.
     type: str
   slots:
     description:

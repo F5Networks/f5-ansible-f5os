@@ -128,11 +128,10 @@ class TestManager(unittest.TestCase):
 
     def test_import_image(self, *args):
         set_module_args(dict(
-            image_name='F5OS-C-1.1.0-3198.PARTITION.iso',
+            image_name='F5OS-C-1.3.1-5968.PARTITION.iso',
             remote_host='fake.imageserver.foo.bar.com',
-            remote_user='admin',
-            remote_password='admin',
             remote_path='/test/',
+            protocol='https',
             state='import',
         ))
 
@@ -141,10 +140,9 @@ class TestManager(unittest.TestCase):
             supports_check_mode=self.spec.supports_check_mode,
             required_if=self.spec.required_if
         )
-        expected = {'input': [{'protocol': 'scp', 'remote-host': 'fake.imageserver.foo.bar.com',
-                               'remote-file': '/test/F5OS-C-1.1.0-3198.PARTITION.iso',
-                               'username': 'admin', 'password': 'admin', 'local-file': ('/var/import/staging/',),
-                               'insecure': ''}]
+        expected = {'input': [{'protocol': 'https', 'remote-host': 'fake.imageserver.foo.bar.com',
+                               'remote-file': '/test/F5OS-C-1.3.1-5968.PARTITION.iso', 'local-file':
+                                   'images/import/iso/', 'insecure': ''}]
                     }
         # Override methods to force specific logic in the module to happen
         mm = ModuleManager(module=module)
@@ -156,18 +154,17 @@ class TestManager(unittest.TestCase):
 
         self.assertTrue(results['changed'])
         self.assertDictEqual(expected, mm.client.post.call_args[1]['data'])
-        self.assertEqual('F5OS-C-1.1.0-3198.PARTITION.iso', results['image_name'])
-        self.assertEqual('/test/F5OS-C-1.1.0-3198.PARTITION.iso', results['remote_path'])
-        self.assertEqual('1.1.0-3198', results['iso_version'])
-        self.assertEqual('Image F5OS-C-1.1.0-3198.PARTITION.iso import started.', results['message'])
+        self.assertEqual('F5OS-C-1.3.1-5968.PARTITION.iso', results['image_name'])
+        self.assertEqual('/test/F5OS-C-1.3.1-5968.PARTITION.iso', results['remote_path'])
+        self.assertEqual('1.3.1-5968', results['iso_version'])
+        self.assertEqual('Image F5OS-C-1.3.1-5968.PARTITION.iso import started.', results['message'])
 
     def test_import_image_failure(self, *args):
         set_module_args(dict(
-            image_name='F5OS-C-1.1.0-3198.PARTITION.iso',
+            image_name='F5OS-C-1.3.1-5968.PARTITION.iso',
             remote_host='fake.imageserver.foo.bar.com',
-            remote_user='admin',
-            remote_password='admin',
             remote_path='/test/',
+            protocol='https',
             state='import',
         ))
 
@@ -188,7 +185,10 @@ class TestManager(unittest.TestCase):
 
     def test_import_image_progress_check(self, *args):
         set_module_args(dict(
-            image_name='F5OS-C-1.1.0-3198.PARTITION.iso',
+            image_name='F5OS-C-1.3.1-5968.PARTITION.iso',
+            remote_host='fake.imageserver.foo.bar.com',
+            remote_path='/test/',
+            protocol='https',
             state='present',
         ))
 
@@ -204,17 +204,20 @@ class TestManager(unittest.TestCase):
         mm = ModuleManager(module=module)
         mm.exists = Mock(return_value=False)
         mm.is_imported = Mock(side_effect=[False, False, True])
-        mm.client.post = Mock(side_effect=[importing, completed])
+        mm.client.get = Mock(side_effect=[importing, completed])
 
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
-        self.assertEqual(results['message'], 'Image F5OS-C-1.1.0-3198.PARTITION.iso import successful.')
-        self.assertEqual(mm.client.post.call_count, 2)
+        self.assertEqual(results['message'], 'Image F5OS-C-1.3.1-5968.PARTITION.iso import successful.')
+        self.assertEqual(mm.client.get.call_count, 2)
 
     def test_import_image_progress_check_import_fails(self, *args):
         set_module_args(dict(
-            image_name='F5OS-C-1.1.0-3198.PARTITION.iso',
+            image_name='F5OS-C-1.3.1-5968.PARTITION.iso',
+            remote_host='fake.imageserver.foo.bar.com',
+            remote_path='/test/',
+            protocol='https',
             state='present',
         ))
 
@@ -230,18 +233,23 @@ class TestManager(unittest.TestCase):
         mm = ModuleManager(module=module)
         mm.exists = Mock(return_value=False)
         mm.is_imported = Mock(side_effect=[False, False])
-        mm.client.post = Mock(side_effect=[importing, fail])
+        mm.client.get = Mock(side_effect=[importing, fail])
 
         with self.assertRaises(F5ModuleError) as err:
             mm.exec_module()
 
-        self.assertIn('Error uploading image: File Not Found, HTTP Error 404', err.exception.args[0])
-        self.assertEqual(mm.client.post.call_count, 2)
+        self.assertIn(
+            'File upload failed with the following result: File Not Found, HTTP Error 404', err.exception.args[0]
+        )
+        self.assertEqual(mm.client.get.call_count, 2)
 
     @patch.object(ModuleParameters, 'timeout', new_callable=PropertyMock)
     def test_import_image_progress_check_timeout(self, mock_timeout):
         set_module_args(dict(
-            image_name='F5OS-C-1.1.0-3198.PARTITION.iso',
+            image_name='F5OS-C-1.3.1-5968.PARTITION.iso',
+            remote_host='fake.imageserver.foo.bar.com',
+            remote_path='/test/',
+            protocol='https',
             state='present',
         ))
         mock_timeout.return_value = (1, 2)
@@ -256,13 +264,13 @@ class TestManager(unittest.TestCase):
         mm = ModuleManager(module=module)
         mm.exists = Mock(return_value=False)
         mm.is_imported = Mock(return_value=False)
-        mm.client.post = Mock(return_value=importing)
+        mm.client.get = Mock(return_value=importing)
 
         with self.assertRaises(F5ModuleError) as err:
             mm.exec_module()
 
         self.assertIn('Module timeout reached, state change is unknown', err.exception.args[0])
-        self.assertEqual(mm.client.post.call_count, 2)
+        self.assertEqual(mm.client.get.call_count, 2)
 
     def test_remove_image_success(self):
         set_module_args(dict(
@@ -278,7 +286,7 @@ class TestManager(unittest.TestCase):
 
         response = dict(code=200, contents={"f5-system-image:output": {"response": "specified images removed"}})
         mm = ModuleManager(module=module)
-        mm.exists = Mock(side_effect=[True, False])
+        mm.exists = Mock(return_value=True)
         mm.client.post = Mock(return_value=response)
 
         results = mm.exec_module()
@@ -333,7 +341,10 @@ class TestManager(unittest.TestCase):
     @patch.object(velos_partition_image.ModuleManager, 'exec_module', Mock(return_value={'changed': False}))
     def test_main_function_success(self, *args):
         set_module_args(dict(
-            image_name='F5OS-C-1.1.0-3198.PARTITION.iso',
+            image_name='F5OS-C-1.3.1-5968.PARTITION.iso',
+            remote_host='fake.imageserver.foo.bar.com',
+            remote_path='/test/',
+            protocol='https',
             state='present',
         ))
 
@@ -372,7 +383,9 @@ class TestManager(unittest.TestCase):
         mm = ModuleManager(module=module)
 
         mm.client.get = Mock(side_effect=[dict(code=200), dict(code=404), dict(code=400, contents='server error'),
-                                          dict(code=201), dict(code=404), dict(code=401, contents='access denied')])
+                                          dict(code=201), dict(code=404), dict(code=401, contents='access denied'),
+                                          dict(code=400, contents='server error'), dict(code=204, contents={}),
+                                          dict(code=200, contents={})])
 
         res1 = mm.is_imported()
         self.assertTrue(res1)
@@ -395,12 +408,17 @@ class TestManager(unittest.TestCase):
 
         self.assertIn('access denied', err2.exception.args[0])
 
-        mm.client.post = Mock(return_value=dict(code=400, contents='server error'))
-
         with self.assertRaises(F5ModuleError) as err3:
             mm.check_file_transfer_status()
 
         self.assertIn('server error', err3.exception.args[0])
+
+        self.assertFalse(mm.check_file_transfer_status())
+
+        with self.assertRaises(F5ModuleError) as err4:
+            mm.check_file_transfer_status()
+
+        self.assertIn('File upload job not has not started', err4.exception.args[0])
 
         mm.exists = Mock(side_effect=[True, True, False, True])
         mm.remove_from_device = Mock(return_value=True)
@@ -413,7 +431,3 @@ class TestManager(unittest.TestCase):
 
         res7 = mm.absent()
         self.assertFalse(res7)
-
-        with self.assertRaises(F5ModuleError) as err4:
-            mm.remove()
-        self.assertIn('Failed to delete the resource.', err4.exception.args[0])

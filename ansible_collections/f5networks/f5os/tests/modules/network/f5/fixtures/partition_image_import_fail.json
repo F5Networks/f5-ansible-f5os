@@ -1,5 +1,31 @@
 {
-    "f5-utils-file-transfer:output": {
-        "result": "\nS.No.|Operation  |Protocol|Local File Path                                             |Remote Host         |Remote File Path                                            |Status            \n1    |Import file|HTTPS   |/var/import/staging/F5OS-C-1.1.0-3198.PARTITION.iso        |10.144.140.21       |/root/image/F5OS-C-1.1.0-3198.PARTITION.iso                |File Not Found, HTTP Error 404\n"
-    }
+    "f5-utils-file-transfer:transfer-operation": [
+        {
+            "local-file-path": "images/import/iso/F5OS-C-1.3.1-5968.PARTITION.iso",
+            "remote-host": "fake.imageserver.foo.bar.com",
+            "remote-file-path": "/test/F5OS-C-1.3.1-5968.PARTITION.iso",
+            "operation": "Import file",
+            "protocol": "HTTPS   ",
+            "status": "File Not Found, HTTP Error 404",
+            "timestamp": "Mon Mar 27 13:03:57 2023"
+        },
+        {
+            "local-file-path": "images/import/os/F5OS-C-1.3.1-5968.PARTITION.os",
+            "remote-host": "fake.imageserver.foo.bar.com",
+            "remote-file-path": "/test/F5OS-C-1.3.1-5968.PARTITION.os",
+            "operation": "Import file",
+            "protocol": "HTTPS   ",
+            "status": "         Completed",
+            "timestamp": "Mon Mar 27 11:33:20 2023"
+        },
+        {
+            "local-file-path": "images/import/services/F5OS-C-1.3.1-5968.PARTITION.img",
+            "remote-host": "fake.imageserver.foo.bar.com",
+            "remote-file-path": "/test/F5OS-C-1.3.1-5968.PARTITION.img",
+            "operation": "Import file",
+            "protocol": "HTTPS   ",
+            "status": "         Completed",
+            "timestamp": "Mon Mar 27 11:32:32 2023"
+        }
+    ]
 }

@@ -92,7 +92,7 @@ interfaces:
         - Indicates if the interface is enabled.
       returned: queried
       type: bool
-      sample: yes
+      sample: true
     l3_counters:
       description:
         - Packets interface counters.
@@ -170,7 +170,7 @@ interfaces:
         - Indicates if the interface is set in loopback mode.
       returned: queried
       type: bool
-      sample: no
+      sample: false
     admin_status:
       description:
         - Returns the interface admin status as set by the user.
@@ -334,7 +334,7 @@ tenant_images:
         - Indicates if the tenant image is currently in use.
       returned: queried
       type: bool
-      sample: no
+      sample: false
     status:
       description:
         - Status of the uploaded tenant image ISO.

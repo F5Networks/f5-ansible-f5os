@@ -68,3 +68,12 @@ releases:
     fragments:
     - fix-plugin.yaml
     release_date: '2023-03-15'
+  1.1.0:
+    changes:
+      minor_changes:
+      - velos_partition_image - fixed invalid internal destination folder, changed
+        progress check functions, added remote_host and remote_path as mandatory parameters
+        for checking import status
+    fragments:
+    - rework-velos-partition-image.yaml
+    release_date: '2023-04-26'

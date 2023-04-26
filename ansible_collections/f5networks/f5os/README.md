@@ -84,11 +84,11 @@ We love hearing about how you're using the F5OS collection for Ansible.
 
 > **_NOTE:_** **This repository is a mirror, only issues submissions are accepted.**
 
-- Wojciech Wypior and the F5 team - solutionsfeedback@f5.com
+- Wojciech Wypior and the F5 team
 
 ## Copyright
 
-Copyright 2022 F5 Networks Inc.
+Copyright 2023 F5 Networks Inc.
 
 
 ## License
