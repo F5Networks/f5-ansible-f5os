@@ -51,6 +51,7 @@ class HttpApi(HttpApiBase):
         self.platform_type = None
 
     def login(self, username, password):
+        using_default_creds = (username == "admin") and (password == "admin")
         if username and password:
             response = self.send_request(path=LOGIN, method='GET', headers=BASE_HEADERS)
         else:
@@ -60,7 +61,8 @@ class HttpApi(HttpApiBase):
             self.access_token = response['headers'].get('X-Auth-Token', None)
             if self.access_token:
                 self.connection._auth = {'X-Auth-Token': self.access_token}
-                self._set_platform_type()
+                if not using_default_creds:
+                    self._set_platform_type()
             else:
                 raise AnsibleConnectionFailure('Server returned invalid response during connection authentication.')
         else:
