@@ -62,7 +62,7 @@ class TestTeemClient(TestCase):
     def setUp(self):
         self.pc = PlayContext()
         self.pc.network_os = "f5networks.f5os.f5os"
-        self.connection = connection_loader.get("httpapi", self.pc, "/dev/null")
+        self.connection = connection_loader.get("ansible.netcommon.httpapi", self.pc, "/dev/null")
         self.start_time = datetime.now().isoformat()
         self.fake_module = Mock()
         self.fake_module._name = 'fake_module'

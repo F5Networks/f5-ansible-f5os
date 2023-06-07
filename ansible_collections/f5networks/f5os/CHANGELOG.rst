@@ -5,6 +5,14 @@ F5Networks.F5OS Release Notes
 .. contents:: Topics
 
 
+v1.1.1
+======
+
+Bugfixes
+--------
+
+- f5os.py - disabled checking for platform type when using the default credentials
+
 v1.1.0
 ======
 

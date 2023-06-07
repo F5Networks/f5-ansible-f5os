@@ -50,7 +50,7 @@ class TestF5OSHttpapi(TestCase):
     def setUp(self):
         self.pc = PlayContext()
         self.pc.network_os = "f5networks.f5os.f5os"
-        self.connection = connection_loader.get("httpapi", self.pc, "/dev/null")
+        self.connection = connection_loader.get("ansible.netcommon.httpapi", self.pc, "/dev/null")
         self.mock_send = Mock()
         self.connection.send = self.mock_send
 

@@ -13,7 +13,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_vlan
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_vlan import (
-    ModuleParameters, ArgumentSpec, ModuleManager, Difference
+    ModuleParameters, ArgumentSpec, ModuleManager
 )
 from ansible_collections.f5networks.f5os.tests.compat import unittest
 from ansible_collections.f5networks.f5os.tests.compat.mock import (

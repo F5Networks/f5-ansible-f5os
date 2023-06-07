@@ -77,3 +77,10 @@ releases:
     fragments:
     - rework-velos-partition-image.yaml
     release_date: '2023-04-26'
+  1.1.1:
+    changes:
+      bugfixes:
+      - f5os.py - disabled checking for platform type when using the default credentials
+    fragments:
+    - password-change-fix.yaml
+    release_date: '2023-06-07'
