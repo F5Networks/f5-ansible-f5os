@@ -1,0 +1,12 @@
+{
+    "ietf-restconf:errors": {
+        "error": [
+            {
+                "error-type": "application",
+                "error-tag": "malformed-message",
+                "error-path": "/openconfig-system:system/f5-database:database/config-backup",
+                "error-message": "unknown element: names in /oc-sys:system/f5-database:database/f5-database:config-backup/f5-database:names"
+            }
+        ]
+    }
+}

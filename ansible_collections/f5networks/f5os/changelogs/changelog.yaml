@@ -84,3 +84,9 @@ releases:
     fragments:
     - password-change-fix.yaml
     release_date: '2023-06-07'
+  1.2.0:
+    modules:
+    - description: Manage F5OS config backups.
+      name: f5os_config_backup
+      namespace: ''
+    release_date: '2023-07-19'

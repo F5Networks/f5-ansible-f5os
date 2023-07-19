@@ -5,6 +5,14 @@ F5Networks.F5OS Release Notes
 .. contents:: Topics
 
 
+v1.2.0
+======
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_config_backup - Manage F5OS config backups.
+
 v1.1.1
 ======
 

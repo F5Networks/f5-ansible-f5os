@@ -1,0 +1,81 @@
+{
+    "f5-utils-file-transfer:transfer-operation": [
+        {
+            "local-file-path": "configs/foo_conf",
+            "remote-host": "192.168.1.1",
+            "remote-file-path": "/upload/upload.php",
+            "operation": "Export file",
+            "protocol": "HTTPS   ",
+            "operation-id": "EXPORT-JnHPFVr7",
+            "status": "Unauthorized Request, HTTP Error 401",
+            "timestamp": "Mon Jul 10 14:17:45 2023"
+        },
+        {
+            "local-file-path": "configs/foo_conf",
+            "remote-host": "192.168.1.1",
+            "remote-file-path": "/upload/upload.php",
+            "operation": "Export file",
+            "protocol": "HTTPS   ",
+            "operation-id": "EXPORT-BIWE95zn",
+            "status": "Unauthorized Request, HTTP Error 401",
+            "timestamp": "Mon Jul 10 14:17:45 2023"
+        },
+        {
+            "local-file-path": "configs/foo_conf",
+            "remote-host": "192.168.1.1",
+            "remote-file-path": "/upload/upload.php",
+            "operation": "Export file",
+            "protocol": "HTTPS   ",
+            "operation-id": "EXPORT-q16anGsp",
+            "status": "In Progress (87.0%)",
+            "timestamp": "Tue Jul 11 15:37:15 2023"
+        },
+        {
+            "local-file-path": "configs/foo_conf",
+            "remote-host": "Not Applicable",
+            "remote-file-path": "Not Applicable",
+            "operation": "Delete file",
+            "protocol": "Not Applicable",
+            "operation-id": "Not Applicable",
+            "status": "         Completed",
+            "timestamp": "Tue Jul 11 09:37:10 2023"
+        },
+        {
+            "local-file-path": "images/tenant/BIGIP-17.1.0.1-0.0.4.ALL-F5OS.qcow2.zip.bundle",
+            "remote-host": "foobar.baz.net",
+            "remote-file-path": "generic",
+            "operation": "Import file",
+            "protocol": "HTTPS   ",
+            "status": "         Completed",
+            "timestamp": "Fri Jul  7 13:26:24 2023"
+        },
+        {
+            "local-file-path": "images/tenant/BIGIP-17.1.0.1-0.0.4.ALL-F5OS.qcow2.zip.bundle",
+            "remote-host": "foobar.baz.net",
+            "remote-file-path": "build/bigip/generic//BIGIP-17.1.0.1-0.0.4.ALL-F5OS.qcow2.zip.bundle",
+            "operation": "Import file",
+            "protocol": "HTTPS   ",
+            "status": "         Completed",
+            "timestamp": "Wed Jun 21 10:34:04 2023"
+        },
+        {
+            "local-file-path": "images/tenant/BIGIP-17.1.0.1-0.0.4.ALL-F5OS.qcow2.zip.bundle",
+            "remote-host": "nibs.olympus.f5net.com",
+            "remote-file-path": "build/bigip/generic/BIGIP-17.1.0.1-0.0.4.ALL-F5OS.qcow2.zip.bundle",
+            "operation": "Import file",
+            "protocol": "HTTPS   ",
+            "status": "    HTTP Error 302",
+            "timestamp": "Tue Jun 13 23:51:42 2023"
+        },
+        {
+            "local-file-path": "images/tenant/F5OS-A-1.1.0-3361.R5R10.DEV.iso",
+            "remote-host": "foobar.baz.net",
+            "remote-file-path": "foo/generic-foo/F5OS-A/builds/s/F5OS-A-1.1.0-3361.R5R10.DEV.iso",
+            "operation": "Import file",
+            "protocol": "HTTPS   ",
+            "status": "         Completed",
+            "timestamp": "Mon Jun 19 13:46:08 2023"
+        }
+    ]
+}
+

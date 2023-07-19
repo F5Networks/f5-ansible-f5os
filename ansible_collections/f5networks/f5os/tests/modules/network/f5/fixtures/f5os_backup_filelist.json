@@ -1,0 +1,16 @@
+{
+    "f5-utils-file-transfer:output": {
+        "entries": [
+            {
+                "name": "another_backup",
+                "date": "Thu Jul 13 10:38:24 UTC 2023",
+                "size": "40KB"
+            },
+            {
+                "name": "foo_conf",
+                "date": "Tue Jul 11 15:36:31 UTC 2023",
+                "size": "40KB"
+            }
+        ]
+    }
+}

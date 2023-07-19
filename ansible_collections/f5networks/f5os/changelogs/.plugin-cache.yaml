@@ -12,6 +12,11 @@ plugins:
   inventory: {}
   lookup: {}
   module:
+    f5os_config_backup:
+      description: Manage F5OS config backups.
+      name: f5os_config_backup
+      namespace: ''
+      version_added: 1.2.0
     f5os_device_info:
       description: Collect information from F5OS devices
       name: f5os_device_info
@@ -73,4 +78,4 @@ plugins:
   shell: {}
   strategy: {}
   vars: {}
-version: 1.1.1
+version: 1.2.0
