@@ -27,14 +27,14 @@ options:
     required: True
   image_name:
     description:
-      - Name of the tenant image to be used. Must be present on the chassis partition.
+      - Name of the tenant image to use. Must be present on the chassis partition.
       - Required for create operations.
     type: str
   nodes:
     description:
-      - List of integers. Specifies on which blades C(nodes) the tenants are deployed.
+      - List of integers. Specifies on which blade C(nodes) the tenants are deployed.
       - Required for create operations.
-      - For single blade platforms like rSeries only the value of 1 should be provided.
+      - For single-blade platforms like rSeries, provide only the value of 1.
     type: list
     elements: int
   mgmt_ip:
@@ -52,16 +52,16 @@ options:
     type: str
   vlans:
     description:
-      - The existing VLAN IDs in the chassis partition that should be added to the tenant.
+      - The existing VLAN IDs in the chassis partition added to the tenant.
       - The order of these VLANs is ignored.
-      - This module orders the VLANs automatically, if you deliberately re-order them in subsequent tasks,
-        this module will B(not) register a change.
+      - This module orders the VLANs automatically. If you deliberately re-order the VLANs in subsequent tasks,
+        then this module will B(not) register a change.
       - Required for create operations.
     type: list
     elements: int
   cpu_cores:
     description:
-      - The number of vCPUs that should be added to the tenant.
+      - The number of vCPUs added to the tenant.
       - Required for create operations.
     type: int
     choices:
@@ -79,13 +79,15 @@ options:
       - 22
   memory:
     description:
-      - The amount of memory that should be provided to the tenant, in KB.
+      - The amount of memory (in KB) provided to the tenant.
+      - The configured value of memory must be greater than or equal to the integer value
+        obtained from the formula, '(3.5 * 1024 * cpu_cores) + 512'.
       - Required for create operations.
     type: int
   cryptos:
     description:
-      - Whether crypto and compression hardware offload should be enabled on the tenant.
-      - We recommend it is enabled, otherwise crypto and compression may be processed in CPU.
+      - Whether crypto and compression hardware offload is enabled on the tenant.
+      - F5 recommends enabling, otherwise, crypto and compression can be processed in CPU.
     type: str
     choices:
       - enabled
@@ -101,15 +103,15 @@ options:
   state:
     description:
       - The tenant state. If C(absent), deletes the tenant if it exists.
-      - If C(present) the tenant is created and enabled.
+      - If C(present), the tenant is created and enabled.
     type: str
     choices:
       - present
       - absent
     default: present
 notes:
-  - The module will create configurations of the tenants, it does not assume actual state of the running tenant.
-  - As deployment of tenants is a lengthy process, the module C(f5os_tenant_wait) should be used in concert with
+  - The module will create configurations of the tenants. The module does not assume actual state of the running tenant.
+  - Deploying tenants is a lengthy process, therefore, the C(f5os_tenant_wait) module is used together with
     this module to achieve desired results.
   - This module will not execute on VELOS controller.
 author:
@@ -183,12 +185,12 @@ mgmt_gateway:
   type: str
   sample: 192.168.1.254
 vlans:
-  description: Existing VLAN IDs in the chassis partition to be added to the tenant.
+  description: Existing VLAN IDs in the chassis partition added to the tenant.
   returned: changed
   type: list
   sample: [444, 333]
 cpu_cores:
-  description: The number of vCPUs added to tenant.
+  description: The number of vCPUs added to the tenant.
   returned: changed
   type: int
   sample: 4
@@ -203,7 +205,7 @@ cryptos:
   type: str
   sample: enabled
 running_state:
-  description: The running_state of tenant.
+  description: The running_state of the tenant.
   returned: changed
   type: str
   sample: provisioned

@@ -59,7 +59,7 @@ class TestParameters(unittest.TestCase):
             mgmt_gateway='127.0.0.254',
             vlans=[245],
             cpu_cores=2,
-            memory=4096,
+            memory=7680,
             cryptos='enabled',
             running_state='deployed',
             state='present'
@@ -74,7 +74,7 @@ class TestParameters(unittest.TestCase):
         self.assertEqual(p.mgmt_gateway, '127.0.0.254')
         self.assertListEqual(p.vlans, [245])
         self.assertEqual(p.cpu_cores, 2)
-        self.assertEqual(p.memory, 4096)
+        self.assertEqual(p.memory, 7680)
         self.assertEqual(p.cryptos, 'enabled')
         self.assertEqual(p.running_state, 'deployed')
         self.assertEqual(p.state, 'present')

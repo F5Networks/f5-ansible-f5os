@@ -37,8 +37,6 @@ options:
     type: str
     default: https
     choices:
-      - scp
-      - sftp
       - https
   remote_user:
     description:
@@ -409,7 +407,7 @@ class ArgumentSpec(object):
             remote_path=dict(type='path'),
             protocol=dict(
                 default='https',
-                choices=['scp', 'sftp', 'https']
+                choices=['https']
             ),
             force=dict(
                 default='no',

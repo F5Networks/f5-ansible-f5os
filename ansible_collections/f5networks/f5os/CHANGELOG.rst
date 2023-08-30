@@ -5,6 +5,15 @@ F5Networks.F5OS Release Notes
 .. contents:: Topics
 
 
+v1.3.0
+======
+
+Minor Changes
+-------------
+
+- f5os.py - set the ROOT of url to /api/data if the port is 443
+- f5os_config_backup.py - removed scp and sftp choices for protocol parameter until they are fully supported
+
 v1.2.0
 ======
 
