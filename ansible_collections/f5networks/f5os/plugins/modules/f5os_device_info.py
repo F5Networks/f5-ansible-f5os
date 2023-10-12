@@ -27,6 +27,7 @@ options:
     choices:
       - all
       - interfaces
+      - lag-interfaces
       - vlans
       - controller-images
       - partition-images
@@ -34,6 +35,7 @@ options:
       - system-info
       - "!all"
       - "!interfaces"
+      - "!lag-interfaces"
       - "!vlans"
       - "!controller-images"
       - "!partition-images"
@@ -76,6 +78,91 @@ EXAMPLES = r'''
           - "!system-info"
 '''
 RETURN = r'''
+lag_interfaces:
+  description: Information about Link Aggregate Group (LAG) interfaces on the platform.
+  returned: When C(lag-interfaces) is specified in C(gather_subset).
+  type: complex
+  contains:
+    name:
+      description:
+        - Name of the LAG interface as designated on the F5OS device.
+      returned: queried
+      type: str
+      sample: "backbone_trunk"
+    distribution_hash:
+      description:
+        - The type of LAG hashing algorithm.
+      returned: queried
+      type: str
+      sample: src-dst-ipport
+    enabled:
+      description:
+        - Indicates if the LAG interface is enabled.
+      returned: queried
+      type: bool
+      sample: true
+    lag_speed:
+      description:
+        - Returns the speed of the LAG interface.
+      returned: queried
+      type: int
+      sample: 100
+    lag_type:
+      description:
+        - Returns the type of LAG interface.
+      returned: queried
+      type: str
+      sample: STATIC
+    mac_address:
+      description:
+        - Returns the MAC address of the LAG interface.
+      returned: queried
+      type: str
+      sample: 00:94:a1:69:5d:17
+    operational_status:
+      description:
+        - Returns the LAG interface operational status.
+      returned: queried
+      type: str
+      sample: UP
+    members:
+      description:
+        - Returns the list of members of the LAG interface.
+      returned: queried
+      type: dict
+      sample: hash/dictionary of values
+      contains:
+        name:
+          description:
+            - Name of the interface.
+          returned: queried
+          type: str
+          sample: "1.0"
+        status:
+          description:
+            - Status of the interface.
+          returned: queried
+          type: str
+          sample: DOWN
+    mtu:
+      description:
+        - Returns the MTU value of the LAG interface.
+      returned: queried
+      type: int
+      sample: 9600
+    native_vlan:
+      description:
+        - Returns the vlan id of the native vlan associated with the LAG interface.
+      returned: queried
+      type: int
+      sample: 100
+    trunk_vlans:
+      description:
+        - Returns the list of vlan ids of trunk vlans associated with the LAG interface.
+      returned: queried
+      type: list
+      sample: [100, 200]
+  sample: hash/dictionary of values
 interfaces:
   description: Information about interfaces on the platform.
   returned: When C(interfaces) is specified in C(gather_subset).
@@ -889,6 +976,128 @@ class InterfacesFactManager(BaseManager):
         return response['contents']['openconfig-interfaces:interfaces']['interface']
 
 
+class LagInterfaceParameters(BaseParameters):
+    api_map = {
+    }
+
+    returnables = [
+        'description',
+        'distribution_hash',
+        'enabled',
+        'lag_speed',
+        'lag_type',
+        'mac_address',
+        'members',
+        'mtu',
+        'name',
+        'native_vlan',
+        'operational_status',
+        'trunk_vlans',
+    ]
+
+    @property
+    def description(self):
+        return self._values['config'].get('description')
+
+    @property
+    def distribution_hash(self):
+        return self._values['openconfig-if-aggregate:aggregation']['config'].get('f5-if-aggregate:distribution-hash')
+
+    @property
+    def enabled(self):
+        return flatten_boolean(self._values['state']['enabled'])
+
+    @property
+    def lag_speed(self):
+        return (self._values['openconfig-if-aggregate:aggregation']
+                .get('state', {})
+                .get('lag-speed'))
+
+    @property
+    def lag_type(self):
+        return (self._values['openconfig-if-aggregate:aggregation']
+                .get('state', {})
+                .get('lag-type'))
+
+    @property
+    def mac_address(self):
+        return (self._values['openconfig-if-aggregate:aggregation']
+                .get('state', {})
+                .get('f5-if-aggregate:mac-address'))
+
+    @property
+    def members(self):
+        members_data = (self._values['openconfig-if-aggregate:aggregation']
+                        .get('state', {})
+                        .get('f5-if-aggregate:members', []))
+        return [{'name': member['member-name'], 'status': member['member-status']} for member in
+                members_data.get('member', []) if members_data]
+
+    @property
+    def mtu(self):
+        return (self._values['openconfig-if-aggregate:aggregation']
+                .get('state', {})
+                .get('mtu'))
+
+    @property
+    def native_vlan(self):
+        return (self._values['openconfig-if-aggregate:aggregation']
+                .get('openconfig-vlan:switched-vlan', {})
+                .get('config', {})
+                .get('native-vlan'))
+
+    @property
+    def operational_status(self):
+        return self._values['state'].get('oper-status')
+
+    @property
+    def trunk_vlans(self):
+        return (self._values['openconfig-if-aggregate:aggregation']
+                .get('openconfig-vlan:switched-vlan', {})
+                .get('config', {})
+                .get('trunk-vlans'))
+
+
+class LagInterfaceFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(LagInterfaceFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(lag_interfaces=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        results = sorted(results, key=lambda k: k['name'])
+        return results
+
+    def read_facts(self):
+        results = []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = LagInterfaceParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-interfaces:interfaces"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        result = [
+            intfc for intfc in response['contents']['openconfig-interfaces:interfaces']['interface']
+            if intfc['config']['type'] == 'iana-if-type:ieee8023adLag'
+        ]
+        return result
+
+
 class ComponentsInfoParameters(BaseParameters):
     api_map = {
     }
@@ -952,11 +1161,16 @@ class LicenseInfoParameters(BaseParameters):
 
     @property
     def base_registration_key(self):
-        return self._values['config']['registration-key']['base']
+        if self._values['config'] is None:
+            return self._values['state'].get('registration-key', {}).get('base')
+        else:
+            return self._values['config'].get('registration-key', {}).get('base')
 
     @property
     def dossier(self):
-        return self._values['config']['dossier']
+        if self._values['config'] is None:
+            return None
+        return self._values['config'].get('dossier')
 
     @property
     def service_check_date(self):
@@ -1178,6 +1392,7 @@ class ModuleManager(object):
         self.want = Parameters(params=self.module.params)
         self.managers = {
             'interfaces': InterfacesFactManager,
+            'lag-interfaces': LagInterfaceFactManager,
             'vlans': VlansFactManager,
             'controller-images': ControllerImagesFactManager,
             'partition-images': PartitionImagesFactManager,
@@ -1269,6 +1484,7 @@ class ArgumentSpec(object):
 
                     # Non-meta choices
                     'interfaces',
+                    'lag-interfaces',
                     'vlans',
                     'controller-images',
                     'partition-images',
@@ -1280,6 +1496,7 @@ class ArgumentSpec(object):
 
                     # Negations of non-meta-choices
                     '!interfaces',
+                    '!lag-interfaces',
                     '!vlans',
                     '!controller-images',
                     '!partition-images',

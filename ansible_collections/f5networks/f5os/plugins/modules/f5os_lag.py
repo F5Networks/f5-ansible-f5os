@@ -459,8 +459,9 @@ class ModuleManager(object):
                 intf['openconfig-if-aggregate:aggregation']['openconfig-vlan:switched-vlan']['config'].update(
                     native_vlan
                 )
-            intf['openconfig-if-aggregate:aggregation']['openconfig-vlan:switched-vlan'] = dict(
-                config=native_vlan)
+            else:
+                intf['openconfig-if-aggregate:aggregation']['openconfig-vlan:switched-vlan'] = dict(
+                    config=native_vlan)
         return intf
 
 # TODO: replace the below blob and above helper function with json template at some point

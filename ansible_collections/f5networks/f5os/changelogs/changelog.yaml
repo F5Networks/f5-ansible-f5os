@@ -100,3 +100,13 @@ releases:
     - remove-scp-sftp.yaml
     - set-url-root-according-to-port.yaml
     release_date: '2023-08-30'
+  1.4.0:
+    changes:
+      bugfixes:
+      - f5os_device_info - fixed issue with license information on F5OS 1.5.0 and
+        above
+      minor_changes:
+      - f5os_device_info - add Link Aggregate Group information
+    fragments:
+    - add-lag-info-f5os-device-info.yaml
+    release_date: '2023-10-12'

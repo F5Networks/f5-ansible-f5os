@@ -698,6 +698,84 @@ class TestInterfacesModuleManager(unittest.TestCase):
         self.assertIsNone(mock_interfaces._filter_counters(None, None))
 
 
+class TestLagInterfacesModuleManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_rseries_lag_facts(self):
+        set_module_args(dict(
+            gather_subset=['lag-interfaces']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('lag-interfaces')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_f5os_interfaces_multiple_lags.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertTrue(len(results['lag_interfaces']) == 4)
+        self.assertEqual(results['lag_interfaces'][-1]['name'], 'test_lag_static_gui')
+
+    def test_get_controller_lag_facts(self):
+        set_module_args(dict(
+            gather_subset=['lag-interfaces']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('lag-interfaces')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_controller_interfaces.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertTrue(len(results['lag_interfaces']) == 8)
+        self.assertEqual(results['lag_interfaces'][0]['name'], 'cplagg_1.1')
+        self.assertEqual(results['lag_interfaces'][-1]['name'], 'cplagg_1.8')
+
+    def test_get_interfaces_facts_raises(self):
+        set_module_args(dict(
+            gather_subset=['lag-interfaces']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('lag-interfaces')
+        vm.client.get = Mock(return_value=dict(code=401, contents='unauthorized access'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('unauthorized access', err.exception.args[0])
+
+
 class TestSystemInfoModuleManager(unittest.TestCase):
     def setUp(self):
         self.spec = ArgumentSpec()

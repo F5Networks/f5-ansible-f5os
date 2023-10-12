@@ -34,10 +34,14 @@ options:
   protocol:
     description:
       - Protocol for config backup file transfer.
+      - Configuring SFTP or SCP might require adding the target device to known hosts on the F5OS device,
+        otherwise there is a chance transfer will fail due to connection error.
     type: str
     default: https
     choices:
       - https
+      - scp
+      - sftp
   remote_user:
     description:
       - User name for the remote server used for exporting the created config backup file.
@@ -407,7 +411,7 @@ class ArgumentSpec(object):
             remote_path=dict(type='path'),
             protocol=dict(
                 default='https',
-                choices=['https']
+                choices=['https', 'scp', 'sftp']
             ),
             force=dict(
                 default='no',

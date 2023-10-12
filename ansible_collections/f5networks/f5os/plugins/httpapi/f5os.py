@@ -8,7 +8,7 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-httpapi: f5os
+name: f5os
 short_description: HttpApi Plugin for F5OS devices
 description:
   - This HttpApi plugin provides methods to connect to F5OS devices over a HTTP(S)-based API.
@@ -26,7 +26,7 @@ options:
       - name: f5_telemetry
 version_added: "1.0.0"
 author:
-  - Wojciech Wypior <w.wypior@f5.com>
+  - Wojciech Wypior (@wojtek0806)
 '''
 
 import io

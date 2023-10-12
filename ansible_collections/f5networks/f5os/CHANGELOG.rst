@@ -5,6 +5,19 @@ F5Networks.F5OS Release Notes
 .. contents:: Topics
 
 
+v1.4.0
+======
+
+Minor Changes
+-------------
+
+- f5os_device_info - add Link Aggregate Group information
+
+Bugfixes
+--------
+
+- f5os_device_info - fixed issue with license information on F5OS 1.5.0 and above
+
 v1.3.0
 ======
 
