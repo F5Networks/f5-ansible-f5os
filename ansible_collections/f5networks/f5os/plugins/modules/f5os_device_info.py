@@ -47,35 +47,22 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Collect interface and vlan information on F5OS device
+  f5os_device_info:
+    gather_subset:
+      - interfaces
+      - vlans
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
+- name: Collect all F5OS device information
+  f5os_device_info:
+    gather_subset:
+      - all
 
-  tasks:
-    - name: Collect interface and vlan information on F5OS device
-      f5os_device_info:
-        gather_subset:
-          - interfaces
-          - vlans
-
-    - name: Collect all F5OS device information
-      f5os_device_info:
-        gather_subset:
-          - all
-
-    - name: Collect all F5OS device information except system-info
-      f5os_device_info:
-        gather_subset:
-          - all
-          - "!system-info"
+- name: Collect all F5OS device information except system-info
+  f5os_device_info:
+    gather_subset:
+      - all
+      - "!system-info"
 '''
 RETURN = r'''
 lag_interfaces:

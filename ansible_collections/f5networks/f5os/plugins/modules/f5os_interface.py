@@ -53,64 +53,51 @@ author:
   - Wojciech Wypior (@wojtek0806)
 '''
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Creating VLAN444
+  f5os_vlan:
+    name: vlan-444
+    vlan_id: 444
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
+- name: Creating VLAN555
+  f5os_vlan:
+    name: vlan-555
+    vlan_id: 555
 
-  tasks:
-    - name: Creating VLAN444
-      f5os_vlan:
-        name: vlan-444
-        vlan_id: 444
+- name: Attach Vlans to interface on Velos Partition
+  f5os_interface:
+    name: "2/1.0"
+    trunk_vlans: [444]
+    state: present
 
-    - name: Creating VLAN555
-      f5os_vlan:
-        name: vlan-555
-        vlan_id: 555
+- name: Modify Vlans to interface on Velos Partition
+  f5os_interface:
+    name: "2/1.0"
+    trunk_vlans: [444, 555]
+    state: present
 
-    - name: Attach Vlans to interface on Velos Partition
-      f5os_interface:
-        name: "2/1.0"
-        trunk_vlans: [444]
-        state: present
+- name: Delete vlans on interface on Velos Partition
+  f5os_interface:
+    name: "1.0"
+    trunk_vlans: [444, 555]
+    state: absent
 
-    - name: Modify Vlans to interface on Velos Partition
-      f5os_interface:
-        name: "2/1.0"
-        trunk_vlans: [444,555]
-        state: present
+- name: Attach Vlans to interface on rSeries Platform
+  f5os_interface:
+    name: "1.0"
+    trunk_vlans: [444]
+    state: present
 
-    - name: Delete vlans on interface on Velos Partition
-      f5os_interface:
-        name: "1.0"
-        trunk_vlans: [444,555]
-        state: absent
+- name: Modify Vlans to interface on rSeries Platform
+  f5os_interface:
+    name: "1.0"
+    trunk_vlans: [444, 555]
+    state: present
 
-    - name: Attach Vlans to interface on rSeries Platform
-      f5os_interface:
-        name: "1.0"
-        trunk_vlans: [444]
-        state: present
-
-    - name: Modify Vlans to interface on rSeries Platform
-      f5os_interface:
-        name: "1.0"
-        trunk_vlans: [444,555]
-        state: present
-
-    - name: Delete vlans on interface on rSeries Platform
-      f5os_interface:
-        name: "1.0"
-        trunk_vlans: [444,555]
-        state: absent
+- name: Delete vlans on interface on rSeries Platform
+  f5os_interface:
+    name: "1.0"
+    trunk_vlans: [444, 555]
+    state: absent
 '''
 
 RETURN = r'''

@@ -47,33 +47,20 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Create a vlan on partition
+  f5os_vlan:
+    name: foo
+    vlan_id: 3212
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
+- name: Update name of a vlan on partition
+  f5os_vlan:
+    name: changed_this
+    vlan_id: 3212
 
-  tasks:
-    - name: Create a vlan on partition
-      f5os_vlan:
-        name: foo
-        vlan_id: 3212
-
-    - name: Update name of a vlan on partition
-      f5os_vlan:
-        name: changed_this
-        vlan_id: 3212
-
-    - name: Delete vlan on partition
-      f5os_vlan:
-        vlan_id: 3212
-        state: absent
+- name: Delete vlan on partition
+  f5os_vlan:
+    vlan_id: 3212
+    state: absent
 '''
 
 RETURN = r'''

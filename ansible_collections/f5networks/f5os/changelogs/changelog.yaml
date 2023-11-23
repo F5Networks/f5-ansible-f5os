@@ -110,3 +110,13 @@ releases:
     fragments:
     - add-lag-info-f5os-device-info.yaml
     release_date: '2023-10-12'
+  1.5.0:
+    changes:
+      minor_changes:
+      - client.py - added client property to return software version of the F5OS platform
+      - f5os.py - added code to fetch the software version of the F5OS platform
+      - teem.py - added a new field, f5SoftwareVersion to the teem data, and changed
+        the field, F5OSPlatform to f5Platform
+    fragments:
+    - teem-add-software-version-field.yaml
+    release_date: '2023-11-23'

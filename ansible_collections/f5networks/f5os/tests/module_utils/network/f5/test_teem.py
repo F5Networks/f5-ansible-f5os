@@ -82,7 +82,7 @@ class TestTeemClient(TestCase):
         assert result[0]['CollectionName'] == 'F5OS'
         assert result[0]['CollectionVersion'] == CURRENT_COLL_VERSION
         assert result[0]['CollectionModuleName'] == 'fake_module'
-        assert result[0]['F5OSPlatform'] == 'rSeries'
+        assert result[0]['f5Platform'] == 'rSeries'
         assert result[0]['ControllerAnsibleVersion'] == '2.10'
         assert result[0]['ControllerPythonVersion'] == self.python_version
         assert result[0]['ControllerAsDocker'] is False
@@ -106,7 +106,7 @@ class TestTeemClient(TestCase):
         assert result[0]['CollectionName'] == 'F5OS'
         assert result[0]['CollectionVersion'] == CURRENT_COLL_VERSION
         assert result[0]['CollectionModuleName'] == 'bigip_fake'
-        assert result[0]['F5OSPlatform'] == 'rSeries'
+        assert result[0]['f5Platform'] == 'rSeries'
         assert result[0]['ControllerAnsibleVersion'] == '2.10'
         assert result[0]['ControllerPythonVersion'] == self.python_version
         assert result[0]['ControllerAsDocker'] is True
@@ -127,7 +127,55 @@ class TestTeemClient(TestCase):
         assert result[0]['CollectionName'] == 'F5OS'
         assert result[0]['CollectionVersion'] == CURRENT_COLL_VERSION
         assert result[0]['CollectionModuleName'] == 'bigip_fake'
-        assert result[0]['F5OSPlatform'] == 'Velos Partition'
+        assert result[0]['f5Platform'] == 'Velos Partition'
+        assert result[0]['ControllerAnsibleVersion'] == '2.10'
+        assert result[0]['ControllerPythonVersion'] == self.python_version
+        assert result[0]['ControllerAsDocker'] is False
+        assert result[0]['DockerHostname'] == 'none'
+        assert result[0]['RunningInCiEnv'] is False
+        assert result[0]['CiEnvName'] == 'none'
+
+    @patch.object(F5Client, 'software_version', new_callable=PropertyMock)
+    @patch.object(F5Client, 'platform', new_callable=PropertyMock)
+    @patch('ansible_collections.f5networks.f5os.plugins.module_utils.teem.in_cicd', new_callable=Mock())
+    def test_teem_client_build_telemetry_velos_software_version(self, m, mock_plat, soft_ver):
+        soft_ver.return_value = '1.6.0-9817'
+        m.return_value = m.return_value = (False, None)
+        mock_plat.return_value = 'Velos Partition'
+        self.fake_module._name = 'f5networks.f5os.bigip_fake'
+
+        teem = TeemClient(self.client, self.start_time)
+        result = teem.build_telemetry()
+
+        assert result[0]['CollectionName'] == 'F5OS'
+        assert result[0]['CollectionVersion'] == CURRENT_COLL_VERSION
+        assert result[0]['CollectionModuleName'] == 'bigip_fake'
+        assert result[0]['f5Platform'] == 'Velos Partition'
+        assert result[0]['f5SoftwareVersion'] == '1.6.0-9817'
+        assert result[0]['ControllerAnsibleVersion'] == '2.10'
+        assert result[0]['ControllerPythonVersion'] == self.python_version
+        assert result[0]['ControllerAsDocker'] is False
+        assert result[0]['DockerHostname'] == 'none'
+        assert result[0]['RunningInCiEnv'] is False
+        assert result[0]['CiEnvName'] == 'none'
+
+    @patch.object(F5Client, 'software_version', new_callable=PropertyMock)
+    @patch.object(F5Client, 'platform', new_callable=PropertyMock)
+    @patch('ansible_collections.f5networks.f5os.plugins.module_utils.teem.in_cicd', new_callable=Mock())
+    def test_teem_client_build_telemetry_rSeries_software_version(self, m, mock_plat, soft_ver):
+        soft_ver.return_value = '1.7.0-3518'
+        m.return_value = m.return_value = (False, None)
+        mock_plat.return_value = 'rSeries Platform'
+        self.fake_module._name = 'f5networks.f5os.bigip_fake'
+
+        teem = TeemClient(self.client, self.start_time)
+        result = teem.build_telemetry()
+
+        assert result[0]['CollectionName'] == 'F5OS'
+        assert result[0]['CollectionVersion'] == CURRENT_COLL_VERSION
+        assert result[0]['CollectionModuleName'] == 'bigip_fake'
+        assert result[0]['f5Platform'] == 'rSeries Platform'
+        assert result[0]['f5SoftwareVersion'] == '1.7.0-3518'
         assert result[0]['ControllerAnsibleVersion'] == '2.10'
         assert result[0]['ControllerPythonVersion'] == self.python_version
         assert result[0]['ControllerAsDocker'] is False

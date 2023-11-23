@@ -83,32 +83,19 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Create partition 'foo'
+  velos_partition:
+    name: foo
+    state: present
+    os_version: 1.1.1-5046
+    ipv4_mgmt_address: 10.144.140.124/24
+    ipv4_mgmt_gateway: 10.144.140.254
+    slots: [4, 5]
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.bigip
-    ansible_httpapi_use_ssl: yes
-
-  tasks:
-    - name: Create partition 'foo'
-      velos_partition:
-        name: foo
-        state: present
-        os_version: 1.1.1-5046
-        ipv4_mgmt_address: 10.144.140.124/24
-        ipv4_mgmt_gateway: 10.144.140.254
-        slots: [4,5]
-
-    - name: Delete partition 'foo'
-      velos_partition:
-        name: foo
-        state: absent
+- name: Delete partition 'foo'
+  velos_partition:
+    name: foo
+    state: absent
 '''
 
 RETURN = r'''

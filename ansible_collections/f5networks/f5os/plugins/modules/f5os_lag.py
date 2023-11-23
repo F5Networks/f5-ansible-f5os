@@ -64,61 +64,48 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Creating VLAN444
+  f5os_vlan:
+    name: vlan-444
+    vlan_id: 444
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
+- name: Creating VLAN555
+  f5os_vlan:
+    name: vlan-555
+    vlan_id: 555
 
-  tasks:
-    - name: Creating VLAN444
-      f5os_vlan:
-        name: vlan-444
-        vlan_id: 444
+- name: Attach Trunk-vlans to LAG to interface
+  f5os_lag:
+    name: "Arista"
+    lag_type: "lacp"
+    trunk_vlans: [444]
+    state: present
 
-    - name: Creating VLAN555
-      f5os_vlan:
-        name: vlan-555
-        vlan_id: 555
+- name: Modify Vlans to LAG interface
+  f5os_lag:
+    name: "Arista"
+    trunk_vlans: [444, 555]
+    state: present
 
-    - name: Attach Trunk-vlans to LAG to interface
-      f5os_lag:
-        name: "Arista"
-        lag_type: "lacp"
-        trunk_vlans: [444]
-        state: present
+- name: Add interfaces to LAG on Velos Partition
+  f5os_lag:
+    name: "Arista"
+    config_members:
+      - "1/1.0"
+    state: present
 
-    - name: Modify Vlans to LAG interface
-      f5os_lag:
-        name: "Arista"
-        trunk_vlans: [444,555]
-        state: present
+- name: Add interfaces to LAG on rSeries Platform
+  f5os_lag:
+    name: "Arista"
+    config_members:
+      - "1.0"
+    state: present
 
-    - name: Add interfaces to LAG on Velos Partition
-      f5os_lag:
-        name: "Arista"
-        config_members:
-          - "1/1.0"
-        state: present
-
-    - name: Add interfaces to LAG on rSeries Platform
-      f5os_lag:
-        name: "Arista"
-        config_members:
-          - "1.0"
-        state: present
-
-    - name: Delete LAG interface
-      f5os_lag:
-        name: "Arista"
-        trunk_vlans: [444,555]
-        state: absent
+- name: Delete LAG interface
+  f5os_lag:
+    name: "Arista"
+    trunk_vlans: [444, 555]
+    state: absent
 '''
 
 RETURN = r'''

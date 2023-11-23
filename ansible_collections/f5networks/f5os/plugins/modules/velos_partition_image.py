@@ -92,41 +92,28 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Import partition image onto the Velos controller
+  velos_partition_image:
+    image_name: F5OS-C-1.1.0-3198.PARTITION.iso
+    remote_host: builds.mydomain.com
+    remote_user: admin
+    remote_password: secret
+    remote_path: /images/
+    state: import
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
+- name: Check for presence of the imported ISO on the Velos controller
+  velos_partition_image:
+    image_name: F5OS-C-1.1.0-3198.PARTITION.iso
+    remote_host: builds.mydomain.com
+    remote_path: /images/
+    protocol: scp
+    timeout: 600
+    state: present
 
-  tasks:
-    - name: Import partition image onto the Velos controller
-      velos_partition_image:
-        image_name: F5OS-C-1.1.0-3198.PARTITION.iso
-        remote_host: builds.mydomain.com
-        remote_user: admin
-        remote_password: secret
-        remote_path: /images/
-        state: import
-
-    - name: Check for presence of the imported ISO on the Velos controller
-      velos_partition_image:
-        image_name: F5OS-C-1.1.0-3198.PARTITION.iso
-        remote_host: builds.mydomain.com
-        remote_path: /images/
-        protocol: scp
-        timeout: 600
-        state: present
-
-    - name: Remove partition image from the Velos controller
-      velos_partition_image:
-        image_name: F5OS-C-1.1.0-3198.PARTITION.iso
-        state: absent
+- name: Remove partition image from the Velos controller
+  velos_partition_image:
+    image_name: F5OS-C-1.1.0-3198.PARTITION.iso
+    state: absent
 '''
 RETURN = r'''
 image_name:

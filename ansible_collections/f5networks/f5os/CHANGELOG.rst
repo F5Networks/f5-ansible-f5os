@@ -5,6 +5,16 @@ F5Networks.F5OS Release Notes
 .. contents:: Topics
 
 
+v1.5.0
+======
+
+Minor Changes
+-------------
+
+- client.py - added client property to return software version of the F5OS platform
+- f5os.py - added code to fetch the software version of the F5OS platform
+- teem.py - added a new field, f5SoftwareVersion to the teem data, and changed the field, F5OSPlatform to f5Platform
+
 v1.4.0
 ======
 

@@ -49,6 +49,7 @@ class HttpApi(HttpApiBase):
         self.connection = connection
         self.access_token = None
         self.platform_type = None
+        self.software_version = None
 
     def login(self, username, password):
         using_default_creds = (username == "admin") and (password == "admin")
@@ -63,6 +64,7 @@ class HttpApi(HttpApiBase):
                 self.connection._auth = {'X-Auth-Token': self.access_token}
                 if not using_default_creds:
                     self._set_platform_type()
+                    self._set_software_version()
             else:
                 raise AnsibleConnectionFailure('Server returned invalid response during connection authentication.')
         else:
@@ -154,6 +156,33 @@ class HttpApi(HttpApiBase):
 
     def get_platform_type(self):
         return self.platform_type
+
+    def _rseries_software_version(self):
+        uri = ROOT + '/openconfig-system:system/f5-system-version:version'
+        response = self.send_request(path=uri, method='GET', headers=BASE_HEADERS)
+        if response['code'] != 200:
+            raise F5ModuleError(response['contents'])
+        version = response['contents']['f5-system-version:version']['os-version']
+        return version
+
+    def _velos_software_version(self):
+        uri = ROOT + '/openconfig-platform:components/component'
+        response = self.send_request(path=uri, method='GET', headers=BASE_HEADERS)
+        if response['code'] != 200:
+            raise F5ModuleError(response['contents'])
+
+        res = response['contents']
+        version = res['openconfig-platform:component'][0]['f5-platform:software']['state']['software-components']['software-component'][0]['state']['version']
+        return version
+
+    def _set_software_version(self):
+        if self.platform_type == 'Velos Partition':
+            self.software_version = self._velos_software_version()
+        elif self.platform_type == 'rSeries Platform':
+            self.software_version = self._rseries_software_version()
+
+    def get_software_version(self):
+        return self.software_version
 
 
 def _check_seek_raising(error):

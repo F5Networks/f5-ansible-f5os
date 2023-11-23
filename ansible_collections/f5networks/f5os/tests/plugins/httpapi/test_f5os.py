@@ -96,6 +96,7 @@ class TestF5OSHttpapi(TestCase):
     def test_set_platform_type_rseries_set(self):
         xheader = {'X-Auth-Token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'}
         xheader.update(BASE_HEADERS)
+        self.connection.httpapi._set_software_version = Mock()
         self.connection.send.side_effect = [
             connection_response(load_fixture('f5os_auth.json'), 200, xheader),
             connection_response({'GOOD': 'RESPONSE'}, 200, xheader)
@@ -123,6 +124,7 @@ class TestF5OSHttpapi(TestCase):
     def test_set_platform_type_partition_set(self):
         xheader = {'X-Auth-Token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'}
         xheader.update(BASE_HEADERS)
+        self.connection.httpapi._set_software_version = Mock()
         self.connection.send.side_effect = [
             connection_response(load_fixture('f5os_auth.json'), 200, xheader),
             connection_response({}, 404, xheader),
@@ -137,6 +139,7 @@ class TestF5OSHttpapi(TestCase):
     def test_set_platform_type_raises_empty_response(self):
         xheader = {'X-Auth-Token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'}
         xheader.update(BASE_HEADERS)
+        # self.connection.httpapi._set_software_version = Mock()
         self.connection.send.side_effect = [
             connection_response(load_fixture('f5os_auth.json'), 200, xheader),
             connection_response({}, 404, xheader),
@@ -151,6 +154,7 @@ class TestF5OSHttpapi(TestCase):
     def test_set_platform_type_raises_different_error(self):
         xheader = {'X-Auth-Token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'}
         xheader.update(BASE_HEADERS)
+        # self.connection.httpapi._set_software_version = Mock()
         self.connection.send.side_effect = [
             connection_response(load_fixture('f5os_auth.json'), 200, xheader),
             connection_response({}, 404, xheader),

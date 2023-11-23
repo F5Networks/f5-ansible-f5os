@@ -89,39 +89,26 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Import tenant image 'foo' onto the F5OS device
+  f5os_tenant_image:
+    image_name: foo
+    remote_host: builds.mydomain.com
+    remote_user: admin
+    remote_password: secret
+    remote_path: /images/
+    local_path: images/tenant
+    state: import
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
+- name: Check the status of the image import onto the F5OS device
+  f5os_tenant_image:
+    image_name: foo
+    timeout: 600
+    state: present
 
-  tasks:
-    - name: Import tenant image 'foo' onto the F5OS device
-      f5os_tenant_image:
-        image_name: foo
-        remote_host: builds.mydomain.com
-        remote_user: admin
-        remote_password: secret
-        remote_path: /images/
-        local_path: images/tenant
-        state: import
-
-    - name: Check the status of the image import onto the F5OS device
-      f5os_tenant_image:
-        image_name: foo
-        timeout: 600
-        state: present
-
-    - name: Remove tenant image 'foo'
-      f5os_tenant_image:
-        name: foo
-        state: absent
+- name: Remove tenant image 'foo'
+  f5os_tenant_image:
+    name: foo
+    state: absent
 '''
 RETURN = r'''
 image_name:

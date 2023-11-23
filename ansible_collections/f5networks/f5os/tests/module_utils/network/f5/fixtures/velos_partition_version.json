@@ -1,0 +1,26 @@
+{
+    "openconfig-platform:component": [
+        {
+            "f5-platform:software": {
+                "state": {
+                    "software-components": {
+                        "software-component": [
+                            {
+                                "software-index": "blade-os",
+                                "state": {
+                                    "version": "1.7.0-5149"
+                                }
+                            },
+                            {
+                                "software-index": "partition-services",
+                                "state": {
+                                    "version": "1.7.0-5149"
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ]
+}

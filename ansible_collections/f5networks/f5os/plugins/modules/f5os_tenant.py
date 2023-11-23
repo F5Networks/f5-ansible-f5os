@@ -119,43 +119,30 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Create tenant 'foo'
+  f5os_tenant:
+    name: foo
+    image_name: BIGIP-bigip14.1.x-miro-14.1.2.3-0.0.182.ALL-VELOS.qcow2.zip
+    nodes:
+      - 1
+    mgmt_ip: 10.144.3.17
+    mgmt_prefix: 19
+    mgmt_gateway: 10.146.127.254
+    vlans: [245]
+    cpu_cores: 2
+    memory: 4096
+    cryptos: disabled
+    running_state: configured
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
+- name: Deploy tenant 'foo'
+  f5os_tenant:
+    name: foo
+    running_state: deployed
 
-  tasks:
-    - name: Create tenant 'foo'
-      f5os_tenant:
-        name: foo
-        image_name: BIGIP-bigip14.1.x-miro-14.1.2.3-0.0.182.ALL-VELOS.qcow2.zip
-        nodes:
-          - 1
-        mgmt_ip: 10.144.3.17
-        mgmt_prefix: 19
-        mgmt_gateway: 10.146.127.254
-        vlans: [245]
-        cpu_cores: 2
-        memory: 4096
-        cryptos: disabled
-        running_state: configured
-
-    - name: Deploy tenant 'foo'
-      f5os_tenant:
-        name: foo
-        running_state: deployed
-
-    - name: Delete tenant 'foo'
-      f5os_tenant:
-        name: foo
-        state: absent
+- name: Delete tenant 'foo'
+  f5os_tenant:
+    name: foo
+    state: absent
 '''
 
 RETURN = r'''

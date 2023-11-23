@@ -93,6 +93,7 @@ class TeemClient:
         if 'f5networks' in module_name:
             module_name = module_name.split('.')[2]
         platform = self.f5client.platform
+        software_version = self.f5client.software_version
         ansible_version = self.f5client.ansible_version
         python_version = sys.version.split(' ', maxsplit=1)[0]
         self.in_ci, ci_name = in_cicd()
@@ -101,7 +102,8 @@ class TeemClient:
             'CollectionName': f'{self.coll_name}',
             'CollectionVersion': CURRENT_COLL_VERSION,
             'CollectionModuleName': module_name,
-            'F5OSPlatform': platform,
+            'f5Platform': platform,
+            'f5SoftwareVersion': software_version,
             'ControllerAnsibleVersion': ansible_version,
             'ControllerPythonVersion': python_version,
             'ControllerAsDocker': self.docker,

@@ -80,40 +80,27 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Create backup config and import it to remote server
+  f5os_config_backup:
+    name: foo
+    remote_host: builds.mydomain.com
+    remote_path: /uploads/upload.php
+    timeout: 300
+    state: present
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
+- name: Recreate existing backup file and upload it to remote server
+  f5os_config_backup:
+    name: foo
+    remote_host: builds.mydomain.com
+    remote_path: /uploads/upload.php
+    timeout: 300
+    force: true
+    state: present
 
-  tasks:
-    - name: Create backup config and import it to remote server
-      f5os_config_backup:
-        name: foo
-        remote_host: builds.mydomain.com
-        remote_path: /uploads/upload.php
-        timeout: 300
-        state: present
-
-    - name: Recreate existing backup file and upload it to remote server
-      f5os_config_backup:
-        name: foo
-        remote_host: builds.mydomain.com
-        remote_path: /uploads/upload.php
-        timeout: 300
-        force: true
-        state: present
-
-    - name: Remove backup file
-      f5os_config_backup:
-        name: foo
-        state: absent
+- name: Remove backup file
+  f5os_config_backup:
+    name: foo
+    state: absent
 '''
 RETURN = r'''
 remote_host:

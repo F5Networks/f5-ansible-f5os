@@ -200,6 +200,7 @@ class TestF5osClient(TestCase):
         self.connection.send.side_effect = [
             connection_response(load_fixture('f5os_auth.json'), 200, xheader),
             connection_response(load_fixture('f5os_platform_response.json'), 200, xheader),
+            connection_response(load_fixture('rseries_software_version.json'), 200, xheader),
         ]
         self.connection.httpapi.login('foo', 'bar')
         platform = self.client.platform
@@ -225,7 +226,8 @@ class TestF5osClient(TestCase):
         self.connection.send.side_effect = [
             connection_response(load_fixture('f5os_auth.json'), 200, xheader),
             connection_response(dict(), 404, xheader),
-            connection_response(dict(), 200, xheader)
+            connection_response(dict(), 200, xheader),
+            connection_response(load_fixture('velos_partition_version.json'), 200, xheader),
         ]
         self.connection.httpapi.login('foo', 'bar')
         platform = self.client.platform

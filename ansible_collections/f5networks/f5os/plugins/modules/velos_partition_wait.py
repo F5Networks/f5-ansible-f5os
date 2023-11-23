@@ -56,31 +56,21 @@ author:
 '''
 
 EXAMPLES = r'''
-- hosts: all
-  collections:
-    - f5networks.f5os
-  connection: httpapi
+- name: Wait for the specified partition to be in the running state.
+  velos_partition_wait:
+    name: partition1
 
-  vars:
-    ansible_host: "lb.mydomain.com"
-    ansible_user: "admin"
-    ansible_httpapi_password: "secret"
-    ansible_network_os: f5networks.f5os.f5os
-    ansible_httpapi_use_ssl: yes
-  tasks:
-    - name: Wait for the specified partition to be in the running state.
-      velos_partition_wait:
-        name: partition1
-    - name: Wait a maximum of 300 seconds specified partition to be in the api_available state.
-      velos_partition_wait:
-        name: partition1
-        state: ssh-ready
-        timeout: 300
-    - name: Wait 30 seconds before verifying the specified partition to be in the running state.
-      velos_partition_wait:
-        name: partition1
-        state: running
-        delay: 30
+- name: Wait a maximum of 300 seconds specified partition to be in the api_available state.
+  velos_partition_wait:
+    name: partition1
+    state: ssh-ready
+    timeout: 300
+
+- name: Wait 30 seconds before verifying the specified partition to be in the running state.
+  velos_partition_wait:
+    name: partition1
+    state: running
+    delay: 30
 '''
 RETURN = r'''
 elapsed:

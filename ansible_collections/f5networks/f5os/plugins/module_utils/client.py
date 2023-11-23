@@ -68,6 +68,10 @@ class F5Client:
     def module_name(self):
         return self.module._name
 
+    @property
+    def software_version(self):
+        return self.plugin.get_software_version()
+
 
 def send_teem(client, start_time):
     """ Sends Teem Data if allowed."""
