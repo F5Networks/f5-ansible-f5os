@@ -75,6 +75,24 @@ class TestParameters(unittest.TestCase):
         self.assertListEqual(p.config_members, ['1.1'])
         self.assertEqual(p.native_vlan, 111)
 
+    def test_lacp_module_parameters(self):
+        args = dict(
+            lag_type='lacp',
+        )
+        p = ModuleParameters(params=args, client=DummyClient('rSeries Platform'))
+        self.assertEqual(p.lag_type, 'LACP')
+        self.assertEqual(p.mode, 'ACTIVE')
+        self.assertEqual(p.interval, 'SLOW')
+
+        args['mode'] = 'PASSIVE'
+        args['interval'] = 'FAST'
+
+        p = ModuleParameters(params=args, client=DummyClient('rSeries Platform'))
+
+        self.assertEqual(p.lag_type, 'LACP')
+        self.assertEqual(p.mode, 'PASSIVE')
+        self.assertEqual(p.interval, 'FAST')
+
     def test_api_parameters(self):
         args = load_fixture('load_velos_partition_lag_config.json')
 
@@ -159,7 +177,7 @@ class TestManager(unittest.TestCase):
         mm = ModuleManager(module=module)
         mm.client.platform = 'rSeries Platform'
         mm.exists = Mock(return_value=False)
-        mm.client.patch = Mock(side_effect=[dict(code=201), dict(code=201), dict(code=201)])
+        mm.client.patch = Mock(side_effect=[dict(code=201), dict(code=201), dict(code=201), dict(code=201)])
 
         results = mm.exec_module()
         assert results['changed'] is True
@@ -362,7 +380,7 @@ class TestManager(unittest.TestCase):
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
-        self.assertTrue(mm.client.delete.call_count == 2)
+        self.assertTrue(mm.client.delete.call_count == 3)
 
     def test_delete_lag_delete_member_fails(self, *args):
         set_module_args(dict(
@@ -502,6 +520,16 @@ class TestManager(unittest.TestCase):
         mm._update_changed_options = Mock(return_value=False)
         mm.read_current_from_device = Mock(return_value=dict())
         self.assertFalse(mm.update())
+
+        mm.client.patch = Mock(return_value=dict(contents='access denied', code=401))
+        with self.assertRaises(F5ModuleError) as err4:
+            mm._add_lacp_config()
+        self.assertIn('access denied', err4.exception.args[0])
+
+        mm.client.delete = Mock(return_value=dict(contents='server error', code=500))
+        with self.assertRaises(F5ModuleError) as err5:
+            mm._remove_lacp_config("foobar")
+        self.assertIn('server error', err5.exception.args[0])
 
     def test_get_interfaces_method(self):
         set_module_args(dict(

@@ -41,6 +41,24 @@ options:
     choices:
       - lacp
       - static
+  mode:
+    description:
+      - The LACP mode of the interface to be created.
+      - This parameter is useful only when C(lag_type) is set to C(lacp).
+    type: str
+    choices:
+      - active
+      - passive
+    version_added: "1.6.0"
+  interval:
+    description:
+      - The LACP interval of the interface to be created.
+      - This parameter is useful only when C(lag_type) is set to C(lacp).
+    type: str
+    choices:
+      - slow
+      - fast
+    version_added: "1.6.0"
   config_members:
     description:
       - "Configures the list of interfaces to be grouped for the Link Aggregation Group (LAG)."
@@ -165,7 +183,9 @@ class Parameters(AnsibleF5Parameters):
         'trunk_vlans',
         'interface_type',
         'config_members',
-        'lag_type'
+        'lag_type',
+        'mode',
+        'interval'
     ]
 
     updatables = [
@@ -256,6 +276,20 @@ class ModuleParameters(Parameters):
         if self._values['lag_type'] is None:
             return None
         return self._values['lag_type'].upper()
+
+    @property
+    def mode(self):
+        if self.lag_type == 'LACP':
+            if self._values['mode'] is None:
+                return 'ACTIVE'
+            return self._values['mode'].upper()
+
+    @property
+    def interval(self):
+        if self.lag_type == 'LACP':
+            if self._values['interval'] is None:
+                return 'SLOW'
+            return self._values['interval'].upper()
 
 
 class Changes(Parameters):
@@ -482,6 +516,8 @@ class ModuleManager(object):
         if params.get('config_members', None):
             for intf in params.get('config_members'):
                 self._configure_member(intf)
+        if params.get('lag_type') == 'LACP':
+            self._add_lacp_config()
         return True
 
     def update_on_device(self):
@@ -512,6 +548,8 @@ class ModuleManager(object):
         if self.have.config_members is not None:
             for intf in self.have.config_members:
                 self._delete_member(intf)
+        if self.have.lag_type == 'LACP':
+            self._remove_lacp_config(self.want.name)
         uri = f"/openconfig-interfaces:interfaces/interface={self.want.name}"
         response = self.client.delete(uri)
         if response['code'] in [200, 201, 202, 204]:
@@ -575,6 +613,35 @@ class ModuleManager(object):
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
 
+    def _remove_lacp_config(self, intf_name):
+        uri = f"/openconfig-lacp:lacp/interfaces/interface={intf_name}"
+        response = self.client.delete(uri)
+        if response['code'] not in [200, 201, 202, 204]:
+            raise F5ModuleError(response['contents'])
+
+    def _add_lacp_config(self):
+        uri = '/'
+        payload = {
+            "ietf-restconf:data": {
+                "openconfig-lacp:lacp": {
+                    "interfaces": {
+                        "interface": {
+                            "name": self.want.name,
+                            "config": {
+                                "name": self.want.name,
+                                "interval": self.want.interval,
+                                "lacp-mode": self.want.mode,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        response = self.client.patch(uri, data=payload)
+        if response['code'] not in [200, 201, 202, 204]:
+            raise F5ModuleError(response['contents'])
+
     def _delete_member(self, intf):
         interface_encoded = self._encode_interface(intf)
         iftype = 'openconfig-if-ethernet:ethernet'
@@ -622,6 +689,12 @@ class ArgumentSpec(object):
             ),
             lag_type=dict(
                 choices=['lacp', 'static']
+            ),
+            mode=dict(
+                choices=['active', 'passive']
+            ),
+            interval=dict(
+                choices=['slow', 'fast']
             ),
             state=dict(
                 default='present',

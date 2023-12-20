@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - f5os_lag.py - fixed a bug related to creating lacp lag interface and added two new parameters, mode and interval
