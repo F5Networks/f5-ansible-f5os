@@ -120,3 +120,11 @@ releases:
     fragments:
     - teem-add-software-version-field.yaml
     release_date: '2023-11-23'
+  1.6.0:
+    changes:
+      bugfixes:
+      - f5os_lag.py - fixed a bug related to creating lacp lag interface and added
+        two new parameters, mode and interval
+    fragments:
+    - lacp_lag_bugfix_and_added_params.yaml
+    release_date: '2024-02-12'

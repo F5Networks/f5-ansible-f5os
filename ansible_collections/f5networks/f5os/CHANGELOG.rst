@@ -4,6 +4,13 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.6.0
+======
+
+Bugfixes
+--------
+
+- f5os_lag.py - fixed a bug related to creating lacp lag interface and added two new parameters, mode and interval
 
 v1.5.0
 ======
