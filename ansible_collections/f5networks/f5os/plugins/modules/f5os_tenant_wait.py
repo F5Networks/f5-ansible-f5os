@@ -29,6 +29,7 @@ options:
       - C(provisioned) waits for the tenant running-state and status "provisioned".
       - C(deployed) waits for the tenant running-state "deployed", status "running", and phase "running".
       - C(ssh-ready) waits for a deployed tenant to be reachable via SSH.
+      - C(api-ready) waits for a deployed tenant to be reachable via the REST API.
     type: str
     default: configured
     choices:
@@ -36,6 +37,7 @@ options:
       - provisioned
       - deployed
       - ssh-ready
+      - api-ready
   timeout:
     description:
       - Maximum number of seconds to wait for the desired state.
@@ -74,6 +76,12 @@ EXAMPLES = r'''
   f5os_tenant_wait:
     name: bigip_tenant1
     state: deployed
+    delay: 30
+
+- name: Wait 30 seconds before verifying the specified tenant to be reachable via the REST API.
+  f5os_tenant_wait:
+    name: bigip_tenant1
+    state: api-ready
     delay: 30
 '''
 
@@ -146,6 +154,7 @@ import logging
 import signal
 import time
 import traceback
+from urllib.error import HTTPError
 
 try:
     import paramiko
@@ -161,7 +170,7 @@ from ansible.module_utils.basic import (
     AnsibleModule, missing_required_lib
 )
 from ansible.module_utils.connection import Connection
-
+from ansible.module_utils.urls import open_url
 from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
     F5Client, send_teem
 )
@@ -291,6 +300,9 @@ class ModuleManager(object):
                     break
 
                 elif self.want.state == 'ssh-ready' and self.tenant_ssh_ready(tenant_data):
+                    break
+
+                elif self.want.state == 'api-ready' and self.tenant_api_ready(tenant_data):
                     break
 
                 # No match - log state data
@@ -502,6 +514,20 @@ class ModuleManager(object):
 
         return ssh_ready
 
+    def tenant_api_ready(self, tenant_data):
+        host = tenant_data['config']['mgmt-ip']
+        port = tenant_data['config'].get('port', 443)
+
+        uri = f"https://{host}:{port}/mgmt/tm/sys/available"
+        try:
+            open_url(uri, method='GET', timeout=10, validate_certs=False)
+        except HTTPError as err:
+            if err.code == 401:
+                return True
+            return False
+        except Exception:
+            return False
+
 
 class ArgumentSpec(object):
     def __init__(self):
@@ -509,7 +535,13 @@ class ArgumentSpec(object):
         argument_spec = dict(
             name=dict(required=True),
             state=dict(
-                choices=['configured', 'provisioned', 'deployed', 'ssh-ready'],
+                choices=[
+                    'configured',
+                    'provisioned',
+                    'deployed',
+                    'ssh-ready',
+                    'api-ready',
+                ],
                 default='configured'
             ),
             timeout=dict(default=600, type='int'),
