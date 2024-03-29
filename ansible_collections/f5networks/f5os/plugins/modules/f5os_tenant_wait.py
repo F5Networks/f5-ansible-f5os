@@ -154,7 +154,7 @@ import logging
 import signal
 import time
 import traceback
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 try:
     import paramiko
@@ -169,7 +169,9 @@ else:
 from ansible.module_utils.basic import (
     AnsibleModule, missing_required_lib
 )
-from ansible.module_utils.connection import Connection
+from ansible.module_utils.connection import (
+    Connection, ConnectionError as AnsibleConnectionError
+)
 from ansible.module_utils.urls import open_url
 from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
     F5Client, send_teem
@@ -265,20 +267,20 @@ class ModuleManager(object):
             signal.SIGALRM,
             lambda sig, frame: hard_timeout(self.module, self.want, start)
         )
-        start = datetime.datetime.utcnow()
+        start = datetime.datetime.now(datetime.timezone.utc)
         if self.want.delay:
             time.sleep(float(self.want.delay))
         end = start + datetime.timedelta(seconds=int(self.want.timeout))
 
         tenant_state = self.wait_for_tenant(start, end)
-        elapsed = datetime.datetime.utcnow() - start
+        elapsed = datetime.datetime.now(datetime.timezone.utc) - start
         self.changes.update({'elapsed': elapsed.seconds,
                              'tenant_state': tenant_state})
         return False
 
     def wait_for_tenant(self, start, end):
         tenant_state = {}
-        while datetime.datetime.utcnow() < end:
+        while datetime.datetime.now(datetime.timezone.utc) < end:
             time.sleep(int(self.want.sleep))
             try:
                 # The first test verifies that the tenant exists on the specified
@@ -308,11 +310,14 @@ class ModuleManager(object):
                 # No match - log state data
                 self.module.debug(json.dumps(tenant_data))
 
+            except AnsibleConnectionError as ex:  # pragma: no cover
+                raise F5ModuleError(ex.args[0])
+
             except Exception as ex:  # pragma: no cover
                 self.module.debug(str(ex))
                 continue
         else:
-            elapsed = datetime.datetime.utcnow() - start
+            elapsed = datetime.datetime.now(datetime.timezone.utc) - start
             self.module.fail_json(
                 msg=self.want.msg or "Timeout waiting for desired tenant state", elapsed=elapsed.seconds,
                 tenant_state=tenant_state
@@ -525,8 +530,11 @@ class ModuleManager(object):
             if err.code == 401:
                 return True
             return False
-        except Exception:
-            return False
+        except URLError as urlerr:
+            conn_refused = 'Connection refused'
+            if conn_refused in urlerr.reason:
+                return False
+            raise
 
 
 class ArgumentSpec(object):

@@ -9,6 +9,7 @@ __metaclass__ = type
 import json
 import os
 import paramiko
+from urllib.error import HTTPError
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -243,6 +244,30 @@ class TestManager(unittest.TestCase):
         self.assertFalse(results['changed'])
         self.assertEqual(mm.tenant_exists.call_count, 2)
         self.assertEqual(mocked_client.connect.call_count, 2)
+
+    def test_awit_api_ready(self, *args):
+        set_module_args(dict(
+            name='defaultbip',
+            state='api-ready'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        mm.tenant_exists = Mock(return_value=True)
+        deployed = load_fixture('load_tenant_state_deployed.json')
+        mm.read_tenant_from_device = Mock(return_value=deployed)
+
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_wait.open_url',
+                   side_effect=[HTTPError('url', 401, 'Not Found', {}, None)]) as mock_open_url:
+            result1 = mm.exec_module()
+
+            self.assertFalse(result1['changed'])
+            self.assertEqual(mock_open_url.call_count, 1)
 
     def test_timeout_elapsed(self, *args):
         set_module_args(dict(

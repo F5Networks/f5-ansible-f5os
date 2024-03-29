@@ -1,0 +1,3 @@
+---
+bugfixes:
+  - f5os_tenant_wait - fixed a bug that resulted in the module going in infinite loop whenever the delay was more than 30 seconds
