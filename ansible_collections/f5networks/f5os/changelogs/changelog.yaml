@@ -128,3 +128,15 @@ releases:
     fragments:
     - lacp_lag_bugfix_and_added_params.yaml
     release_date: '2024-02-12'
+  1.7.0:
+    changes:
+      bugfixes:
+      - f5os_tenant_wait - fixed a bug that resulted in the module going in infinite
+        loop whenever the delay was more than 30 seconds
+      minor_changes:
+      - f5os_tenant_wait.py - added code to verify whether the tenant is reachable
+        via the API
+    fragments:
+    - added-api-ready-to-tenant-wait.yaml
+    - tenant-wait-longer-delay-bugfix.yaml
+    release_date: '2024-03-29'

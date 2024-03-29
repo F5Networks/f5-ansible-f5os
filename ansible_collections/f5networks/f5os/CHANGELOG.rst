@@ -4,6 +4,19 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.7.0
+======
+
+Minor Changes
+-------------
+
+- f5os_tenant_wait.py - added code to verify whether the tenant is reachable via the API
+
+Bugfixes
+--------
+
+- f5os_tenant_wait - fixed a bug that resulted in the module going in infinite loop whenever the delay was more than 30 seconds
+
 v1.6.0
 ======
 
