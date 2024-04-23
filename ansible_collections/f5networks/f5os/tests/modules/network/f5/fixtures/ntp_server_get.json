@@ -1,0 +1,26 @@
+{
+    "openconfig-system:server": [
+        {
+            "address": "10.218.33.44",
+            "config": {
+                "address": "10.218.33.44",
+                "port": 123,
+                "version": 4,
+                "association-type": "SERVER",
+                "iburst": false,
+                "prefer": false,
+                "f5-openconfig-system-ntp:key-id": 12
+            },
+            "state": {
+                "address": "10.218.33.44",
+                "port": 123,
+                "version": 4,
+                "association-type": "SERVER",
+                "iburst": false,
+                "prefer": false,
+                "f5-openconfig-system-ntp:key-id": 12,
+                "f5-openconfig-system-ntp:authenticated": false
+            }
+        }
+    ]
+}
