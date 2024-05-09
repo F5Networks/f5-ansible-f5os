@@ -140,3 +140,17 @@ releases:
     - added-api-ready-to-tenant-wait.yaml
     - tenant-wait-longer-delay-bugfix.yaml
     release_date: '2024-03-29'
+  1.8.0:
+    changes:
+      major_changes:
+      - f5os_qkview.py - Added module to Generate QKview file.
+    fragments:
+    - f5os_qkview.yaml
+    modules:
+    - description: Manage DNS on F5OS Devices
+      name: f5os_dns
+      namespace: ''
+    - description: Manage NTP servers on F5OS based systems
+      name: f5os_ntp_server
+      namespace: ''
+    release_date: '2024-05-09'

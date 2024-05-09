@@ -1,0 +1,6 @@
+{
+    "f5-system-diagnostics-qkview:output": {
+        "result": " Warning: Qkview may contain sensitive data such as secrets, passwords and core files. Handle with care. Please send this file to F5 support. \nQkview file test is being collected.\nreturn code 200\n ",
+        "resultint": 0
+    }
+}

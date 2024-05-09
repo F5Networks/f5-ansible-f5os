@@ -1,0 +1,6 @@
+{
+  "f5-system-diagnostics-qkview:output": {
+    "result": " Deleted Qkview file partition2-1:test.canceled\nreturn code 200\n ",
+    "resultint": 0
+  }
+}

@@ -1,0 +1,6 @@
+{
+    "f5-system-diagnostics-qkview:output": {
+        "result": " {\"Qkviews\":[{\"Filename\":\"partition2-1:test\",\"Date\":\"2024-05-02T03:36:59.81218663-07:00\",\"Size\":1581187},{\"Filename\":\"partition2-2:tmp_100.65.18.52.tgz.canceled\",\"Date\":\"2024-05-02T03:36:59.898977851-07:00\",\"Size\":223953}]}\n ",
+        "resultint": 0
+    }
+}

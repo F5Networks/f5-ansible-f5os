@@ -4,6 +4,20 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.8.0
+======
+
+Major Changes
+-------------
+
+- f5os_qkview.py - Added module to Generate QKview file.
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_dns - Manage DNS on F5OS Devices
+- f5networks.f5os.f5os_ntp_server - Manage NTP servers on F5OS based systems
+
 v1.7.0
 ======
 

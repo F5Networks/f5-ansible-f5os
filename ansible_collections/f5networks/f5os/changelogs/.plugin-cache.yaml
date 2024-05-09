@@ -1,0 +1,100 @@
+objects:
+  role: {}
+plugins:
+  become: {}
+  cache: {}
+  callback: {}
+  cliconf: {}
+  connection: {}
+  filter: {}
+  httpapi:
+    f5os:
+      description: HttpApi Plugin for F5OS devices
+      name: f5os
+      version_added: 1.0.0
+  inventory: {}
+  lookup: {}
+  module:
+    f5os_config_backup:
+      description: Manage F5OS config backups.
+      name: f5os_config_backup
+      namespace: ''
+      version_added: 1.2.0
+    f5os_device_info:
+      description: Collect information from F5OS devices
+      name: f5os_device_info
+      namespace: ''
+      version_added: 1.0.0
+    f5os_dns:
+      description: Manage DNS on F5OS Devices
+      name: f5os_dns
+      namespace: ''
+      version_added: 1.8.0
+    f5os_interface:
+      description: Manage network interfaces on F5OS based systems
+      name: f5os_interface
+      namespace: ''
+      version_added: 1.0.0
+    f5os_lag:
+      description: Manage LAG interfaces on F5OS based systems
+      name: f5os_lag
+      namespace: ''
+      version_added: 1.0.0
+    f5os_ntp_server:
+      description: Manage NTP servers on F5OS based systems
+      name: f5os_ntp_server
+      namespace: ''
+      version_added: 1.8.0
+    f5os_qkview:
+      description: Manage Generation of qkview file
+      name: f5os_qkview
+      namespace: ''
+      version_added: 1.0.0
+    f5os_tenant:
+      description: Manage F5OS tenants
+      name: f5os_tenant
+      namespace: ''
+      version_added: 1.0.0
+    f5os_tenant_image:
+      description: Manage F5OS tenant images
+      name: f5os_tenant_image
+      namespace: ''
+      version_added: 1.0.0
+    f5os_tenant_wait:
+      description: Wait for a F5OS tenant condition before continuing
+      name: f5os_tenant_wait
+      namespace: ''
+      version_added: 1.0.0
+    f5os_vlan:
+      description: Manage VLANs on F5OS based systems
+      name: f5os_vlan
+      namespace: ''
+      version_added: 1.0.0
+    velos_partition:
+      description: Manage VELOS chassis partitions
+      name: velos_partition
+      namespace: ''
+      version_added: 1.0.0
+    velos_partition_change_password:
+      description: Provides access to VELOS chassis partition user authentication
+        methods
+      name: velos_partition_change_password
+      namespace: ''
+      version_added: 1.0.0
+    velos_partition_image:
+      description: Manage VELOS chassis partition images
+      name: velos_partition_image
+      namespace: ''
+      version_added: 1.0.0
+    velos_partition_wait:
+      description: Wait for a VELOS chassis partition to match a condition before
+        continuing
+      name: velos_partition_wait
+      namespace: ''
+      version_added: 1.0.0
+  netconf: {}
+  shell: {}
+  strategy: {}
+  test: {}
+  vars: {}
+version: 1.8.0

@@ -1,0 +1,6 @@
+{
+    "f5-system-diagnostics-qkview:output": {
+        "result": " {\"Busy\":false,\"Percent\":100,\"Status\":\"complete\",\"Message\":\"Completed collection.\",\"Filename\":\"test\"}\n ",
+        "resultint": 0
+    }
+}
