@@ -26,6 +26,7 @@ options:
       - name: f5_telemetry
 version_added: "1.0.0"
 author:
+  - Ravinder Reddy (@chinthalapalli)
   - Wojciech Wypior (@wojtek0806)
 '''
 
@@ -125,7 +126,7 @@ class HttpApi(HttpApiBase):
             return json.loads(response_text) if response_text else {}
         # JSONDecodeError only available on Python 3.5+
         except ValueError:
-            raise F5ModuleError('Invalid JSON response: %s' % response_text)
+            raise F5ModuleError(f'Invalid JSON response: {response_text}')
 
     def telemetry(self):
         return self.get_option('send_telemetry')
