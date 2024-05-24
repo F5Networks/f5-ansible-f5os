@@ -1,0 +1,3 @@
+---
+major_changes:
+  - f5os_lldp_config - Added module to Enable/Disable LLDP config.

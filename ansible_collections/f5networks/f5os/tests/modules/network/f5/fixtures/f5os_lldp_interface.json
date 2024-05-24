@@ -1,0 +1,52 @@
+{
+    "openconfig-lldp:lldp": {
+        "config": {
+            "enabled": false,
+            "system-name": "test",
+            "system-description": "Test Description",
+            "f5-lldp:tx-interval": 31,
+            "f5-lldp:tx-hold": 42,
+            "f5-lldp:reinit-delay": 23,
+            "f5-lldp:tx-delay": 22,
+            "f5-lldp:max-neighbors-per-port": 15
+        },
+        "state": {
+            "enabled": false,
+            "chassis-id": "chs700155s",
+            "chassis-id-type": "LOCAL"
+        },
+        "interfaces": {
+            "interface": [
+                {
+                    "name": "1.0",
+                    "config": {
+                        "name": "1.0",
+                        "enabled": true,
+                        "f5-lldp:tlv-advertisement-state": "txrx",
+                        "f5-lldp:tlvmap": "chassis-id port-id ttl port-description system-name system-description system-capabilities pvid ppvid vlan-name protocol-identity macphy link-aggregation power-mdi mfs product-model"
+                    },
+                    "state": {
+                        "enabled": true
+                    }
+                },
+                {
+                    "name": "2/1.0",
+                    "config": {
+                        "name": "2/1.0",
+                        "enabled": true,
+                        "f5-lldp:tlv-advertisement-state": "txrx",
+                        "f5-lldp:tlvmap": "chassis-id port-id ttl port-description system-name system-description system-capabilities pvid ppvid vlan-name protocol-identity macphy link-aggregation power-mdi mfs product-model"
+                    },
+                    "state": {
+                        "name": "2/1.0",
+                        "enabled": true,
+                        "counters": {
+                            "frame-in": "0",
+                            "frame-out": "1"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "openconfig-lldp:lldp": {
+        "config": {
+            "enabled": false,
+            "system-name": "test123",
+            "system-description": "Test Description",
+            "f5-lldp:tx-interval": 31,
+            "f5-lldp:tx-hold": 42,
+            "f5-lldp:reinit-delay": 23,
+            "f5-lldp:tx-delay": 22,
+            "f5-lldp:max-neighbors-per-port": 15
+        },
+        "state": {
+            "enabled": false,
+            "chassis-id": "chs700155s",
+            "chassis-id-type": "LOCAL"
+        }
+    }
+}
