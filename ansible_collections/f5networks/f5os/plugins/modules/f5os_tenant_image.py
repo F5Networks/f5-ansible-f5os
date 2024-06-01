@@ -85,6 +85,7 @@ notes:
     if the image has not finished downloading.
   - This module will not execute on VELOS controller.
 author:
+  - Ravinder Reddy (@chinthalapalli)
   - Wojciech Wypior (@wojtek0806)
 '''
 
@@ -355,12 +356,15 @@ class ModuleManager(object):
         params = self.changes.api_params()
         uri = "/f5-utils-file-transfer:file/import"
         params['insecure'] = ""
+        if params['username'] == "":
+            del params['username']
+        if params['password'] == "":
+            del params['password']
         payload = dict(input=[params])
         response = self.client.post(uri, data=payload)
 
         if response['code'] not in [200, 201, 202]:
-            raise F5ModuleError(f"Failed to import tenant image: {self.want.image_name}")
-
+            raise F5ModuleError(f"Failed to import tenant image with {response['contents']}")
         self.changes.update({"message": f"Image {self.want.image_name} import started."})
         return True
 

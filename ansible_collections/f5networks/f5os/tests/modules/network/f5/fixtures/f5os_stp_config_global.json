@@ -1,0 +1,41 @@
+{
+    "openconfig-spanning-tree:stp": {
+        "rstp": {
+            "config": {
+                "hello-time": 2,
+                "max-age": 20,
+                "forwarding-delay": 15,
+                "hold-count": 6,
+                "bridge-priority": 32768
+            },
+            "state": {
+                "hold-count": 6
+            }
+        },
+        "mstp": {
+            "config": {
+                "revision": 0,
+                "max-hop": 20,
+                "hello-time": 2,
+                "max-age": 20,
+                "forwarding-delay": 15,
+                "hold-count": 6
+            },
+            "state": {
+                "hold-count": 6
+            }
+        },
+        "f5-openconfig-spanning-tree:stp": {
+            "config": {
+                "hello-time": 2,
+                "max-age": 7,
+                "forwarding-delay": 16,
+                "hold-count": 7,
+                "bridge-priority": 28672
+            },
+            "state": {
+                "hold-count": 6
+            }
+        }
+    }
+}

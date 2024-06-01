@@ -311,7 +311,7 @@ class ModuleManager(object):
             if response['code'] not in [200, 201, 202]:
                 raise F5ModuleError(response['contents'])
             res = json.loads(response['contents']['f5-system-diagnostics-qkview:output']['result'])
-            if res["Percent"] < 100 and res["Status"] in statuses and res["Message"] in messages:
+            if res["Percent"] <= 100 and res["Status"] in statuses and res["Message"] in messages:
                 time.sleep(15)
                 continue
             elif res["Percent"] == 100 and res["Status"] == "complete" and res["Message"] == "Completed collection.":
@@ -348,7 +348,6 @@ class ModuleManager(object):
         response = self.client.post(uri)
         if response['code'] == 404:
             return False
-
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
         res = json.loads(response['contents']['f5-system-diagnostics-qkview:output']['result'])
@@ -356,10 +355,17 @@ class ModuleManager(object):
             return False
         for item in res['Qkviews']:
             filename = self.want.filename
-            if item['Filename'].split(':')[1].endswith('.tar'):
-                filename = filename + '.tar'
-            if filename == item['Filename'].split(':')[1]:
-                return True
+            itemList = item['Filename'].split(':')
+            if len(itemList) > 1:
+                if itemList[1].endswith('.tar'):
+                    filename = filename + '.tar'
+                if filename == itemList[1]:
+                    return True
+            else:
+                if itemList[0].endswith('.tar'):
+                    filename = filename + '.tar'
+                if filename == itemList[0]:
+                    return True
         return False
 
     def read_filename_from_device(self):
@@ -375,7 +381,11 @@ class ModuleManager(object):
             if not filename.endswith('.tar'):
                 filename = filename + '.tar'
 
-            existingFilename = item['Filename'].split(':')[1]
+            itemList = item['Filename'].split(':')
+            if len(itemList) > 1:
+                existingFilename = item['Filename'].split(':')[1]
+            else:
+                existingFilename = item['Filename']
             if not existingFilename.endswith('.tar'):
                 existingFilename = existingFilename + '.tar'
 

@@ -1,0 +1,9 @@
+{
+    "f5-openconfig-spanning-tree:config": {
+        "hello-time": 2,
+        "max-age": 20,
+        "forwarding-delay": 15,
+        "hold-count": 6,
+        "bridge-priority": 32768
+    }
+}

@@ -1,0 +1,7 @@
+{
+    "f5-openconfig-spanning-tree:config": {
+        "name": "1.0",
+        "cost": 1,
+        "port-priority": 128
+    }
+}
