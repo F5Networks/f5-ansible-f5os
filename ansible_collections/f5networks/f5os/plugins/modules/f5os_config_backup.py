@@ -367,7 +367,7 @@ class ModuleManager(object):
                 status = item['status'].strip()
                 if status == 'Completed':
                     return False
-                elif status.startswith('In Progress'):
+                elif status.startswith('In Progress') or status.startswith('File Transfer Initiated'):
                     return True
                 else:
                     raise F5ModuleError(f"File export failed with the following result: {status}")
