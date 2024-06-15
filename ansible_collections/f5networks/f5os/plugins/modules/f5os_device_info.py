@@ -883,38 +883,49 @@ class InterfacesParameters(BaseParameters):
     def port_speed(self):
         if self._values['openconfig-if-ethernet:ethernet'] is None:
             return None
-        if 'port-speed' in self._values['openconfig-if-ethernet:ethernet']['state']:
+        if ('state' in self._values['openconfig-if-ethernet:ethernet']
+                and 'port-speed' in self._values['openconfig-if-ethernet:ethernet']['state']):
             raw_speed = self._values['openconfig-if-ethernet:ethernet']['state']['port-speed']
             if raw_speed:
                 return raw_speed.strip('openconfig-if-ethernet:SPEED_')
+        elif ('config' in self._values['openconfig-if-ethernet:ethernet']
+              and 'port-speed' in self._values['openconfig-if-ethernet:ethernet']['config']['port-speed']):
+            raw_speed = self._values['openconfig-if-ethernet:ethernet']['config']['port-speed']
+            if raw_speed:
+                return raw_speed.strip('openconfig-if-ethernet:SPEED_')
+        return None
 
     @property
     def mac_address(self):
         if self._values['openconfig-if-ethernet:ethernet'] is None:
             return None
-        if 'hw-mac-address' in self._values['openconfig-if-ethernet:ethernet']['state']:
+        if ('state' in self._values['openconfig-if-ethernet:ethernet'] and
+                'hw-mac-address' in self._values['openconfig-if-ethernet:ethernet']['state']):
             return self._values['openconfig-if-ethernet:ethernet']['state']['hw-mac-address']
+        return None
 
     @property
     def l2_counters(self):
         if self._values['openconfig-if-ethernet:ethernet'] is None:
             return None
-        if 'counters' not in self._values['openconfig-if-ethernet:ethernet']['state']:
-            return None
-        raw_counters = self._values['openconfig-if-ethernet:ethernet']['state']['counters']
-        mapped_names = {
-            'in-mac-control-frames': 'in_mac_control_frames',
-            'in-mac-pause-frames': 'in_mac-pause-frames',
-            'in-oversize-frames': 'in_oversize_frames',
-            'in-jabber-frames': 'in_jabber_frames',
-            'in-fragment-frames': 'in_fragment_frames',
-            'in-8021q-frames': 'in_8021q_frames',
-            'in-crc-errors': 'in_crc_errors',
-            'out-mac-control-frames': 'out_mac_control_frames',
-            'out-mac-pause-frames': 'out_mac_pause_frames',
-            'out-8021q-frames': 'out_8021q_frames'
-        }
-        return self._filter_counters(raw_counters, mapped_names)
+        if 'state' in self._values['openconfig-if-ethernet:ethernet']:
+            if 'counters' not in self._values['openconfig-if-ethernet:ethernet']['state']:
+                return None
+            raw_counters = self._values['openconfig-if-ethernet:ethernet']['state']['counters']
+            mapped_names = {
+                'in-mac-control-frames': 'in_mac_control_frames',
+                'in-mac-pause-frames': 'in_mac-pause-frames',
+                'in-oversize-frames': 'in_oversize_frames',
+                'in-jabber-frames': 'in_jabber_frames',
+                'in-fragment-frames': 'in_fragment_frames',
+                'in-8021q-frames': 'in_8021q_frames',
+                'in-crc-errors': 'in_crc_errors',
+                'out-mac-control-frames': 'out_mac_control_frames',
+                'out-mac-pause-frames': 'out_mac_pause_frames',
+                'out-8021q-frames': 'out_8021q_frames'
+            }
+            return self._filter_counters(raw_counters, mapped_names)
+        return None
 
     @staticmethod
     def _filter_counters(raw_counters, mapped_names):
