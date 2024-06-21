@@ -5,7 +5,7 @@ managing Velos chassis and rSeries platform lifecycles as well as F5OS tenant an
 
 ## Requirements
 
- - ansible >= 2.14
+ - ansible >= 2.15
 
 ## Python Version
 This collection is supported on Python 3.9 and above.
