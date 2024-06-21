@@ -154,3 +154,23 @@ releases:
       name: f5os_ntp_server
       namespace: ''
     release_date: '2024-05-09'
+  1.9.0:
+    changes:
+      major_changes:
+      - f5os_lldp_config - Added module to Enable/Disable LLDP config.
+      - f5os_stp_config - Added module to Enable/Disable STP config.
+      minor_changes:
+      - f5os_device_info - Added some validations in Parameters.
+    fragments:
+    - f5os_device_info.yaml
+    - f5os_lldp_config.yaml
+    - f5os_stp_config.yaml
+    modules:
+    - description: Manage SNMP Communities, Users, and Targets using openAPI on F5OS
+        based systems
+      name: f5os_snmp
+      namespace: ''
+    - description: Manage Users and roles on F5OS based systems
+      name: f5os_user
+      namespace: ''
+    release_date: '2024-06-21'

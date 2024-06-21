@@ -4,6 +4,26 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.9.0
+======
+
+Major Changes
+-------------
+
+- f5os_lldp_config - Added module to Enable/Disable LLDP config.
+- f5os_stp_config - Added module to Enable/Disable STP config.
+
+Minor Changes
+-------------
+
+- f5os_device_info - Added some validations in Parameters.
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_snmp - Manage SNMP Communities, Users, and Targets using openAPI on F5OS based systems
+- f5networks.f5os.f5os_user - Manage Users and roles on F5OS based systems
+
 v1.8.0
 ======
 
