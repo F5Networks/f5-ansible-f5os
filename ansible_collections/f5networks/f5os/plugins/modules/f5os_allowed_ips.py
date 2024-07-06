@@ -161,7 +161,7 @@ class UsableChanges(Changes):
                     result['config'][protocol_version] = dict()
                     result['config'][protocol_version]['address'] = val[protocol_version]['address']
                     result['config'][protocol_version]['prefix-length'] = val[protocol_version]['prefix']
-                    if 'port' in result['config'][protocol_version] and result['config'][protocol_version]['port'] is not None:
+                    if 'port' in val[protocol_version] and val[protocol_version]['port'] is not None:
                         result['config'][protocol_version]['port'] = val[protocol_version]['port']
                     break
             allowed.append(result)
@@ -209,6 +209,8 @@ class Difference(object):  # pragma: no cover
                                     if wallowed[ip_version]['prefix'] != hallowed['config'][ip_version]['prefix-length']:
                                         return self.want.allowed
                                     if 'port' in wallowed[ip_version] and wallowed[ip_version]['port'] is not None:
+                                        if 'port' not in hallowed['config'][ip_version]:
+                                            return self.want.allowed
                                         if wallowed[ip_version]['port'] != hallowed['config'][ip_version]['port']:
                                             return self.want.allowed
                                 break
