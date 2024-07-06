@@ -804,11 +804,18 @@ class ModuleManager(object):
                 response = self.client.delete(uri)
                 if response['code'] not in [200, 201, 202, 204]:
                     raise F5ModuleError(response['contents'])
-        for val in self.want.snmp_community:
-            uri = f"/openconfig-system:system/f5-system-snmp:snmp/communities/community={val['name']}"
-            response = self.client.delete(uri)
-            if response['code'] not in [200, 201, 202, 204]:
-                raise F5ModuleError(response['contents'])
+        if self.want.snmp_community is not None:
+            for val in self.want.snmp_community:
+                uri = f"/openconfig-system:system/f5-system-snmp:snmp/communities/community={val['name']}"
+                response = self.client.delete(uri)
+                if response['code'] not in [200, 201, 202, 204]:
+                    raise F5ModuleError(response['contents'])
+        if self.want.snmp_user is not None:
+            for val in self.want.snmp_user:
+                uri = f"/openconfig-system:system/f5-system-snmp:snmp/users/user={val['name']}"
+                response = self.client.delete(uri)
+                if response['code'] not in [200, 201, 202, 204]:
+                    raise F5ModuleError(response['contents'])
         return True
 
     def read_current_from_device(self):
