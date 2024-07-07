@@ -110,7 +110,7 @@ class ApiParameters(Parameters):
 
     @property
     def key_id(self):
-        return self._values['config']['f5-openconfig-system-ntp:key-id']
+        return self._values['config'].get('f5-openconfig-system-ntp:key-id')
 
 
 class ModuleParameters(Parameters):
