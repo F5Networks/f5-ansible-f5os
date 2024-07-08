@@ -409,8 +409,7 @@ class Difference(object):
                         if interface['config']['f5-lldp:tlvmap'] != self.want.interfaces['tlv_map']:
                             changes['tlv_map'] = self.want.interfaces['tlv_map']
                         return changes
-            else:
-                return self.want.interfaces
+            return self.want.interfaces
         return None
 
 
@@ -497,7 +496,7 @@ class ModuleManager(object):
         if self.want.interfaces is not None:
             self.have = self.read_current_from_device()
 
-            if self.have.interfaces is None:
+            if self.have.interfaces is None or self.want.interfaces not in self.have.interfaces:
                 interfaces = {
                     "openconfig-lldp:interface": [
                         {
