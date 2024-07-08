@@ -496,7 +496,10 @@ class ModuleManager(object):
         if self.want.interfaces is not None:
             self.have = self.read_current_from_device()
 
-            if self.have.interfaces is None or self.want.interfaces not in self.have.interfaces:
+            hinterfaces =[]
+            for hinterface in self.have.interfaces:
+                hinterfaces.append(hinterface['name'])
+            if self.have.interfaces is None and self.want.interfaces['name'] not in hinterfaces:
                 interfaces = {
                     "openconfig-lldp:interface": [
                         {
