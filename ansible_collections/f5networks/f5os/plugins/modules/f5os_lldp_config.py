@@ -636,8 +636,8 @@ class ModuleManager(object):
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
         config = response['contents']['openconfig-lldp:lldp']['config']
-        if config['system-name'] is None:
-            return False
+        if 'system-name' not in config or config['system-name'] is None:
+                return False
         if self.want.system_name == config['system-name']:
             return True
         return False
