@@ -113,8 +113,6 @@ EXAMPLES = r'''
     reinitiate_delay: 2
     tx_delay: 2
     max_neighbors_per_port: 13
-    max_core_size: 25
-    exclude_cores: true
     interfaces:
       name: 1.0
       enable: true
@@ -409,6 +407,7 @@ class Difference(object):
                         if interface['config']['f5-lldp:tlvmap'] != self.want.interfaces['tlv_map']:
                             changes['tlv_map'] = self.want.interfaces['tlv_map']
                         return changes
+                return self.want.interfaces
             else:
                 return self.want.interfaces
         return None
@@ -494,10 +493,18 @@ class ModuleManager(object):
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
 
+        tobeCreated = True
         if self.want.interfaces is not None:
             self.have = self.read_current_from_device()
 
             if self.have.interfaces is None:
+                tobeCreated = True
+            else:
+                for interface in self.have.interfaces:
+                    if interface['name'] == self.want.interfaces['name']:
+                        tobeCreated = False
+                        break
+            if tobeCreated:
                 interfaces = {
                     "openconfig-lldp:interface": [
                         {
@@ -527,7 +534,7 @@ class ModuleManager(object):
                 }
 
                 # Patching Interfaces
-                uri = f"/openconfig-lldp:lldp/interfaces/interface={self.want.interfaces['name']}/config"
+                uri = f"/openconfig-lldp:lldp/interfaces/interface={self.want.interfaces['name'].replace('/', '%2F')}/config"
                 response = self.client.patch(uri, data=interfaces)
                 if response['code'] not in [200, 201, 202, 204]:
                     raise F5ModuleError(response['contents'])
@@ -634,10 +641,11 @@ class ModuleManager(object):
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
         config = response['contents']['openconfig-lldp:lldp']['config']
-        if config['system-name'] is None:
-            return False
-        if self.want.system_name == config['system-name']:
-            return True
+        if 'system-name' in config:
+            if config['system-name'] is None:
+                return False
+            if self.want.system_name == config['system-name']:
+                return True
         return False
 
 
