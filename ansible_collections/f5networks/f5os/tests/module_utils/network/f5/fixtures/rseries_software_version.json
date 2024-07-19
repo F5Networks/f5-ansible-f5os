@@ -1,7 +1,7 @@
 {
-    "f5-system-version:version": {
-        "os-version": "1.7.0-3518",
-        "service-version": "1.7.0-3518",
-        "product": "F5OS-A"
+    "f5-system-image:install": {
+        "install-os-version": "1.8.0-11943",
+        "install-service-version": "1.8.0-11943",
+        "install-status": "success"
     }
 }

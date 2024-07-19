@@ -159,11 +159,11 @@ class HttpApi(HttpApiBase):
         return self.platform_type
 
     def _rseries_software_version(self):
-        uri = ROOT + '/openconfig-system:system/f5-system-version:version'
+        uri = ROOT + '/openconfig-system:system/f5-system-image:image/state/install'
         response = self.send_request(path=uri, method='GET', headers=BASE_HEADERS)
         if response['code'] != 200:
             raise F5ModuleError(response['contents'])
-        version = response['contents']['f5-system-version:version']['os-version']
+        version = response['contents']['f5-system-image:install']['install-os-version']
         return version
 
     def _velos_software_version(self):
