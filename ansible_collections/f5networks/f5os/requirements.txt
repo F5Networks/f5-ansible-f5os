@@ -1,5 +1,5 @@
 ipaddress; python_version < '3.5'
-cryptography
+cryptography>=42.0.8
 objectpath
 ordereddict
 simplejson

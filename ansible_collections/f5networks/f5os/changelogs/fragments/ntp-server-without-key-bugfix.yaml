@@ -1,3 +1,0 @@
----
-bugfixes:
-  - f5os_ntp_server - Fixed a bug that was causing an idempotency issue.

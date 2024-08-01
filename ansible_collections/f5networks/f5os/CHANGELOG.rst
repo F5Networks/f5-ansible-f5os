@@ -4,6 +4,25 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.10.0
+=======
+
+Minor Changes
+-------------
+
+- f5os_lldp_config - doc changes and fixed issue - update/add interfaces
+
+Bugfixes
+--------
+
+- f5os_ntp_server - Fixed a bug that was causing an idempotency issue.
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_license - Manage F5OS license activation and deactivation.
+- f5networks.f5os.f5os_system - Manage generic system settings
+
 v1.9.0
 ======
 

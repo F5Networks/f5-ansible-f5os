@@ -84,6 +84,23 @@ releases:
     fragments:
     - password-change-fix.yaml
     release_date: '2023-06-07'
+  1.10.0:
+    changes:
+      bugfixes:
+      - f5os_ntp_server - Fixed a bug that was causing an idempotency issue.
+      minor_changes:
+      - f5os_lldp_config - doc changes and fixed issue - update/add interfaces
+    fragments:
+    - fix_f5os_lldp.yaml
+    - ntp-server-without-key-bugfix.yaml
+    modules:
+    - description: Manage F5OS license activation and deactivation.
+      name: f5os_license
+      namespace: ''
+    - description: Manage generic system settings
+      name: f5os_system
+      namespace: ''
+    release_date: '2024-08-01'
   1.2.0:
     modules:
     - description: Manage F5OS config backups.
