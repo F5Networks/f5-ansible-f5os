@@ -101,6 +101,8 @@ releases:
       name: f5os_system
       namespace: ''
     release_date: '2024-08-01'
+  1.10.1:
+    release_date: '2024-08-01'
   1.2.0:
     modules:
     - description: Manage F5OS config backups.

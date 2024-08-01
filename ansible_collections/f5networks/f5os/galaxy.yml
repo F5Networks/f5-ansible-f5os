@@ -1,7 +1,8 @@
 authors:
   - Wojciech Wypior (@wojtek0806)
+  - Rohit Upadhyay (@urohit011)
 dependencies:
-  ansible.netcommon: ">=2.0.0,<5.0.0"
+  ansible.netcommon: ">=2.0.0"
 description: F5OS based Collection for Ansible
 documentation: https://clouddocs.f5.com/products/orchestration/ansible/devel/f5os/modules_3_0/module_index.html
 homepage: https://clouddocs.f5.com/products/orchestration/ansible/devel/
@@ -12,11 +13,21 @@ name: f5os
 namespace: f5networks
 readme: README.md
 build_ignore:
-  - tests
+  - tests/__pycache__
+  - tests/compat
+  - tests/mock
+  - tests/modules
+  - tests/module_utils
+  - tests/modules
+  - tests/plugins
+  - tests/sanity
+  - tests/utils
+  - tests/*.ini
+  - tests/*.py
 repository: https://github.com/F5Networks/f5-ansible-f5os
 tags:
   - f5
   - networking
   - rseries
   - velos
-version: 1.10.0
+version: 1.10.1
