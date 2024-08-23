@@ -1,0 +1,40 @@
+{
+    "code": 200,
+    "contents": {
+        "f5-system-snmp:snmp": {
+            "communities": {
+                "community": [
+                    {
+                        "config": {
+                            "name": "test1_com",
+                            "security-model": ["v1", "v2", "v3"]
+                        }
+                    }
+                ]
+            },
+            "users": {
+                "user": [{
+                    "config": {
+                        "name": "test2_user"
+                    }
+                }]
+            },
+            "targets": {
+                "target": [{
+                    "config": {
+                        "name": "target1",
+                        "security-model": "v2",
+                        "ipv4": {
+                            "address": "8.9.7.5",
+                            "port": 443
+                        },
+                        "ipv6": {
+                            "address": "2001:db8::1",
+                            "port": 443
+                        }
+                    }
+                }]
+            }
+        }
+    }
+}
