@@ -64,7 +64,7 @@ Please see [f5execenv] documentation for further instructions how to use and bui
    ansible_user: "{{ provider.user }}"
    ansible_httpapi_password: "{{ provider.password }}"
    ansible_httpapi_port: "{{ provider.server_port }}"
-   ansible_network_os: f5networks.f5_bigip.bigip
+   ansible_network_os: f5networks.f5os.f5os
    ansible_httpapi_use_ssl: yes
    ansible_httpapi_validate_certs: "{{ provider.validate_certs }}"
 ```
@@ -83,8 +83,6 @@ If you've got the time, consider sending an email that introduces yourself and w
 We love hearing about how you're using the F5OS collection for Ansible.
 
 > **_NOTE:_** **This repository is a mirror, only issues submissions are accepted.**
-
-- Wojciech Wypior and the F5 team
 
 ## Copyright
 
