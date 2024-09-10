@@ -103,6 +103,21 @@ releases:
     release_date: '2024-08-01'
   1.10.1:
     release_date: '2024-08-01'
+  1.11.0:
+    modules:
+    - description: Manage F5OS Devices Primary-key Setting.
+      name: f5os_primarykey
+      namespace: ''
+    - description: Manage F5OS System image import.
+      name: f5os_system_image_import
+      namespace: ''
+    - description: Manage F5OS system software installation.
+      name: f5os_system_image_install
+      namespace: ''
+    - description: Manage TLS certificate and key on F5OS devices.
+      name: f5os_tls_cert_key
+      namespace: ''
+    release_date: '2024-09-10'
   1.2.0:
     modules:
     - description: Manage F5OS config backups.

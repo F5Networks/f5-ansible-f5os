@@ -4,6 +4,17 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.11.0
+=======
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_primarykey - Manage F5OS Devices Primary-key Setting.
+- f5networks.f5os.f5os_system_image_import - Manage F5OS System image import.
+- f5networks.f5os.f5os_system_image_install - Manage F5OS system software installation.
+- f5networks.f5os.f5os_tls_cert_key - Manage TLS certificate and key on F5OS devices.
+
 v1.10.1
 =======
 
