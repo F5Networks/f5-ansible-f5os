@@ -174,9 +174,10 @@ class UsableChanges(Changes):
             }
             for protocol_version in ['ipv6', 'ipv4']:
                 if val[protocol_version] is not None:
-                    result['config'][protocol_version] = dict()
-                    result['config'][protocol_version]['address'] = val[protocol_version]['address']
-                    result['config'][protocol_version]['prefix-length'] = val[protocol_version]['prefix']
+                    result['config'][protocol_version] = {
+                        'address': val[protocol_version]['address'],
+                        'prefix-length': val[protocol_version]['prefix']
+                    }
                     if 'port' in val[protocol_version] and val[protocol_version]['port'] is not None:
                         result['config'][protocol_version]['port'] = val[protocol_version]['port']
                     break
@@ -299,14 +300,14 @@ class ModuleManager(object):
 
     def present(self):
         '''Wrapper for creation/update'''
-        if self.exists():
+        if self.all_exist():
             return self.update()
         else:
             return self.create()
 
     def absent(self):
         '''Wrapper for removal'''
-        if self.exists():
+        if self.any_exists():
             return self.remove()
         return False
 
@@ -331,7 +332,7 @@ class ModuleManager(object):
         if self.module.check_mode:  # pragma: no cover
             return True
         self.remove_from_device()
-        if self.exists():
+        if self.still_exists():
             raise F5ModuleError("Failed to delete the resource.")
         return True
 
@@ -343,19 +344,34 @@ class ModuleManager(object):
         self.create_on_device()
         return True
 
-    def exists(self) -> bool:
+    def any_exists(self):
+        return self.exists(query='any')
+
+    def all_exist(self):
+        return self.exists(query='all')
+
+    def still_exists(self):
+        return self.exists(query='still')
+
+    def exists(self, query=None) -> bool:
         '''Check object existance on F5OS system'''
         base_uri = "/openconfig-system:system/f5-allowed-ips:allowed-ips"
         if (hasattr(self.want, 'allowed') and getattr(self.want, 'allowed') is not None):
             for val in getattr(self.want, 'allowed'):
-                object_uri = "/allowed-ip={}".format(val['name'])
+                object_uri = f'/allowed-ip={val["name"]}'
 
                 uri = base_uri + object_uri
                 response = self.client.get(uri)
+                if response['code'] == 200:
+                    if query in ['any', 'still']:
+                        return True
                 if response['code'] == 404:
-                    return False
-                if response['code'] not in [200, 201, 202]:
+                    if query == 'all':
+                        return False
+                if response['code'] not in [200, 201, 202, 404]:
                     raise F5ModuleError(response['contents'])
+        if query in ['any', 'still']:
+            return False
         return True
 
     def create_on_device(self):
@@ -367,8 +383,11 @@ class ModuleManager(object):
             for allow_entry in params['allowed']:
                 payload = {'allowed-ip': [{'name': allow_entry['name'], 'config': allow_entry['config']}]}
                 response = self.client.post(uri, data=payload)
+                if response['code'] == 409:
+                    # at least one address in the declaration was missing, but not this one.
+                    response = self.client.put(uri + f'/allowed-ip={allow_entry["name"]}', data=payload)
                 if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                    raise F5ModuleError(str(response['contents']))
 
         return True
 
@@ -379,7 +398,7 @@ class ModuleManager(object):
 
         if 'allowed' in params:
             for allow_entry in params['allowed']:
-                object_uri = "/allowed-ip={}/config".format(allow_entry['name'])
+                object_uri = f'/allowed-ip={allow_entry["name"]}/config'
                 uri = base_uri + object_uri
                 payload = {'config': allow_entry['config']}
                 response = self.client.put(uri, data=payload)
@@ -394,8 +413,8 @@ class ModuleManager(object):
             for val in self.want.allowed:
                 uri = f"/openconfig-system:system/f5-allowed-ips:allowed-ips/allowed-ip={val['name']}"
                 response = self.client.delete(uri)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                if response['code'] not in [200, 201, 202, 204, 404]:
+                    raise F5ModuleError(str(response['contents']))
         return True
 
     def read_current_from_device(self):

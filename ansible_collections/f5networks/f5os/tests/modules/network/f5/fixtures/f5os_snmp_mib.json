@@ -1,0 +1,6 @@
+{
+    "code": 200,
+    "contents" : {
+        "SNMPv2-MIB:system": {}
+    }
+}

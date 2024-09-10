@@ -20,6 +20,11 @@ plugins:
       name: f5os_allowed_ips
       namespace: ''
       version_added: 1.9.0
+    f5os_auth:
+      description: Manage authentication settings
+      name: f5os_auth
+      namespace: ''
+      version_added: 1.10.0
     f5os_config_backup:
       description: Manage F5OS config backups.
       name: f5os_config_backup
@@ -55,11 +60,21 @@ plugins:
       name: f5os_lldp_config
       namespace: ''
       version_added: 1.8.0
+    f5os_logging:
+      description: Manage logging settings
+      name: f5os_logging
+      namespace: ''
+      version_added: 1.10.0
     f5os_ntp_server:
       description: Manage NTP servers on F5OS based systems
       name: f5os_ntp_server
       namespace: ''
       version_added: 1.8.0
+    f5os_primarykey:
+      description: Manage F5OS Devices Primary-key Setting.
+      name: f5os_primarykey
+      namespace: ''
+      version_added: 1.11.0
     f5os_qkview:
       description: Manage Generation of qkview file
       name: f5os_qkview
@@ -81,6 +96,16 @@ plugins:
       name: f5os_system
       namespace: ''
       version_added: 1.10.0
+    f5os_system_image_import:
+      description: Manage F5OS System image import.
+      name: f5os_system_image_import
+      namespace: ''
+      version_added: 1.11.0
+    f5os_system_image_install:
+      description: Manage F5OS system software installation.
+      name: f5os_system_image_install
+      namespace: ''
+      version_added: 1.11.0
     f5os_tenant:
       description: Manage F5OS tenants
       name: f5os_tenant
@@ -96,6 +121,11 @@ plugins:
       name: f5os_tenant_wait
       namespace: ''
       version_added: 1.0.0
+    f5os_tls_cert_key:
+      description: Manage TLS certificate and key on F5OS devices.
+      name: f5os_tls_cert_key
+      namespace: ''
+      version_added: 1.11.0
     f5os_user:
       description: Manage Users and roles on F5OS based systems
       name: f5os_user
@@ -133,4 +163,4 @@ plugins:
   strategy: {}
   test: {}
   vars: {}
-version: 1.10.1
+version: 1.11.0
