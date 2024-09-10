@@ -32,10 +32,60 @@ options:
     description:
       - Specifies the timezone for the system per TZ database name
     type: str
+  cli_timeout:
+    description:
+      - Specifies the CLI idle timeout
+    type: int
+  httpd_ciphersuite:
+    description:
+      - Specifies the httpd ciphersuite in OpenSSL format
+    type: str
+  sshd_idle_timeout:
+    description:
+      - Specifies the SSHD idle timeout
+    type: str
+  sshd_ciphers:
+    description:
+      - Specifies the sshd ciphers in OpenSSH format
+    type: list
+    elements: str
+  sshd_kex_alg:
+    description:
+      - Specifies the sshd key exchange algorithems in OpenSSH format
+    type: list
+    elements: str
+  sshd_mac_alg:
+    description:
+      - Specifies the sshd MAC algorithems in OpenSSH format
+    type: list
+    elements: str
+  sshd_hkey_alg:
+    description:
+      - Specifies the sshd host key algorithems in OpenSSH format
+    type: list
+    elements: str
+  gui_advisory:
+    description:
+      - Specify the GUI advisory banner
+    type: dict
+    suboptions:
+      color:
+        description:
+          - Specify the color of the advisory banner
+        type: str
+        choices:
+          - blue
+          - green
+          - orange
+          - red
+          - yellow
+      text:
+        description:
+          - Specify the text for the advisory banner
+        type: str
   state:
     description:
-      - State for the settings. Please note, this is kept for future additions and currently
-      - unused as implemented settings can't be removed.
+      - State for the settings.
       - If C(present), creates/updates the specified setting if necessary.
       - If C(absent), deletes the specified setting if it exists.
     type: str
@@ -54,6 +104,29 @@ EXAMPLES = r'''
     motd: Todays weather is great!
     login_banner: With great power comes great responsibility
     timezone: UTC
+    cli_timeout: 3600
+    sshd_idle_timeout: 1800
+    httpd_ciphersuite: ECDHE-RSA-AES256-GCM-SHA384
+    sshd_ciphers:
+      - aes256-ctr
+      - aes256-gcm@openssh.com
+    sshd_kex_alg:
+      - ecdh-sha2-nistp384
+      - ecdh-sha2-nistp521
+    sshd_mac_alg:
+      - hmac-sha1
+      - hmac-sha1-96
+    sshd_hkey_alg:
+      - ssh-rsa
+
+- name: Unset MAC / Host Key algorithms
+  f5os_system:
+    sshd_hkey_alg:
+      - ssh-rsa
+    sshd_mac_alg:
+      - hmac-sha1
+      - hmac-sha1-96
+    state: absent
 '''
 
 RETURN = r'''
@@ -61,22 +134,50 @@ hostname:
   description: Specifies the system hostname
   returned: changed
   type: str
-  sample: system.example.net
 motd:
   description: Specifies the message of the day
   returned: changed
   type: str
-  sample: Todays weather is great!
 login_banner:
-  description: Specifies the Specifies the Login Banner
+  description: Specifies the Login Banner
   returned: changed
   type: str
-  sample: With great power comes great responsibility
 timezone:
   description: Specifies the timezone for the system per TZ database name
   returned: changed
   type: str
-  sample: UTC
+cli_timeout:
+  description: Specifies the CLI idle timeout
+  returned: changed
+  type: str
+httpd_ciphersuite:
+  description: Specifies the httpd ciphersuite in OpenSSL format
+  returned: changed
+  type: str
+sshd_idle_timeout:
+  description: Specifies the SSHD idle timeout
+  returned: changed
+  type: str
+sshd_ciphers:
+  description: Specifies the sshd ciphers in OpenSSH format
+  returned: changed
+  type: list
+sshd_kex_alg:
+  description: Specifies the sshd key exchange algorithems in OpenSSH format
+  returned: changed
+  type: list
+sshd_mac_alg:
+  description: Specifies the sshd MAC algorithems in OpenSSH format
+  returned: changed
+  type: list
+sshd_hkey_alg:
+  description: Specifies the sshd host key algorithems in OpenSSH format
+  returned: changed
+  type: list
+gui_advisory:
+  description: Specifies GUI advisory banner
+  returned: changed
+  type: str
 '''
 
 import datetime
@@ -101,21 +202,45 @@ class Parameters(AnsibleF5Parameters):
         'timezone',
         'motd',
         'login_banner',
-        'hostname'
+        'hostname',
+        'cli_timeout',
+        'sshd_idle_timeout',
+        'httpd_ciphersuite',
+        'sshd_ciphers',
+        'sshd_kex_alg',
+        'sshd_mac_alg',
+        'sshd_hkey_alg',
+        'gui_advisory'
     ]
 
     returnables = [
         'timezone',
         'motd',
         'login_banner',
-        'hostname'
+        'hostname',
+        'cli_timeout',
+        'sshd_idle_timeout',
+        'httpd_ciphersuite',
+        'sshd_ciphers',
+        'sshd_kex_alg',
+        'sshd_mac_alg',
+        'sshd_hkey_alg',
+        'gui_advisory'
     ]
 
     updatables = [
         'timezone',
         'motd',
         'login_banner',
-        'hostname'
+        'hostname',
+        'cli_timeout',
+        'sshd_idle_timeout',
+        'httpd_ciphersuite',
+        'sshd_ciphers',
+        'sshd_kex_alg',
+        'sshd_mac_alg',
+        'sshd_hkey_alg',
+        'gui_advisory'
     ]
 
 
@@ -124,29 +249,125 @@ class ApiParameters(Parameters):
     def timezone(self):
         try:
             return self._values['clock']['config']['timezone-name']
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, KeyError):
             return None
 
     @property
     def motd(self):
         try:
             return self._values['config']['motd-banner']
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, KeyError):
             return None
 
     @property
     def login_banner(self):
         try:
             return self._values['config']['login-banner']
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, KeyError):
             return None
 
     @property
     def hostname(self):
         try:
             return self._values['config']['hostname']
+        except (TypeError, ValueError, KeyError):
+            return None
+
+    @property
+    def cli_timeout(self):
+        try:
+            return int(self._values['settings']['config']['idle-timeout'])
+        except (TypeError, ValueError, KeyError):
+            return None
+
+    @property
+    def sshd_idle_timeout(self):
+        try:
+            return self._values['settings']['config']['sshd-idle-timeout']
+        except (TypeError, ValueError, KeyError):
+            return None
+
+    @property
+    def httpd_ciphersuite(self):
+        try:
+            for service in self._values['ciphers']:
+                if service['name'] == 'httpd':
+                    return service['config']['ssl-ciphersuite']
+            return None
         except (TypeError, ValueError):
             return None
+        except (KeyError):
+            return []
+
+    @property
+    def sshd_ciphers(self):
+        try:
+            for service in self._values['ciphers']:
+                if service['name'] == 'sshd':
+                    sorted_ciphers = service['config']['ciphers']
+                    sorted_ciphers.sort()
+                    return sorted_ciphers
+            return None
+        except (TypeError, ValueError):
+            return None
+        except (KeyError):
+            return []
+
+    @property
+    def sshd_kex_alg(self):
+        try:
+            for service in self._values['ciphers']:
+                if service['name'] == 'sshd':
+                    sorted_kex = service['config']['kexalgorithms']
+                    sorted_kex.sort()
+                    return sorted_kex
+            return None
+        except (TypeError, ValueError):
+            return None
+        except (KeyError):
+            return []
+
+    @property
+    def sshd_mac_alg(self):
+        try:
+            for service in self._values['ciphers']:
+                if service['name'] == 'sshd':
+                    sorted_macs = service['config']['macs']
+                    sorted_macs.sort()
+                    return sorted_macs
+            return None
+        except (TypeError, ValueError):
+            return None
+        except (KeyError):
+            return []
+
+    @property
+    def sshd_hkey_alg(self):
+        try:
+            for service in self._values['ciphers']:
+                if service['name'] == 'sshd':
+                    sorted_hkey_algs = service['config']['host-key-algorithms']
+                    sorted_hkey_algs.sort()
+                    return sorted_hkey_algs
+            return None
+        except (TypeError, ValueError):
+            return None
+        except (KeyError):
+            return []
+
+    @property
+    def gui_advisory(self):
+        try:
+            config = self._values['settings']['f5-gui-advisory:gui']['advisory']['config']
+            result = {
+                'color': config['color'],
+                'text': config['text']
+            }
+            return result
+        except (TypeError, ValueError):
+            return None
+        except (KeyError):
+            return []
 
 
 class ModuleParameters(Parameters):
@@ -222,10 +443,7 @@ class ModuleManager(object):
             if change is None:
                 continue
             else:
-                if isinstance(change, dict):  # pragma: no cover
-                    changed.update(change)
-                else:
-                    changed[k] = change
+                changed[k] = change
         if changed:
             self.changes = UsableChanges(params=changed)
             return True
@@ -259,13 +477,13 @@ class ModuleManager(object):
         return result
 
     def present(self):
-        if self.exists():
+        if self.all_exist():
             return self.update()
         else:
             return self.create()
 
     def absent(self):
-        if self.exists():
+        if self.any_exists():
             return self.remove()
         return False
 
@@ -288,7 +506,7 @@ class ModuleManager(object):
         if self.module.check_mode:  # pragma: no cover
             return True
         self.remove_from_device()
-        if self.exists():
+        if self.still_exists():
             raise F5ModuleError("Failed to delete the resource.")
         return True
 
@@ -299,20 +517,101 @@ class ModuleManager(object):
         self.create_on_device()
         return True
 
-    def exists(self):
-        uri = "/openconfig-system:system"
-        response = self.client.get(uri)
+    def any_exists(self):
+        return self.exists(query='any')
 
-        if response['code'] == 404:
+    def all_exist(self):
+        return self.exists(query='all')
+
+    def still_exists(self):
+        return self.exists(query='still')
+
+    def exists(self, query=None):
+        conf_attr = {
+            'login_banner': 'login-banner',
+            'motd': 'motd-banner',
+            'hostname': 'hostname'
+        }
+        for attr in conf_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                uri = f'/openconfig-system:system/config/{conf_attr[attr]}'
+                response = self.client.get(uri)
+
+                if response['code'] == 200:
+                    if query in ['any', 'still']:
+                        return True
+
+                if response['code'] not in [200, 201, 202, 404]:
+                    raise F5ModuleError(response['contents'])
+
+        clock_attr = {
+            'timezone': 'timezone-name'
+        }
+        for attr in clock_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                uri = f'/openconfig-system:system/clock/config/{clock_attr[attr]}'
+                response = self.client.get(uri)
+
+                if response['code'] == 200:
+                    if query in ['any', 'still']:
+                        return True
+
+                if response['code'] not in [200, 201, 202, 404]:
+                    raise F5ModuleError(response['contents'])
+
+        settings_attr = {
+            'cli_timeout': 'idle-timeout',
+            'sshd_idle_timeout': 'sshd-idle-timeout',
+            'gui_advisory': 'f5-gui-advisory:gui'
+        }
+        for attr in settings_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                uri = f'/openconfig-system:system/f5-system-settings:settings/{settings_attr[attr]}'
+                response = self.client.get(uri)
+
+                if response['code'] == 200:
+                    if query in ['any', 'still']:
+                        return True
+
+                if response['code'] not in [200, 201, 202, 404]:
+                    raise F5ModuleError(response['contents'])
+
+        ciphers_attr = {
+            'httpd_ciphersuite': 'ssl-cipher-suite',
+            'sshd_ciphers': 'ciphers',
+            'sshd_kex_alg': 'kexalgorithms',
+            'sshd_mac_alg': 'macs',
+            'sshd_hkey_alg': 'host-key-algorithms'
+        }
+        for attr in ciphers_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                if attr == 'httpd_ciphersuite':
+                    uri = '/openconfig-system:system/f5-security-ciphers:security/services/service="httpd"/config/ssl-ciphersuite'
+                    response = self.client.get(uri)
+
+                    if response['code'] == 200:
+                        if query in ['any', 'still']:
+                            return True
+
+                    if response['code'] not in [200, 201, 202, 404]:
+                        raise F5ModuleError(response['contents'])
+                else:
+                    uri = f'/openconfig-system:system/f5-security-ciphers:security/services/service="sshd"/config/{ciphers_attr[attr]}'
+                    response = self.client.get(uri)
+
+                    if response['code'] == 200:
+                        if query in ['any', 'still']:
+                            return True
+
+                    if response['code'] not in [200, 201, 202, 404]:
+                        raise F5ModuleError(response['contents'])
+
+        if query in ['any', 'still']:
             return False
-
-        if response['code'] not in [200, 201, 202]:
-            raise F5ModuleError(response['contents'])
-
         return True
 
     def create_on_device(self):
-        # not applicable for system parameters
+        # not applicable for system parameters,
         pass
 
     def update_on_device(self):
@@ -329,13 +628,76 @@ class ModuleManager(object):
             config['hostname'] = params['hostname']
         if 'timezone' in params:
             # Clock is nested
-            system['clock'] = dict()
-            system['clock']['config'] = dict()
-            system['clock']['config']['timezone-name'] = params['timezone']
+            system['clock'] = {
+                'config': {
+                    'timezone-name': params['timezone']
+                }
+            }
         if 'motd' in params:
             config['motd-banner'] = params['motd']
         if 'login_banner' in params:
             config['login-banner'] = params['login_banner']
+
+        # Settings use a different API endpoint
+        if any(attr in ['cli_timeout', 'sshd_idle_timeout', 'gui_advisory'] for attr in params):
+            settings_uri = '/openconfig-system:system/f5-system-settings:settings'
+            settings_payload = {
+                'settings': {
+                    'config': dict()
+                }
+            }
+
+            settings_config = settings_payload['settings']['config']
+            if 'cli_timeout' in params:
+                settings_config['idle-timeout'] = params['cli_timeout']
+            if 'sshd_idle_timeout' in params:
+                settings_config['sshd-idle-timeout'] = params['sshd_idle_timeout']
+            if 'gui_advisory' in params:
+                settings_payload['settings']['f5-gui-advisory:gui'] = {
+                    'advisory': {
+                        'config': {
+                            'color': params['gui_advisory']['color'],
+                            'text': params['gui_advisory']['text'],
+                            'enabled': True
+                        }
+                    }
+                }
+
+            settings_response = self.client.patch(settings_uri, data=settings_payload)
+            if settings_response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(settings_response['contents'])
+
+        # Ciphers + Key Exchange use a different API endpoint
+        if 'httpd_ciphersuite' in params:
+            httpd_uri = '/openconfig-system:system/f5-security-ciphers:security/services/service="httpd"/config'
+            httpd_payload = {
+                'config': {
+                    'name': 'httpd',
+                    'ssl-ciphersuite': params['httpd_ciphersuite']
+                }
+            }
+            httpd_response = self.client.put(httpd_uri, data=httpd_payload)
+            if httpd_response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(httpd_response['contents'])
+
+        if any(attr in ['sshd_ciphers', 'sshd_kex_alg', 'sshd_mac_alg', 'sshd_hkey_alg'] for attr in params):
+            sshd_uri = '/openconfig-system:system/f5-security-ciphers:security/services/service="sshd"/config'
+
+            attributes = {}
+
+            if hasattr(self.want, 'sshd_ciphers') and self.want.sshd_ciphers is not None:
+                attributes['ciphers'] = {'ciphers': self.want.sshd_ciphers}
+            if hasattr(self.want, 'sshd_kex_alg') and self.want.sshd_kex_alg is not None:
+                attributes['kexalgorithms'] = {'kexalgorithms': self.want.sshd_kex_alg}
+            if hasattr(self.want, 'sshd_mac_alg') and self.want.sshd_mac_alg is not None:
+                attributes['macs'] = {'macs': self.want.sshd_mac_alg}
+            if hasattr(self.want, 'sshd_hkey_alg') and self.want.sshd_hkey_alg is not None:
+                attributes['host-key-algorithms'] = {'host-key-algorithms': self.want.sshd_hkey_alg}
+
+            for attr in attributes:
+                sshd_response = self.client.put(sshd_uri + "/" + attr, data=attributes[attr])
+                if sshd_response['code'] not in [200, 201, 202, 204]:
+                    raise F5ModuleError(sshd_response['contents'])
 
         response = self.client.patch(uri, data=payload)
         if response['code'] not in [200, 201, 202, 204]:
@@ -343,17 +705,126 @@ class ModuleManager(object):
         return True
 
     def remove_from_device(self):
-        # not applicable for system parameters
-        pass
+        conf_attr = {
+            'login_banner': 'login-banner',
+            'motd': 'motd-banner',
+            'hostname': 'hostname'
+        }
+        for attr in conf_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                uri = f'/openconfig-system:system/config/{conf_attr[attr]}'
+                response = self.client.delete(uri)
+
+                if response['code'] == 204:
+                    # Deleted
+                    continue
+                elif response['code'] == 404:
+                    # Not Found
+                    continue
+                else:
+                    raise F5ModuleError(response['contents'])
+
+        clock_attr = {
+            'timezone': 'timezone-name'
+        }
+        for attr in clock_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                uri = f'/openconfig-system:system/clock/config/{clock_attr[attr]}'
+                response = self.client.delete(uri)
+
+                if response['code'] == 204:
+                    # Deleted
+                    continue
+                elif response['code'] == 404:
+                    # Not Found
+                    continue
+                else:
+                    raise F5ModuleError(response['contents'])
+
+        settings_attr = {
+            'cli_timeout': 'idle-timeout',
+            'sshd_idle_timeout': 'sshd-idle-timeout'
+        }
+        for attr in settings_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                uri = f'/openconfig-system:system/f5-system-settings:settings/{settings_attr[attr]}'
+                response = self.client.delete(uri)
+
+                if response['code'] == 204:
+                    # Deleted
+                    continue
+                elif response['code'] == 404:
+                    # Not Found
+                    continue
+                else:
+                    raise F5ModuleError(response['contents'])
+
+        ciphers_attr = {
+            'httpd_ciphersuite': 'ssl-cipher-suite',
+            'sshd_ciphers': 'ciphers',
+            'sshd_kex_alg': 'kexalgorithms',
+            'sshd_mac_alg': 'macs',
+            'sshd_hkey_alg': 'host-key-algorithms'
+        }
+        for attr in ciphers_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                if attr == 'httpd_ciphersuite':
+                    uri = '/openconfig-system:system/f5-security-ciphers:security/services/service="httpd"/config/ssl-ciphersuite'
+                    response = self.client.delete(uri)
+
+                    if response['code'] == 204:
+                        # Deleted
+                        continue
+                    elif response['code'] == 404:
+                        # Not Found
+                        continue
+                    else:
+                        raise F5ModuleError(response['contents'])
+
+                else:
+                    uri = f'/openconfig-system:system/f5-security-ciphers:security/services/service="sshd"/config/{ciphers_attr[attr]}'
+                    response = self.client.delete(uri)
+
+                    if response['code'] == 204:
+                        # Deleted
+                        continue
+                    elif response['code'] == 404:
+                        # Not Found
+                        continue
+                    else:
+                        raise F5ModuleError(response['contents'])
 
     def read_current_from_device(self):
-        uri = "/openconfig-system:system"
+        params = dict()
+
+        # Motd, login_banner, hostname
+        uri = "/openconfig-system:system/config"
         response = self.client.get(uri)
-
         if response['code'] not in [200, 201, 202]:
-            raise F5ModuleError(response['contents']['openconfig-system:system'])
+            raise F5ModuleError(response['contents']['openconfig-system:config'])
 
-        params = response['contents']['openconfig-system:system']
+        # Clock
+        clock_uri = "/openconfig-system:system/clock"
+        clock_response = self.client.get(clock_uri)
+        if clock_response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(clock_response['contents']['openconfig-system:clock'])
+
+        # Ciphers
+        ciphers_uri = '/openconfig-system:system/f5-security-ciphers:security/services/service'
+        ciphers_response = self.client.get(ciphers_uri)
+        if ciphers_response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(ciphers_response['contents']['f5-security-ciphers:service'])
+
+        # Settings
+        settings_uri = '/openconfig-system:system/f5-system-settings:settings'
+        settings_response = self.client.get(settings_uri)
+        if settings_response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(settings_response['contents']['f5-system-settings:settings'])
+
+        params['config'] = response['contents']['openconfig-system:config']
+        params['clock'] = clock_response['contents']['openconfig-system:clock']
+        params['ciphers'] = ciphers_response['contents']['f5-security-ciphers:service']
+        params['settings'] = settings_response['contents']['f5-system-settings:settings']
         return ApiParameters(params=params)
 
 
@@ -365,6 +836,41 @@ class ArgumentSpec(object):
             login_banner=dict(type='str'),
             motd=dict(type='str'),
             timezone=dict(type='str'),
+            gui_advisory=dict(
+                type='dict',
+                options=dict(
+                    color=dict(
+                        type='str',
+                        choices=[
+                            'blue',
+                            'green',
+                            'orange',
+                            'red',
+                            'yellow'
+                        ]
+                    ),
+                    text=dict(type='str')
+                )
+            ),
+            cli_timeout=dict(type='int'),
+            httpd_ciphersuite=dict(type='str'),
+            sshd_idle_timeout=dict(type='str'),
+            sshd_ciphers=dict(
+                type='list',
+                elements='str'
+            ),
+            sshd_kex_alg=dict(
+                type='list',
+                elements='str'
+            ),
+            sshd_mac_alg=dict(
+                type='list',
+                elements='str'
+            ),
+            sshd_hkey_alg=dict(
+                type='list',
+                elements='str'
+            ),
             state=dict(
                 default='present',
                 choices=['present', 'absent']
