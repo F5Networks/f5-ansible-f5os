@@ -92,6 +92,13 @@ options:
     choices:
       - enabled
       - disabled
+  virtual_disk_size:
+    description:
+      - The size of the virtual disk in GB.
+      - To update this attribute the tenant must be in either C(configured)
+        or C(provisioned) state.
+    type: int
+    version_added: "1.12.0"
   running_state:
     description:
       - Desired C(running_state) of the tenant.
@@ -132,6 +139,7 @@ EXAMPLES = r'''
     cpu_cores: 2
     memory: 4096
     cryptos: disabled
+    virtual_disk_size: 85
     running_state: configured
 
 - name: Deploy tenant 'foo'
@@ -221,7 +229,8 @@ class Parameters(AnsibleF5Parameters):
         'gateway': 'mgmt_gateway',
         'running-state': 'running_state',
         'vcpu-cores-per-node': 'cpu_cores',
-        'cpu-cores': 'cpu_cores'
+        'cpu-cores': 'cpu_cores',
+        'storage': 'virtual_disk_size',
     }
 
     api_attributes = [
@@ -235,6 +244,7 @@ class Parameters(AnsibleF5Parameters):
         'memory',
         'cryptos',
         'running-state',
+        'storage',
     ]
 
     returnables = [
@@ -247,7 +257,8 @@ class Parameters(AnsibleF5Parameters):
         'cpu_cores',
         'memory',
         'cryptos',
-        'running_state'
+        'running_state',
+        'virtual_disk_size',
     ]
 
     updatables = [
@@ -260,7 +271,8 @@ class Parameters(AnsibleF5Parameters):
         'cpu_cores',
         'memory',
         'cryptos',
-        'running_state'
+        'running_state',
+        'virtual_disk_size',
     ]
 
 
@@ -277,6 +289,13 @@ class ApiParameters(Parameters):
     def memory(self):
         try:
             return int(self._values.get('memory'))
+        except (TypeError, ValueError):
+            return None
+
+    @property
+    def virtual_disk_size(self):
+        try:
+            return self._values.get('virtual_disk_size')
         except (TypeError, ValueError):
             return None
 
@@ -359,6 +378,12 @@ class ModuleParameters(Parameters):
             )
         return result
 
+    @property
+    def virtual_disk_size(self):
+        if self._values['virtual_disk_size'] is None:
+            return None
+        return {'size': self._values['virtual_disk_size']}
+
 
 class Changes(Parameters):
     def to_return(self):  # pragma: no cover
@@ -400,6 +425,18 @@ class Difference(object):  # pragma: no cover
                 return attr1
         except AttributeError:
             return attr1
+
+    @property
+    def virtual_disk_size(self):
+        want = self.want.virtual_disk_size
+        have = self.have.virtual_disk_size
+        if want is None:
+            return None
+        if have is None:
+            return want
+        if want['size'] != have['size']:
+            return {'virtual_disk_size': want}
+        return None
 
 
 class ModuleManager(object):
@@ -532,12 +569,24 @@ class ModuleManager(object):
 
     def update_on_device(self):
         params = self.changes.api_params()
-        for k, v in params.items():
+        keys = list(params.keys())
+
+        if 'running-state' in keys:
+            if params['running-state'] == 'deployed':
+                keys.remove('running-state')
+                keys.append('running-state')
+            elif params['running-state'] in ['configured', 'provisioned']:
+                keys.remove('running-state')
+                keys.insert(0, 'running-state')
+
+        for k in keys:
+            v = params[k]
             uri = f"/f5-tenants:tenants/tenant={self.want.name}/config/{k}"
             payload = {k: v}
             response = self.client.put(uri, data=payload)
             if response['code'] not in [200, 201, 202, 204]:
                 raise F5ModuleError("Failed to update tenant {0}, {1} to {2}".format(self.want.name, k, v))
+
         return True
 
     def remove_from_device(self):
@@ -571,6 +620,7 @@ class ArgumentSpec(object):
                 choices=[1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]
             ),
             memory=dict(type='int'),
+            virtual_disk_size=dict(type='int'),
             cryptos=dict(
                 choices=['enabled', 'disabled']
             ),

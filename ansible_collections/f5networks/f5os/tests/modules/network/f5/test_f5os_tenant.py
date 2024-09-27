@@ -226,6 +226,7 @@ class TestManager(unittest.TestCase):
             cpu_cores=2,
             memory=7680,
             cryptos='enabled',
+            virtual_disk_size=80,
             running_state='configured',
         ))
 
@@ -237,7 +238,7 @@ class TestManager(unittest.TestCase):
             {'name': 'foo', 'config': {
                 'image': 'BIGIP-14.1.4.1-0.0.4.ALL-VELOS.qcow2.zip.bundle', 'nodes': [1],
                 'mgmt-ip': '10.144.140.151', 'gateway': '10.144.140.254', 'vlans': [444], 'prefix-length': 24,
-                'vcpu-cores-per-node': 2, 'memory': 7680, 'cryptos': 'enabled', 'running-state': 'configured'}}]}
+                'vcpu-cores-per-node': 2, 'storage': {'size': 80}, 'memory': 7680, 'cryptos': 'enabled', 'running-state': 'configured'}}]}
 
         # Override methods to force specific logic in the module to happen
         mm = ModuleManager(module=module)
