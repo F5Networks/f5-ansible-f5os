@@ -759,7 +759,7 @@ class ModuleManager(object):
         if 'remote_forwarding' in params and params['remote_forwarding'] is not None:
             uri = f'{base_uri}/f5-openconfig-system-logging:host-logs/config'
             payload = {
-                'f5-openconfig-system-logging:config' : dict()
+                'f5-openconfig-system-logging:config': dict()
             }
             conf = payload['f5-openconfig-system-logging:config']
             conf['remote-forwarding'] = {

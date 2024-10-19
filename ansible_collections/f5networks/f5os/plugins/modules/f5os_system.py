@@ -702,6 +702,7 @@ class ModuleManager(object):
         response = self.client.patch(uri, data=payload)
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
+        # time.sleep(65)
         return True
 
     def remove_from_device(self):
@@ -800,31 +801,36 @@ class ModuleManager(object):
         # Motd, login_banner, hostname
         uri = "/openconfig-system:system/config"
         response = self.client.get(uri)
-        if response['code'] not in [200, 201, 202]:
+        if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents']['openconfig-system:config'])
+        if response['code'] in [200]:
+            params['config'] = response['contents']['openconfig-system:config']
 
         # Clock
         clock_uri = "/openconfig-system:system/clock"
         clock_response = self.client.get(clock_uri)
-        if clock_response['code'] not in [200, 201, 202]:
+        if clock_response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(clock_response['contents']['openconfig-system:clock'])
+        if response['code'] in [200]:
+            params['clock'] = clock_response['contents']['openconfig-system:clock']
 
         # Ciphers
         ciphers_uri = '/openconfig-system:system/f5-security-ciphers:security/services/service'
+        # /services/service'
         ciphers_response = self.client.get(ciphers_uri)
-        if ciphers_response['code'] not in [200, 201, 202]:
+        if ciphers_response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(ciphers_response['contents']['f5-security-ciphers:service'])
+        if ciphers_response['code'] in [200]:
+            params['ciphers'] = ciphers_response['contents']['f5-security-ciphers:service']
 
         # Settings
         settings_uri = '/openconfig-system:system/f5-system-settings:settings'
         settings_response = self.client.get(settings_uri)
-        if settings_response['code'] not in [200, 201, 202]:
+        if settings_response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(settings_response['contents']['f5-system-settings:settings'])
+        if settings_response['code'] in [200]:
+            params['settings'] = settings_response['contents']['f5-system-settings:settings']
 
-        params['config'] = response['contents']['openconfig-system:config']
-        params['clock'] = clock_response['contents']['openconfig-system:clock']
-        params['ciphers'] = ciphers_response['contents']['f5-security-ciphers:service']
-        params['settings'] = settings_response['contents']['f5-system-settings:settings']
         return ApiParameters(params=params)
 
 

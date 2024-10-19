@@ -1,0 +1,16 @@
+{
+    "code": 200,
+    "contents": {
+        "openconfig-system:config": {
+            "hostname": "appliance-1.chassis.local",
+            "login-banner": "pmlab-r5600",
+            "motd-banner": "pmlab-ravi-r5600",
+            "current-datetime": "2024-10-09 10:01:53+00:00",
+            "f5-system:base-mac": "00:94:a1:69:5d:00",
+            "f5-system:mac-pool-size": 256
+        },
+        "openconfig-system:clock": {},
+        "f5-security-ciphers:service": {},
+        "f5-system-settings:settings": {}
+    }
+}
