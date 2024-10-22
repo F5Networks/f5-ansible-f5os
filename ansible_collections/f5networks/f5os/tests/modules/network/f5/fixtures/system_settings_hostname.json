@@ -1,0 +1,9 @@
+{
+    "openconfig-system:config": {
+        "login-banner": "pmlab-r5600",
+        "motd-banner": "pmlab-ravi-r5600"
+    },
+    "openconfig-system:clock": {},
+    "f5-security-ciphers:service": {},
+    "f5-system-settings:settings": {}
+}

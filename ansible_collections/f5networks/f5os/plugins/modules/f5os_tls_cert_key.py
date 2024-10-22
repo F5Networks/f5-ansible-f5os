@@ -64,9 +64,9 @@ options:
     type: str
     choices:
       - rsa
-      - encrypted rsa
+      - encrypted-rsa
       - ecdsa
-      - encrypted ecdsa
+      - encrypted-ecdsa
   key_size:
     description:
       - This specifies the length of the key.
@@ -643,9 +643,9 @@ class ArgumentSpec(object):
             key_type=dict(
                 choices=[
                     "rsa",
-                    "encrypted rsa",
+                    "encrypted-rsa",
                     "ecdsa",
-                    "encrypted ecdsa",
+                    "encrypted-ecdsa",
                 ]
             ),
             key_size=dict(

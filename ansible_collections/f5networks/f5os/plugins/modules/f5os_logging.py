@@ -52,8 +52,11 @@ options:
                     facility:
                         description: Filter logs on facility local0 or authpriv.
                         type: str
+                        choices:
+                            - local0
+                            - authpriv
                     severity:
-                        description: Specify the minimum seceverity to be forwarded to this server
+                        description: Specify the minimum severity to be forwarded to this server
                         type: str
                         choices:
                             - debug
@@ -80,7 +83,7 @@ options:
                         description: Filter logs on facility.
                         type: str
                     severity:
-                        description: Specify the minimum seceverity to be forwarded to remote servers
+                        description: Specify the minimum severity to be forwarded to remote servers
                         type: str
                         choices:
                             - debug
@@ -536,9 +539,8 @@ class ModuleManager(object):
 
         if hasattr(self.want, 'servers') and self.want.servers is not None:
             for server in self.want.servers:
-                uri = f'{base_uri}/remote-servers/remote-server="{server["address"]}"'
+                uri = f'{base_uri}/remote-servers/remote-server={server["address"]}'
                 response = self.client.get(uri)
-
                 if response['code'] == 200:
                     if query in ['any', 'still']:
                         return True
@@ -684,11 +686,7 @@ class ModuleManager(object):
                     }
                 }
                 if 'authentication' in server and server['authentication'] is not None:
-                    server_conf['config'] = {
-                        'f5-openconfig-system-logging:authentication': {
-                            'enabled': server['authentication']
-                        }
-                    }
+                    server_conf['config'].update({'f5-openconfig-system-logging:authentication': {'enabled': server['authentication']}})
                 if 'logs' in server and server['logs'] is not None:
                     server_conf['selectors'] = {
                         'selector': list()
@@ -704,7 +702,6 @@ class ModuleManager(object):
                         }
                         server_conf['selectors']['selector'].append(log_conf)
                 server_list.append(server_conf)
-
                 response = self.client.post(uri, data=payload)
                 if response['code'] == 409:
                     # This object exists already, so override it
@@ -731,7 +728,6 @@ class ModuleManager(object):
     def update_on_device(self):
         params = self.changes.api_params()
         base_uri = '/openconfig-system:system/logging'
-
         if 'tls' in params and params['tls'] is not None:
             uri = f'{base_uri}/f5-openconfig-system-logging:tls'
             payload = {
@@ -741,7 +737,6 @@ class ModuleManager(object):
             response = self.client.put(uri, data=payload)
             if response['code'] not in [200, 204]:
                 raise F5ModuleError(response['contents'])
-
         if 'ca_bundles' in params and params['ca_bundles'] is not None:
             for bundle in params['ca_bundles']:
                 uri = f'{base_uri}/f5-openconfig-system-logging:tls/ca-bundles/ca-bundle="{bundle["name"]}"'
@@ -789,16 +784,12 @@ class ModuleManager(object):
             response = self.client.put(uri, data=payload)
             if response['code'] not in [200, 204]:
                 raise F5ModuleError(response['contents'])
-
         if 'servers' in params and params['servers'] is not None:
             uri = f'{base_uri}/remote-servers'
-            payload = {
-                'openconfig-system:remote-servers': {
-                    'remote-server': list()
-                }
-            }
-            server_list = payload['openconfig-system:remote-servers']['remote-server']
+
             for server in params['servers']:
+                payload = {'remote-server': list()}
+
                 server_conf = {
                     'host': server['address'],
                     'config': {
@@ -809,16 +800,13 @@ class ModuleManager(object):
                 }
 
                 if 'authentication' in server and server['authentication'] is not None:
-                    server_conf['config'] = {
-                        'f5-openconfig-system-logging:authentication': {
-                            'enabled': server['authentication']
-                        }
-                    }
+                    server_conf['config']['f5-openconfig-system-logging:authentication'] = dict()
+                    server_conf['config']['f5-openconfig-system-logging:authentication'] = {'enabled': server['authentication']}
 
                 if 'logs' in server and server['logs'] is not None:
-                    server_conf['selectors'] = {
-                        'selector': list()
-                    }
+                    server_conf['selectors'] = dict()
+                    server_conf['selectors'] = {'selector': list()}
+
                     for log in server['logs']:
                         log_conf = {
                             'facility': f'f5-system-logging-types:{log["facility"].upper()}',
@@ -829,12 +817,11 @@ class ModuleManager(object):
                             }
                         }
                         server_conf['selectors']['selector'].append(log_conf)
-                server_list.append(server_conf)
 
-                response = self.client.put(uri, data=payload)
+                payload['remote-server'].append(server_conf)
+                response = self.client.put(f'{uri}/remote-server={server["address"]}', data=payload)
                 if response['code'] not in [200, 204]:
                     raise F5ModuleError(response['contents'])
-
         if 'include_hostname' in params and params['include_hostname'] is not None:
             uri = f'{base_uri}/f5-openconfig-system-logging:config'
             payload = {
@@ -969,7 +956,10 @@ class ArgumentSpec(object):
                         type='list',
                         elements='dict',
                         options=dict(
-                            facility=dict(type='str'),
+                            facility=dict(
+                                type='str',
+                                choices=['local0', 'authpriv']
+                            ),
                             severity=dict(
                                 type='str',
                                 choices=ArgumentSpec.severities

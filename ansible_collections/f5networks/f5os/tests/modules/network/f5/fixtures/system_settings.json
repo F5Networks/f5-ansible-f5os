@@ -1,16 +1,37 @@
 {
-    "code": 200,
-    "contents": {
-        "openconfig-system:config": {
-            "hostname": "appliance-1.chassis.local",
-            "login-banner": "pmlab-r5600",
-            "motd-banner": "pmlab-ravi-r5600",
-            "current-datetime": "2024-10-09 10:01:53+00:00",
-            "f5-system:base-mac": "00:94:a1:69:5d:00",
-            "f5-system:mac-pool-size": 256
+    "f5-system-settings:settings": {
+        "config": {
+            "f5-system-settings-pgwarn:portgroup-confirmation-warning": "on"
         },
-        "openconfig-system:clock": {},
-        "f5-security-ciphers:service": {},
-        "f5-system-settings:settings": {}
+        "state": {
+            "sshd-idle-timeout": "0",
+            "f5-system-settings-pgwarn:portgroup-confirmation-warning": "on"
+        },
+        "f5-system-settings-dag:dag": {
+            "config": {
+                "gtp-u": {
+                    "teid-hash": {
+                        "enabled": false
+                    }
+                }
+            },
+            "state": {
+                "gtp-u": {
+                    "teid-hash": {
+                        "enabled": false
+                    }
+                }
+            }
+        },
+        "f5-gui-advisory:gui": {
+            "advisory": {
+                "config": {
+                    "enabled": false
+                },
+                "state": {
+                    "enabled": false
+                }
+            }
+        }
     }
 }
