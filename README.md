@@ -107,7 +107,7 @@ being included in this project.
 [repoinstall]: https://docs.ansible.com/ansible/latest/user_guide/collections_using.html#installing-a-collection-from-a-git-repository
 [dailybuild]: https://f5-ansible.s3.amazonaws.com/collections/f5networks-f5os-devel.tar.gz
 [ansible_issues]: https://github.com/F5Networks/f5-ansible-f5os/issues
-[License]: https://github.com/f5devcentral/f5-ansible-bigip/blob/master/COPYING
+[License]: https://www.gnu.org/licenses/gpl-3.0.txt
 [ansiblehelp]: http://clouddocs.f5.com/products/orchestration/ansible/devel/
 [execenv]: https://docs.ansible.com/automation-controller/latest/html/userguide/execution_environments.html
 [f5execenv]: http://clouddocs.f5.com/products/orchestration/ansible/devel/usage/exec-env.html

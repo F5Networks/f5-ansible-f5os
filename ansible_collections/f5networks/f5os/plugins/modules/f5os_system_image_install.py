@@ -15,6 +15,10 @@ description:
   - Manage F5OS system software installation.
 version_added: "1.11.0"
 options:
+  partition_name:
+    description:
+      - Partition Name for which ISO image version is to be installed or upgraded.
+    type: str
   image_version:
     description:
       - Image/software version to be installed on the F5OS device.
@@ -52,6 +56,20 @@ EXAMPLES = r'''
 - name: check status of Image Install
   f5os_system_image_install:
     image_version: "1.8.0-13846"
+    state: install
+    timeout: 600
+
+- name: Update Partition Image Version
+  f5os_system_image_install:
+    partition_name: test100GbEoptics
+    image_version: "1.6.2-30244"
+    state: install
+    timeout: 600
+
+- name: check status of Image Install
+  f5os_system_image_install:
+    partition_name: test100GbEoptics
+    image_version: "1.6.2-30244"
     state: present
     timeout: 600
 '''
@@ -145,6 +163,7 @@ class ModuleManager(object):
         self.want = ModuleParameters(params=self.module.params)
         self.changes = UsableChanges()
         self.image_is_valid = False
+        self.partition_exists = False
 
     def _set_changed_options(self):
         changed = {}
@@ -210,48 +229,99 @@ class ModuleManager(object):
         self._set_changed_options()
         if self.module.check_mode:  # pragma: no cover
             return True
-        self.install_software_image()
+        if self.want.partition_name is not None:
+            self.update_partition_image()
+        else:
+            self.install_software_image()
         return True
 
     def exists(self):
-        if self.install_status_complete():
-            pass
-        # try:
-        #     result = self.install_status_complete()
-        #     return True
-        uri = "/openconfig-system:system/f5-system-image:image/state/install"
-        response = self.client.get(uri)
-        if response['code'] == 404 and self.client.platform == 'Velos Controller':
-            uri = "/openconfig-system:system/f5-system-controller-image:image"
+        if self.want.partition_name is not None:
+            if self.want.state == "present":
+                return self.install_status_complete()
+            else:
+                exists, version = self.check_partition()
+                self.partition_exists = exists
+                if exists and version == self.want.image_version:
+                    return True
+                return False
+        else:
+            if self.install_status_complete():
+                pass
+            # try:
+            #     result = self.install_status_complete()
+            #     return True
+            uri = "/openconfig-system:system/f5-system-image:image/state/install"
             response = self.client.get(uri)
+            if response['code'] == 404 and self.client.platform == 'Velos Controller':
+                uri = "/openconfig-system:system/f5-system-controller-image:image"
+                response = self.client.get(uri)
+                if response['code'] not in [200, 201, 202]:
+                    raise F5ModuleError(response['contents'])
+                for key in response['contents']['f5-system-controller-image:image']['state']['controllers']['controller']:
+                    if key['install-status'] == "success" and key['os-version'] == self.want.image_version:
+                        return True
+                return False
+            if response['code'] == 404 and self.client.platform == 'Velos Partition':
+                uri = "/openconfig-platform:components"
+                response = self.client.get(uri)
+                platform_data = response['contents']['openconfig-platform:components']['component'][0]
+                for key in platform_data['f5-platform:software']['state']['software-components']['software-component']:
+                    if key['state']['version'] != self.want.image_version:
+                        return False
+                return True
+            if response['code'] in [200, 201, 202] and self.client.platform == 'rSeries Platform':
+                if response['contents']['f5-system-image:install']['install-os-version'] == self.want.image_version and \
+                        response['contents']['f5-system-image:install']['install-status'] == 'success':
+                    return True
             if response['code'] not in [200, 201, 202]:
                 raise F5ModuleError(response['contents'])
-            for key in response['contents']['f5-system-controller-image:image']['state']['controllers']['controller']:
-                if key['install-status'] == "success" and key['os-version'] == self.want.image_version:
-                    return True
+                # {
+                #     "f5-system-image:install": {
+                #         "install-os-version": "1.8.0-13819",
+                #         "install-service-version": "1.8.0-13819",
+                #         "install-status": "success"
+                #     }
+                # }
             return False
-        if response['code'] == 404 and self.client.platform == 'Velos Partition':
-            uri = "/openconfig-platform:components"
-            response = self.client.get(uri)
-            platform_data = response['contents']['openconfig-platform:components']['component'][0]
-            for key in platform_data['f5-platform:software']['state']['software-components']['software-component']:
-                if key['state']['version'] != self.want.image_version:
-                    return False
-            return True
-        if response['code'] in [200, 201, 202] and self.client.platform == 'rSeries Platform':
-            if response['contents']['f5-system-image:install']['install-os-version'] == self.want.image_version and \
-                    response['contents']['f5-system-image:install']['install-status'] == 'success':
-                return True
+
+    def check_partition(self):
+        uri = "/f5-system-partition:partitions?with-defaults=report-all"
+        response = self.client.get(uri)
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
-            # {
-            #     "f5-system-image:install": {
-            #         "install-os-version": "1.8.0-13819",
-            #         "install-service-version": "1.8.0-13819",
-            #         "install-status": "success"
-            #     }
-            # }
-        return False
+        if 'f5-system-partition:partitions' in response['contents']:
+            if 'partition' in response['contents']['f5-system-partition:partitions']:
+                if len(response['contents']['f5-system-partition:partitions']['partition']) > 0:
+                    for partition in response['contents']['f5-system-partition:partitions']['partition']:
+                        if partition['name'] == self.want.partition_name:
+                            return True, partition['config']['iso-version']
+        return False, ''
+
+    def update_partition_image(self):
+        if not self.partition_exists:
+            raise F5ModuleError("Partition does not exists.")
+        partition_image_exists = False
+        uri = '/f5-system-image:image/partition/config/iso'
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        if 'f5-system-image:iso' in response['contents']:
+            if 'iso' in response['contents']['f5-system-image:iso'] and len(response['contents']['f5-system-image:iso']['iso']) > 0:
+                for iso_version in response['contents']['f5-system-image:iso']['iso']:
+                    if iso_version['version'] == self.want.image_version:
+                        partition_image_exists = True
+                        break
+        if not partition_image_exists:
+            raise F5ModuleError(f"Partition Image with ISO version {self.want.image_version} does not exists.")
+        uri = f'/f5-system-partition:partitions/partition={self.want.partition_name}/set-version'
+        payload = {
+            "f5-system-partition:iso-version": self.want.image_version
+        }
+        response = self.client.post(uri, data=payload)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return True
 
     def install_software_image(self):
         params = self.changes.api_params()
@@ -311,11 +381,29 @@ class ModuleManager(object):
 
     def is_still_installing(self):
         try:
-            uri = "api"
-            response = self.client.get(uri, scope="/")
-            if response['code'] not in [200, 201, 202]:
-                raise F5ModuleError(response['contents'])
-            return False
+            if self.want.partition_name:
+                uri = "/f5-system-partition:partitions?with-defaults=report-all"
+                response = self.client.get(uri)
+                if response['code'] not in [200, 201, 202]:
+                    raise F5ModuleError(response['contents'])
+                if 'f5-system-partition:partitions' in response['contents']:
+                    if 'partition' in response['contents']['f5-system-partition:partitions']:
+                        if len(response['contents']['f5-system-partition:partitions']['partition']) > 0:
+                            for partition in response['contents']['f5-system-partition:partitions']['partition']:
+                                if partition['name'] == self.want.partition_name and 'state' in partition and 'install-status' in partition['state']:
+                                    if partition['state']['install-status'] == ['in-progress', 'switching-role', 'pending']:
+                                        return True
+                                    elif partition['state']['install-status'] == "success":
+                                        return False
+                                    else:
+                                        raise F5ModuleError('Installation Failed with status' + partition['state']['install-status'])
+
+            else:
+                uri = "api"
+                response = self.client.get(uri, scope="/")
+                if response['code'] not in [200, 201, 202]:
+                    raise F5ModuleError(response['contents'])
+                return False
         except Exception as e:
             if e.__class__.__name__ == 'ConnectionError':
                 return True
@@ -326,6 +414,7 @@ class ArgumentSpec(object):
     def __init__(self):
         self.supports_check_mode = True
         argument_spec = dict(
+            partition_name=dict(type='str'),
             image_version=dict(type='str', required=True),
             timeout=dict(
                 type='int',

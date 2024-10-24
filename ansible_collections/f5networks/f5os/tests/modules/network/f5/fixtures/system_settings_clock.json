@@ -1,0 +1,13 @@
+{
+    "openconfig-system:clock": {
+        "config": {
+            "timezone-name": "Etc/UTC"
+        },
+        "state": {
+            "timezone-name": "Etc/UTC",
+            "f5-system-clock:appliance": {
+                "date-time": "2024-10-18 10:27:08+00:00"
+            }
+        }
+    }
+}

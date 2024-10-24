@@ -1,0 +1,38 @@
+{
+    "f5-openconfig-system-logging:host-logs": {
+        "config": {
+            "remote-forwarding": {
+                "enabled": true
+            },
+            "selectors": {
+                "selector": [
+                    {
+                        "facility": "openconfig-system-logging:LOCAL0",
+                        "severity": "NOTICE"
+                    },
+                    {
+                        "facility": "openconfig-system-logging:AUTHPRIV",
+                        "severity": "EMERGENCY"
+                    },
+                    {
+                        "facility": "openconfig-system-logging:AUTH",
+                        "severity": "EMERGENCY"
+                    }
+                ]
+            },
+            "files": {
+                "file": [
+                    {
+                        "name": "anaconda"
+                    },
+                    {
+                        "name": "ansible.log"
+                    },
+                    {
+                        "name": "boot.log"
+                    }
+                ]
+            }
+        }
+    }
+}

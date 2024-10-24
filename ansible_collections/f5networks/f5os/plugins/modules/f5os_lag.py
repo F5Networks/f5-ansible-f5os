@@ -124,6 +124,32 @@ EXAMPLES = r'''
     name: "Arista"
     trunk_vlans: [444, 555]
     state: absent
+
+- name: Create a FAST and PASSIVE lacp LAG interface
+  f5os_lag:
+    name: "Arista"
+    lag_type: "lacp"
+    mode: "passive"
+    interval: "fast"
+    native_vlan: 666
+    trunk_vlans: [444, 555]
+    config_members:
+      - "1.0"
+      - "2.0"
+    state: present
+
+- name: Create a SLOW and ACTIVE lacp LAG interface
+  f5os_lag:
+    name: "Arista"
+    lag_type: "lacp"
+    mode: "active"
+    interval: "slow"
+    native_vlan: 666
+    trunk_vlans: [444, 555]
+    config_members:
+      - "1.0"
+      - "2.0"
+    state: present
 '''
 
 RETURN = r'''
@@ -499,6 +525,9 @@ class ModuleManager(object):
                 "config": {
                     "lag-type": params['lag_type'],
                     "f5-if-aggregate:distribution-hash": "src-dst-ipport",
+                },
+                "openconfig-vlan:switched-vlan": {
+                    "config": {},
                 },
             }
         }

@@ -4,6 +4,19 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.12.0
+=======
+
+Minor Changes
+-------------
+
+- f5os_tenant - added a new parameter, virtual_disk_size, to set the virtual disk size of the tenant
+
+Bugfixes
+--------
+
+- f5os_lag - fixed a bug that used to occur while adding trunk or native vlans
+
 v1.11.0
 =======
 

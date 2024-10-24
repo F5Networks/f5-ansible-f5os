@@ -40,6 +40,10 @@ options:
     default: present
 author:
   - Ravinder Reddy (@chinthalapalli)
+notes:
+  - This Modules will only make patch calls to add the DNS servers and domains.
+  - It does not support the deletion of difference DNS servers and domains from the existing list while updating,it just adds new entries.
+  - When state is C(absent) it will B(delete) the DNS servers and domains from the user provided list.
 '''
 
 EXAMPLES = r'''
