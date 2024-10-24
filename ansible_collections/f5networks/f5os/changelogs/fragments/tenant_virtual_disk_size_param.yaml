@@ -1,3 +1,0 @@
----
-minor_changes:
-  - f5os_tenant - added a new parameter, virtual_disk_size, to set the virtual disk size of the tenant

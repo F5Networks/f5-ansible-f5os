@@ -1,3 +1,0 @@
----
-bugfixes:
-  - f5os_lag - fixed a bug that used to occur while adding trunk or native vlans
