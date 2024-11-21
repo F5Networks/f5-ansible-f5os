@@ -36,6 +36,10 @@ options:
     description:
       - Specifies the CLI idle timeout
     type: int
+  token_lifetime:
+    description:
+      - Specifies the token lifetime length in minutes
+    type: int
   httpd_ciphersuite:
     description:
       - Specifies the httpd ciphersuite in OpenSSL format
@@ -204,6 +208,7 @@ class Parameters(AnsibleF5Parameters):
         'login_banner',
         'hostname',
         'cli_timeout',
+        'token_lifetime',
         'sshd_idle_timeout',
         'httpd_ciphersuite',
         'sshd_ciphers',
@@ -219,6 +224,7 @@ class Parameters(AnsibleF5Parameters):
         'login_banner',
         'hostname',
         'cli_timeout',
+        'token_lifetime',
         'sshd_idle_timeout',
         'httpd_ciphersuite',
         'sshd_ciphers',
@@ -234,6 +240,7 @@ class Parameters(AnsibleF5Parameters):
         'login_banner',
         'hostname',
         'cli_timeout',
+        'token_lifetime',
         'sshd_idle_timeout',
         'httpd_ciphersuite',
         'sshd_ciphers',
@@ -277,6 +284,13 @@ class ApiParameters(Parameters):
     def cli_timeout(self):
         try:
             return int(self._values['settings']['config']['idle-timeout'])
+        except (TypeError, ValueError, KeyError):
+            return None
+
+    @property
+    def token_lifetime(self):
+        try:
+            return int(self._values['token_lifetime'])
         except (TypeError, ValueError, KeyError):
             return None
 
@@ -495,6 +509,7 @@ class ModuleManager(object):
 
     def update(self):
         self.have = self.read_current_from_device()
+
         if not self.should_update():
             return False
         if self.module.check_mode:  # pragma: no cover
@@ -544,6 +559,21 @@ class ModuleManager(object):
                 if response['code'] not in [200, 201, 202, 404]:
                     raise F5ModuleError(response['contents'])
 
+        aaa_attr = {
+            'token_lifetime': 'lifetime'
+        }
+        for attr in aaa_attr:
+            if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+                uri = f'/openconfig-system:system/aaa/f5-aaa-confd-restconf-token:restconf-token/config/{aaa_attr[attr]}'
+                response = self.client.get(uri)
+
+                if response['code'] == 200:
+                    if query in ['any', 'still']:
+                        return True
+
+                if response['code'] not in [200, 201, 202, 404]:
+                    raise F5ModuleError(response['contents'])
+
         clock_attr = {
             'timezone': 'timezone-name'
         }
@@ -554,6 +584,8 @@ class ModuleManager(object):
 
                 if response['code'] == 200:
                     if query in ['any', 'still']:
+                        if query == 'still':
+                            return False
                         return True
 
                 if response['code'] not in [200, 201, 202, 404]:
@@ -637,6 +669,21 @@ class ModuleManager(object):
             config['motd-banner'] = params['motd']
         if 'login_banner' in params:
             config['login-banner'] = params['login_banner']
+
+        if 'token_lifetime' in params:
+            token_uri = '/openconfig-system:system/aaa'
+            token_payload = {
+                "openconfig-system:aaa": {
+                    "f5-aaa-confd-restconf-token:restconf-token": {
+                        "config": {
+                            "lifetime": params['token_lifetime']
+                        }
+                    }
+                }
+            }
+            settings_response = self.client.patch(token_uri, data=token_payload)
+            if settings_response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(settings_response['contents'])
 
         # Settings use a different API endpoint
         if any(attr in ['cli_timeout', 'sshd_idle_timeout', 'gui_advisory'] for attr in params):
@@ -724,13 +771,13 @@ class ModuleManager(object):
                     continue
                 else:
                     raise F5ModuleError(response['contents'])
-
-        clock_attr = {
-            'timezone': 'timezone-name'
+        aaa_attr = {
+            'token_lifetime': 'lifetime'
         }
-        for attr in clock_attr:
+
+        for attr in aaa_attr:
             if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
-                uri = f'/openconfig-system:system/clock/config/{clock_attr[attr]}'
+                uri = f'/openconfig-system:system/aaa/f5-aaa-confd-restconf-token:restconf-token/config/lifetime/{aaa_attr[attr]}'
                 response = self.client.delete(uri)
 
                 if response['code'] == 204:
@@ -741,6 +788,37 @@ class ModuleManager(object):
                     continue
                 else:
                     raise F5ModuleError(response['contents'])
+
+        # Deleting the clock attribute is not supported
+        # The following error is returned for admin users:
+        # {
+        #         "ietf-restconf:errors": {
+        #             "error": [
+        #                 {
+        #                     "error-type": "application",
+        #                     "error-tag": "access-denied",
+        #                     "error-message": "access denied"
+        #                 }
+        #             ]
+        #         }
+        #     }
+        # clock_attr = {
+        #     'timezone': 'timezone-name'
+        # }
+
+        # for attr in clock_attr:
+        #     if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
+        #         uri = f'/openconfig-system:system/clock/config/{clock_attr[attr]}'
+        #         response = self.client.delete(uri)
+
+        #         if response['code'] == 204:
+        #             # Deleted
+        #             continue
+        #         elif response['code'] == 404:
+        #             # Not Found
+        #             continue
+        #         else:
+        #             raise F5ModuleError(response['contents'])
 
         settings_attr = {
             'cli_timeout': 'idle-timeout',
@@ -770,7 +848,7 @@ class ModuleManager(object):
         for attr in ciphers_attr:
             if hasattr(self.want, attr) and getattr(self.want, attr) is not None:
                 if attr == 'httpd_ciphersuite':
-                    uri = '/openconfig-system:system/f5-security-ciphers:security/services/service="httpd"/config/ssl-ciphersuite'
+                    uri = f'/openconfig-system:system/f5-security-ciphers:security/services/service="httpd"/config/{ciphers_attr[attr]}'
                     response = self.client.delete(uri)
 
                     if response['code'] == 204:
@@ -781,7 +859,6 @@ class ModuleManager(object):
                         continue
                     else:
                         raise F5ModuleError(response['contents'])
-
                 else:
                     uri = f'/openconfig-system:system/f5-security-ciphers:security/services/service="sshd"/config/{ciphers_attr[attr]}'
                     response = self.client.delete(uri)
@@ -831,6 +908,14 @@ class ModuleManager(object):
         if settings_response['code'] in [200]:
             params['settings'] = settings_response['contents']['f5-system-settings:settings']
 
+        # Token Lifetime
+        settings_uri = '/openconfig-system:system/aaa/f5-aaa-confd-restconf-token:restconf-token/state/lifetime'
+        settings_response = self.client.get(settings_uri)
+        if settings_response['code'] not in [200, 201, 202, 204]:
+            raise F5ModuleError(settings_response['contents']['f5-aaa-confd-restconf-token:lifetime'])
+        if settings_response['code'] in [200]:
+            params['token_lifetime'] = settings_response['contents']['f5-aaa-confd-restconf-token:lifetime']
+
         return ApiParameters(params=params)
 
 
@@ -859,6 +944,7 @@ class ArgumentSpec(object):
                 )
             ),
             cli_timeout=dict(type='int'),
+            token_lifetime=dict(type='int', no_log=False),
             httpd_ciphersuite=dict(type='str'),
             sshd_idle_timeout=dict(type='str'),
             sshd_ciphers=dict(
