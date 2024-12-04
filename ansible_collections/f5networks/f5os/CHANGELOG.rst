@@ -4,6 +4,19 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.13.0
+=======
+
+Minor Changes
+-------------
+
+- f5os_ntp_server - added a new parameter, prefer, iburst
+
+Bugfixes
+--------
+
+- f5os_system_image_import - bug fixed for importing system image in versions less than 1.7
+
 v1.12.0
 =======
 

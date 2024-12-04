@@ -1,3 +1,0 @@
----
-minor_changes:
-  - f5os_ntp_server - added a new parameter, prefer, iburst

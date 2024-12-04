@@ -1,3 +1,0 @@
----
-bugfixes:
-  - f5os_system_image_import - bug fixed for importing system image in versions less than 1.7
