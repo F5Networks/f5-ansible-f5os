@@ -26,6 +26,14 @@ options:
     description:
       - Specifies the key ID which identifies the key used for authentication.
     type: int
+  prefer:
+    description:
+      - Specifies that this server should be the preferred one if true. Specify false if not.
+    type: bool
+  iburst:
+    description:
+      - Specifies to enable iburst for the NTP service. Specify false to disable it.
+    type: bool
   state:
     description:
       - The NTP server state.
@@ -38,6 +46,7 @@ options:
     default: present
 author:
   - Rohit Upadhyay (@rupadhyay)
+  - Prateek Ramani (@ramani)
 '''
 
 EXAMPLES = r'''
@@ -45,6 +54,8 @@ EXAMPLES = r'''
   f5os_ntp_server:
     server: "1.2.3.4"
     key_id: 10
+    prefer: true
+    iburst: true
 
 - name: Update an ntp server
   f5os_ntp_server:
@@ -85,21 +96,26 @@ from ..module_utils.common import (
 
 class Parameters(AnsibleF5Parameters):
     api_map = {
-
     }
 
     api_attributes = [
         'server',
         'key_id',
+        'iburst',
+        'prefer',
     ]
 
     returnables = [
         'server',
         'key_id',
+        'iburst',
+        'prefer'
     ]
 
     updatables = [
-        'key_id'
+        'key_id',
+        'iburst',
+        'prefer',
     ]
 
 
@@ -111,6 +127,14 @@ class ApiParameters(Parameters):
     @property
     def key_id(self):
         return self._values['config'].get('f5-openconfig-system-ntp:key-id')
+
+    @property
+    def iburst(self):
+        return self._values['config'].get('iburst')
+
+    @property
+    def prefer(self):
+        return self._values['config'].get('prefer')
 
 
 class ModuleParameters(Parameters):
@@ -157,6 +181,18 @@ class Difference(object):  # pragma: no cover
                 return attr1
         except AttributeError:
             return attr1
+
+    @property
+    def prefer(self):
+        if (self.want.prefer and self.have.prefer) or (not self.want.prefer and not self.have.prefer):
+            return None
+        return self.want.prefer
+
+    @property
+    def iburst(self):
+        if (self.want.iburst and self.have.iburst) or (not self.want.iburst and not self.have.iburst):
+            return None
+        return self.want.iburst
 
 
 class ModuleManager(object):
@@ -290,6 +326,12 @@ class ModuleManager(object):
         if params.get('key_id'):
             payload['server'][0]['config']['f5-openconfig-system-ntp:key-id'] = params['key_id']
 
+        if 'prefer' in params:
+            payload['server'][0]['config']['prefer'] = params['prefer']
+
+        if 'iburst' in params:
+            payload['server'][0]['config']['iburst'] = params['iburst']
+
         uri = "/openconfig-system:system/ntp/openconfig-system:servers"
         response = self.client.post(uri, data=payload)
 
@@ -306,12 +348,19 @@ class ModuleManager(object):
                     'address': self.want.server,
                     'config': {
                         'address': self.want.server,
-                        'f5-openconfig-system-ntp:key-id': params['key_id']
                     }
                 }
             ]
         }
 
+        if 'key_id' in params:
+            payload['server'][0]['config']['f5-openconfig-system-ntp:key-id'] = params['key_id']
+
+        if 'prefer' in params:
+            payload['server'][0]['config']['prefer'] = params['prefer']
+
+        if 'iburst' in params:
+            payload['server'][0]['config']['iburst'] = params['iburst']
         response = self.client.patch(uri, data=payload)
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
@@ -341,6 +390,8 @@ class ArgumentSpec(object):
         argument_spec = dict(
             server=dict(required=True),
             key_id=dict(type='int'),
+            prefer=dict(type='bool'),
+            iburst=dict(type='bool'),
             state=dict(
                 default='present',
                 choices=['present', 'absent']

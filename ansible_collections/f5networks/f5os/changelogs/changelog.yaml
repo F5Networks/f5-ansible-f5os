@@ -129,6 +129,17 @@ releases:
     - lag_bugfix.yaml
     - tenant_virtual_disk_size_param.yaml
     release_date: '2024-10-24'
+  1.13.0:
+    changes:
+      bugfixes:
+      - f5os_system_image_import - bug fixed for importing system image in versions
+        less than 1.7
+      minor_changes:
+      - f5os_ntp_server - added a new parameter, prefer, iburst
+    fragments:
+    - f5os_system_import_version_issue.yaml
+    - prefer_iburst_f5os_ntp_param.yaml
+    release_date: '2024-12-04'
   1.2.0:
     modules:
     - description: Manage F5OS config backups.

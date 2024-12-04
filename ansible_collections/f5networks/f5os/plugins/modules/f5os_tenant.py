@@ -99,6 +99,34 @@ options:
         or C(provisioned) state.
     type: int
     version_added: "1.12.0"
+  type:
+    description:
+      - The size of the virtual disk in GB.
+      - To update this attribute the tenant must be in either C(configured)
+        or C(provisioned) state.
+    type: str
+    version_added: "1.13.0"
+  dag_ipv6_prefix_length:
+    description:
+      - DAG IPv6 prefix length is a configuration field on each tenant that is used by disaggregator algorithms as a networking mask
+      - To update this attribute the tenant must be in either C(configured)
+        or C(provisioned) state.
+    type: int
+    version_added: "1.13.0"
+  deployment_file:
+    description:
+      - The deployment file to use for the tenant.
+      - To update this attribute the tenant must be in either C(configured)
+        or C(provisioned) state.
+    type: str
+    version_added: "1.13.0"
+  mac_block_size:
+    description:
+      - The MAC block size for the tenant.
+      - To update this attribute the tenant must be in either C(configured)
+        or C(provisioned) state.
+    type: str
+    version_added: "1.13.0"
   running_state:
     description:
       - Desired C(running_state) of the tenant.
@@ -123,6 +151,7 @@ notes:
   - This module will not execute on VELOS controller.
 author:
   - Wojciech Wypior (@wojtek0806)
+  - Ravinder Reddy (@chinthalapalli)
 '''
 
 EXAMPLES = r'''
@@ -231,6 +260,10 @@ class Parameters(AnsibleF5Parameters):
         'vcpu-cores-per-node': 'cpu_cores',
         'cpu-cores': 'cpu_cores',
         'storage': 'virtual_disk_size',
+        'mac-data': 'mac_block_size',
+        'type': 'type',
+        'dag-ipv6-prefix-length': 'dag_ipv6_prefix_length',
+        'deployment-file': 'deployment_file',
     }
 
     api_attributes = [
@@ -245,6 +278,10 @@ class Parameters(AnsibleF5Parameters):
         'cryptos',
         'running-state',
         'storage',
+        'mac-data',
+        'dag-ipv6-prefix-length',
+        'type',
+        'deployment-file',
     ]
 
     returnables = [
@@ -259,6 +296,10 @@ class Parameters(AnsibleF5Parameters):
         'cryptos',
         'running_state',
         'virtual_disk_size',
+        'mac_block_size',
+        'dag_ipv6_prefix_length',
+        'type',
+        'deployment_file',
     ]
 
     updatables = [
@@ -273,6 +314,10 @@ class Parameters(AnsibleF5Parameters):
         'cryptos',
         'running_state',
         'virtual_disk_size',
+        'mac_block_size',
+        'dag_ipv6_prefix_length',
+        'type',
+        'deployment_file',
     ]
 
 
@@ -296,6 +341,13 @@ class ApiParameters(Parameters):
     def virtual_disk_size(self):
         try:
             return self._values.get('virtual_disk_size')
+        except (TypeError, ValueError):
+            return None
+
+    @property
+    def mac_block_size(self):
+        try:
+            return self._values.get('mac_block_size')
         except (TypeError, ValueError):
             return None
 
@@ -384,6 +436,12 @@ class ModuleParameters(Parameters):
             return None
         return {'size': self._values['virtual_disk_size']}
 
+    @property
+    def mac_block_size(self):
+        if self._values['mac_block_size'] is None:
+            return None
+        return {'f5-tenant-l2-inline:mac-block-size': self._values['mac_block_size']}
+
 
 class Changes(Parameters):
     def to_return(self):  # pragma: no cover
@@ -438,6 +496,18 @@ class Difference(object):  # pragma: no cover
             return {'virtual_disk_size': want}
         return None
 
+    @property
+    def mac_block_size(self):
+        want = self.want.mac_block_size
+        have = self.have.mac_block_size
+        if want is None:
+            return None
+        if have is None:
+            return want
+        if want['f5-tenant-l2-inline:mac-block-size'] != have['f5-tenant-l2-inline:mac-block-size']:
+            return {'mac_block_size': want}
+        return None
+
 
 class ModuleManager(object):
     def __init__(self, *args, **kwargs):
@@ -469,6 +539,7 @@ class ModuleManager(object):
                     changed.update(change)
                 else:
                     changed[k] = change
+        # raise F5ModuleError(f"have: {self.have.__dict__} \n want: {self.want.__dict__} \n changed: {changed}")
         if changed:
             self.changes = UsableChanges(params=changed)
             return True
@@ -558,6 +629,7 @@ class ModuleManager(object):
 
     def create_on_device(self):
         params = self.changes.api_params()
+        # raise F5ModuleError(f"params: {params}")
         payload = dict(tenant=[dict(name=self.want.name, config=params)])
 
         uri = "/f5-tenants:tenants"
@@ -569,6 +641,7 @@ class ModuleManager(object):
 
     def update_on_device(self):
         params = self.changes.api_params()
+        # raise F5ModuleError(f"have: {params}")
         keys = list(params.keys())
 
         if 'running-state' in keys:
@@ -610,6 +683,8 @@ class ArgumentSpec(object):
         argument_spec = dict(
             name=dict(required=True),
             image_name=dict(),
+            type=dict(type='str'),
+            deployment_file=dict(type='str'),
             nodes=dict(type='list', elements='int'),
             mgmt_ip=dict(),
             mgmt_prefix=dict(type='int'),
@@ -621,6 +696,8 @@ class ArgumentSpec(object):
             ),
             memory=dict(type='int'),
             virtual_disk_size=dict(type='int'),
+            dag_ipv6_prefix_length=dict(type='int'),
+            mac_block_size=dict(type='str'),
             cryptos=dict(
                 choices=['enabled', 'disabled']
             ),

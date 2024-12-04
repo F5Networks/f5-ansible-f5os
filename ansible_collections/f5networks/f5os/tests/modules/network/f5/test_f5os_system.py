@@ -149,6 +149,7 @@ class TestManager(unittest.TestCase):
             {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
             {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
             {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_lifetime.json')},
         ])
 
         mm.client.patch = Mock(return_value=dict(code=200))
@@ -192,7 +193,7 @@ class TestManager(unittest.TestCase):
         result = mm.exec_module()
 
         self.assertTrue(result['changed'])
-        self.assertEqual(mm.client.delete.call_count, 11)
+        self.assertEqual(mm.client.delete.call_count, 10)
 
     def test_update_hostname_setting(self, *args):
         set_module_args(
@@ -210,14 +211,20 @@ class TestManager(unittest.TestCase):
 
         mm = ModuleManager(module=module)
         mm.exists = Mock(return_value=True)
-        mm.client.get = Mock(return_value={'code': 200, 'contents': load_fixture('system_settings_hostname.json')})
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_lifetime.json')},
+        ])
         mm.client.patch = Mock(return_value=dict(code=200))
 
         result = mm.exec_module()
 
         self.assertTrue(result['changed'])
         self.assertEqual(mm.client.patch.call_count, 1)
-        self.assertEqual(mm.client.get.call_count, 4)
+        self.assertEqual(mm.client.get.call_count, 5)
 
     def test_remove_hostname_setting(self, *args):
         set_module_args(
