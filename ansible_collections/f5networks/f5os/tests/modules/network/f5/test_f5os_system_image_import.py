@@ -104,6 +104,31 @@ class TestManager(unittest.TestCase):
         self.assertEqual(mm.client.post.call_count, 2)
         # self.assertEqual(mm.client.get.call_count, 1)
 
+    def test_system_image_import_v_15(self, *args):
+        set_module_args(dict(
+            remote_image_url='https://foo.bar.baz.net/foo/bar/F5OS-A-1.8.0-14139.R5R10.CANDIDATE.iso',
+            local_path="images/staging",
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        get_data = {"f5-utils-file-transfer:output": {"entries": [{"name": "F5OS-A-1.8.0-14136.R5R10.CANDIDATE.iso", "date": "string", "size": "string"}]}}
+        post_data = {"f5-utils-file-transfer:output": {"result": "File transfer is initiated.(images/staging/F5OS-A-1.8.0-14139.R5R10.CANDIDATE.iso)"}}
+        status_data = {"f5-utils-file-transfer:output": {"result": "/F5OS-A-1.8.0-14139.R5R10.CANDIDATE.iso|Completed\n"}}
+        mm.client.post = Mock(return_value={'code': 201, 'contents': get_data})
+        mm.client.post = Mock(side_effect=[
+            dict(code=201, contents=get_data),
+            dict(code=201, contents=post_data),
+            dict(code=204, contents=status_data),
+        ])
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+        self.assertEqual(mm.client.post.call_count, 3)
+
     def test_system_image_import_status(self, *args):
         set_module_args(dict(
             remote_image_url='https://foo.bar.baz.net/foo/bar/F5OS-A-1.8.0-14139.R5R10.CANDIDATE.iso',

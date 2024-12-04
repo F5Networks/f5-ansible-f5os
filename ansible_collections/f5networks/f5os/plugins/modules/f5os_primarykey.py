@@ -26,6 +26,12 @@ options:
       - Specifies Salt for generating primary key.
     required: True
     type: str
+  force_update:
+    description:
+        - Force update the primary key on F5OS Device.
+    type: bool
+    default: False
+    version_added: "1.13.0"
   state:
     description:
       - Primary key on F5OS Device state.
@@ -35,6 +41,8 @@ options:
       - present
       - absent
     default: present
+notes:
+    - This module does not support deleting the primary key.
 author:
   - Ravinder Reddy (@chinthalapalli)
 '''
@@ -45,6 +53,13 @@ EXAMPLES = r'''
     passphrase: "test-passphrase"
     salt: "test-salt"
     state: present
+
+- name: Update Primary Key on F5OS Device
+  f5os_primarykey:
+    passphrase: "test-passphrase"
+    salt: "test-salt"
+    state: present
+    force_update: true
 '''
 
 RETURN = r'''
@@ -67,7 +82,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 
 from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
-    F5Client, send_teem
+    F5Client
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import (
     F5ModuleError, AnsibleF5Parameters
@@ -207,11 +222,11 @@ class ModuleManager(object):
         result.update(**changes)
         result.update(dict(changed=changed))
         self._announce_deprecations(result)
-        send_teem(self.client, start)
+        # send_teem(self.client, start)
         return result
 
     def present(self):
-        if not self.exists():
+        if not self.exists() or self.want.force_update:
             return self.create()
 
     def absent(self):
@@ -234,12 +249,13 @@ class ModuleManager(object):
         return True
 
     def remove(self):
-        if self.module.check_mode:  # pragma: no cover
-            return True
-        self.remove_from_device()
-        if self.exists():
-            raise F5ModuleError("Failed to delete the resource.")
-        return True
+        pass
+        # if self.module.check_mode:  # pragma: no cover
+        #     return True
+        # self.remove_from_device()
+        # # if self.exists():
+        # #     raise F5ModuleError("Failed to delete the resource.")
+        # return True
 
     def create(self):
         self._set_changed_options()
@@ -293,6 +309,7 @@ class ArgumentSpec(object):
         argument_spec = dict(
             passphrase=dict(type='str', no_log=True, required=True),
             salt=dict(type='str', no_log=True, required=True),
+            force_update=dict(type='bool', default=False),
             state=dict(
                 default='present',
                 choices=['present', 'absent']

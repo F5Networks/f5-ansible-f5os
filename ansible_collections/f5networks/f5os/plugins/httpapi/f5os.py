@@ -32,6 +32,7 @@ author:
 
 import io
 import json
+import time
 
 from ansible.module_utils.basic import to_text
 from ansible.plugins.httpapi import HttpApiBase
@@ -93,17 +94,26 @@ class HttpApi(HttpApiBase):
         url = url.replace(ROOT, '/api/data') if port == 443 else url
         # allow for empty json to be passed as payload, useful for some endpoints
         data = json.dumps(body) if body or body == {} else None
-        try:
-            self._display_request(method, url, body)
-            response, response_data = self.connection.send(url, data, method=method, **kwargs)
-            response_value = self._get_response_value(response_data)
-            return dict(
-                code=response.getcode(),
-                contents=self._response_to_json(response_value),
-                headers=dict(response.getheaders())
-            )
-        except HTTPError as e:
-            return dict(code=e.code, contents=handle_errors(e))
+        retries = 3
+        err_dict = dict()
+        for r1 in range(retries):
+            try:
+                self._display_request(method, url, body)
+                response, response_data = self.connection.send(url, data, method=method, **kwargs)
+                response_value = self._get_response_value(response_data)
+                return dict(
+                    code=response.getcode(),
+                    contents=self._response_to_json(response_value),
+                    headers=dict(response.getheaders())
+                )
+            except HTTPError as e:
+                return dict(code=e.code, contents=handle_errors(e))
+            except AnsibleConnectionFailure as e:
+                time.sleep(10)
+                err_dict.update({'error': str(e)})
+                continue
+        raise F5ModuleError(f'{err_dict}')
+        # raise F5ModuleError('Failed to send request after {0} retries'.format(retries))
 
     def _display_request(self, method, url, data=None):
         if data:

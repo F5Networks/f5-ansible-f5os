@@ -100,6 +100,8 @@ class TestManager(unittest.TestCase):
         set_module_args(dict(
             server='10.218.33.44',
             key_id=32,
+            iburst=False,
+            prefer=False
         ))
 
         module = AnsibleModule(

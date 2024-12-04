@@ -315,16 +315,37 @@ class ModuleManager(object):
         del params['image-name']
         payload = dict(input=[params])
         response = self.client.post(uri, data=payload)
-        if response['code'] not in [200, 201, 202]:
+
+        if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(f"Failed to import system image with {response['contents']}")
         if 'f5-utils-file-transfer:output' in response['contents'] and 'result' in response['contents']['f5-utils-file-transfer:output']:
             result = response['contents']['f5-utils-file-transfer:output']['result']
+
             if result.startswith('Aborted: local-file already exists'):
                 raise F5ModuleError(f"Failed to import system image, error: {result}")
             if result.startswith('File import with same local file name is in progress'):
                 raise F5ModuleError(f"Failed to import system image, error: {result}")
-            operation_id = response['contents']['f5-utils-file-transfer:output']['operation-id']
-            self.changes.update({"operation_id": operation_id})
+
+            if 'operation-id' in response['contents']['f5-utils-file-transfer:output']:
+                operation_id = response['contents']['f5-utils-file-transfer:output']['operation-id']
+                self.changes.update({"operation_id": operation_id})
+            else:
+                # less than 1.7 version
+                uri = "/f5-utils-file-transfer:file/transfer-status"
+                delay, period = self.want.timeout
+                for x in range(0, period):
+                    response = self.client.post(uri, data={})
+                    result = response['contents']['f5-utils-file-transfer:output']['result']
+                    if "In Progress" in result:
+                        time.sleep(delay)
+                        continue
+                    elif "Completed" in result:
+                        return True
+                    time.sleep(delay)
+                raise F5ModuleError(
+                    "Module timeout reached, state change is unknown, "
+                    "please increase the timeout parameter for long lived actions."
+                )
         time.sleep(20)
         self.changes.update({"message": f"Image {self.want.image_name} import started."})
         return True
