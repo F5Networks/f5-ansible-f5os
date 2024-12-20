@@ -15,6 +15,16 @@ description:
   - Manages STP config.
 version_added: "1.8.0"
 options:
+  mode:
+    description:
+      - Specifies the mode of the spanning tree protocol.
+      - The default value is STP.
+    type: str
+    default: stp
+    choices:
+      - stp
+      - rstp
+    version_added: "1.14.0"
   hello_time:
     description:
       - Specifies the time interval, in seconds, that the rSeries system transmits spanning tree information to adjacent bridges in the network.
@@ -440,11 +450,14 @@ class ModuleManager(object):
         return True
 
     def enable_stp_protocol(self):
-        payload = {
-            "enabled-protocol": [
-                "f5-openconfig-spanning-tree-types:STP"
-            ]
-        }
+        mode = self.want.mode
+        payload = {}
+
+        if mode in ['rstp']:
+            payload['enabled-protocol'] = [f"openconfig-spanning-tree-types:{mode.upper()}"]
+        else:
+            payload['enabled-protocol'] = [f"f5-openconfig-spanning-tree-types:{mode.upper()}"]
+
         # Posting Global Config
 
         uri = "/openconfig-spanning-tree:stp/global/config"
@@ -454,10 +467,20 @@ class ModuleManager(object):
             raise F5ModuleError(response['contents'])
 
     def patch_stp_config(self):
-        uri = "/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/config"
+        mode = self.want.mode
+
+        if mode in ['rstp']:
+            uri = f"/openconfig-spanning-tree:stp/{mode}/config"
+        else:
+            uri = "/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/config"
+
+        if mode in ['rstp', 'mstp']:
+            config_key = "openconfig-spanning-tree:config"
+        else:
+            config_key = "f5-openconfig-spanning-tree:config"
 
         payload = {
-            "f5-openconfig-spanning-tree:config": {
+            config_key: {
                 "hello-time": self.want.hello_time,
                 "max-age": self.want.max_age,
                 "forwarding-delay": self.want.forwarding_delay,
@@ -473,8 +496,14 @@ class ModuleManager(object):
 
     def post_stp_interface(self):
         # Posting Interfaces - cost , port-priority
+        mode = self.want.mode
+        if mode in ['rstp']:
+            config_key = "openconfig-spanning-tree:interface"
+        else:
+            config_key = "f5-openconfig-spanning-tree:interface"
+
         interfaces = {
-            "f5-openconfig-spanning-tree:interface": [
+            config_key: [
                 {
                     'name': self.want.interfaces['name'],
                     'config': {
@@ -485,7 +514,12 @@ class ModuleManager(object):
                 }
             ]
         }
-        uri = '/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/interfaces'
+
+        if mode in ['rstp']:
+            uri = f"/openconfig-spanning-tree:stp/{mode}/interfaces"
+        else:
+            uri = '/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/interfaces'
+
         response = self.client.post(uri, data=interfaces)
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
@@ -509,10 +543,16 @@ class ModuleManager(object):
             raise F5ModuleError(response['contents'])
 
     def patch_stp_interface(self):
+        mode = self.want.mode
         interface_name = self.want.interfaces['name'].replace('/', '%2F')
 
+        if mode in ['rstp', 'mstp']:
+            config_key = "openconfig-spanning-tree:interface"
+        else:
+            config_key = "f5-openconfig-spanning-tree:config"
+
         interfaces = {
-            "f5-openconfig-spanning-tree:config": {
+            config_key: {
                 'name': self.want.interfaces['name'],
                 'cost': self.want.interfaces['cost'],
                 "port-priority": self.want.interfaces['port_priority'],
@@ -613,37 +653,64 @@ class ModuleManager(object):
         return True
 
     def read_current_from_device(self):
+        mode = self.want.mode
 
-        uri = "/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/config"
+        if mode == 'rstp':
+            uri = "/openconfig-spanning-tree:stp"
+        else:
+            uri = "/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/config"
+
         response = self.client.get(uri)
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
-        stp = {}
-        stp['hello-time'] = response['contents']['f5-openconfig-spanning-tree:config']['hello-time']
-        stp['max-age'] = response['contents']['f5-openconfig-spanning-tree:config']['max-age']
-        stp['forwarding-delay'] = response['contents']['f5-openconfig-spanning-tree:config']['forwarding-delay']
-        stp['hold-count'] = response['contents']['f5-openconfig-spanning-tree:config']['hold-count']
-        stp['bridge-priority'] = response['contents']['f5-openconfig-spanning-tree:config']['bridge-priority']
-        uri = "/openconfig-spanning-tree:stp/interfaces"
-        response = self.client.get(uri)
+        if mode in ['rstp', 'mstp']:
+            stp = response['contents']['openconfig-spanning-tree:stp']['rstp']['config']
+        else:
+            stp = response['contents']['f5-openconfig-spanning-tree:config']
 
-        if response['code'] not in [200, 201, 202, 204]:
-            raise F5ModuleError(response['contents'])
+        if mode in ['rstp']:
+            uri = "/openconfig-spanning-tree:stp"
+            response = self.client.get(uri)
 
-        if 'openconfig-spanning-tree:interfaces' in response['contents']:
-            stp['interfaces'] = response['contents']['openconfig-spanning-tree:interfaces']['interface']
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+            rstp_obj = response['contents']['openconfig-spanning-tree:stp']['rstp']
+            if 'interfaces' in rstp_obj:
+                if 'interface' in rstp_obj['interfaces']:
+                    stp['interfaces'] = rstp_obj['interfaces']['interface']
 
-        if 'interfaces' in stp:
-            for interface in stp['interfaces']:
-                name = interface['name']
-                name = name.replace('/', '%2F')
-                uri = '/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/interfaces/interface=' + name + '/config'
-                response = self.client.get(uri)
-                if response['code'] not in [200, 201, 202]:
-                    raise F5ModuleError(response['contents'])
+            if 'interfaces' in stp:
+                for interface in stp['interfaces']:
+                    name = interface['name']
+                    name = name.replace('/', '%2F')
+                    uri = '/openconfig-spanning-tree:stp/interfaces/interface=' + name + '/config'
+                    response = self.client.get(uri)
+                    if response['code'] not in [200, 201, 202]:
+                        raise F5ModuleError(response['contents'])
 
-                interface['config']['cost'] = response['contents']['f5-openconfig-spanning-tree:config']['cost']
-                interface['config']['port-priority'] = response['contents']['f5-openconfig-spanning-tree:config']['port-priority']
+                    interface['config']['edge-port'] = response['contents']['openconfig-spanning-tree:config']['edge-port']
+                    interface['config']['link-type'] = response['contents']['openconfig-spanning-tree:config']['link-type']
+        else:
+            uri = "/openconfig-spanning-tree:stp/interfaces"
+            response = self.client.get(uri)
+
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+
+            if 'openconfig-spanning-tree:interfaces' in response['contents']:
+                stp['interfaces'] = response['contents']['openconfig-spanning-tree:interfaces']['interface']
+
+            if 'interfaces' in stp:
+                for interface in stp['interfaces']:
+                    name = interface['name']
+                    name = name.replace('/', '%2F')
+                    uri = '/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/interfaces/interface=' + name + '/config'
+                    response = self.client.get(uri)
+                    if response['code'] not in [200, 201, 202]:
+                        raise F5ModuleError(response['contents'])
+
+                    interface['config']['cost'] = response['contents']['f5-openconfig-spanning-tree:config']['cost']
+                    interface['config']['port-priority'] = response['contents']['f5-openconfig-spanning-tree:config']['port-priority']
 
         return ApiParameters(params=stp)
 
@@ -677,7 +744,14 @@ class ModuleManager(object):
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
         config = response['contents']['openconfig-spanning-tree:stp']
-        if 'global' in config and 'f5-openconfig-spanning-tree-types:STP' in config['global']['config']['enabled-protocol']:
+
+        mode = self.want.mode
+        if mode in ['rstp']:
+            config_str = f'openconfig-spanning-tree-types:{mode.upper()}'
+        else:
+            config_str = f'f5-openconfig-spanning-tree-types:{mode.upper()}'
+
+        if 'global' in config and config_str in config['global']['config']['enabled-protocol']:
             return True
         return False
 
@@ -686,6 +760,11 @@ class ArgumentSpec(object):
     def __init__(self):
         self.supports_check_mode = True
         argument_spec = dict(
+            mode=dict(
+                type="str",
+                default='stp',
+                choices=['stp', 'rstp']
+            ),
             hello_time=dict(
                 type="int",
                 default=2
@@ -722,13 +801,13 @@ class ArgumentSpec(object):
                     ),
                     edge_port=dict(
                         type="str",
-                        default='EDGE_AUTO',
-                        choices=['EDGE_AUTO', 'EDGE_ENABLE', 'EDGE_DISABLE']
+                        default="EDGE_AUTO",
+                        choices=["EDGE_AUTO", "EDGE_ENABLE", "EDGE_DISABLE"]
                     ),
                     link_type=dict(
                         type="str",
-                        choices=['P2P', 'SHARED'],
-                        default='P2P'
+                        choices=["P2P", "SHARED"],
+                        default="P2P"
                     )
                 )
             ),
