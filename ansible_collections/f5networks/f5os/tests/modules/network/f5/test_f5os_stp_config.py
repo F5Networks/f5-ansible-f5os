@@ -341,6 +341,87 @@ class TestManager(unittest.TestCase):
 
         self.assertTrue(results['changed'])
 
+    def test_create_mstp_config(self, *args):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            mode='mstp',
+            mstp_instances=[
+                dict(
+                    instance_id=1,
+                    bridge_priority=28672,
+                    vlans=[444, 555],
+                    interface=dict(
+                        name=1.0,
+                        cost=2,
+                        port_priority=129,
+                        edge_port='EDGE_DISABLE',
+                        link_type='SHARED',
+                    )
+                )
+            ],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(return_value=dict(code=204))
+        mm.client.patch = Mock(return_value=dict(code=204))
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+        self.assertEqual(mm.client.post.call_count, 3)
+        self.assertEqual(mm.client.patch.call_count, 1)
+
+    def test_update_mstp_config(self, *args):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            mode='mstp',
+            mstp_instances=[
+                dict(
+                    instance_id=1,
+                    bridge_priority=28672,
+                    vlans=[444, 555],
+                    interface=dict(
+                        name=2.0,
+                        cost=3,
+                        port_priority=129,
+                        edge_port='EDGE_DISABLE',
+                        link_type='P2P',
+                    )
+                )
+            ],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        current_mstp = dict(load_fixture('f5os_mstp_config.json'))
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=current_mstp))
+        mm.client.patch = Mock(return_value=dict(code=204))
+        mm.client.put = Mock(return_value=dict(code=204))
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+        self.assertEqual(mm.client.patch.call_count, 2)
+        self.assertEqual(mm.client.put.call_count, 1)
+
     @patch.object(f5os_stp_config, 'Connection')
     @patch.object(f5os_stp_config.ModuleManager, 'exec_module', Mock(return_value={'changed': False}))
     def test_main_function_success(self, *args):
