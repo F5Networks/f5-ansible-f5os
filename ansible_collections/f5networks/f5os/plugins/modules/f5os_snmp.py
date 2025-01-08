@@ -733,10 +733,12 @@ class ModuleManager(object):
 
                     response = self.client.get(uri)
                     if response['code'] == 404:
-                        return False
+                        # return False
+                        continue
                     if response['code'] not in [200, 201, 202]:
                         raise F5ModuleError(response['contents'])
                     return True
+        return False
 
     def create_on_device(self):
         '''API communication to actually create the objects on the F5OS system'''
@@ -744,31 +746,34 @@ class ModuleManager(object):
         base_uri = "/openconfig-system:system/f5-system-snmp:snmp"
 
         if 'snmp_community' in params:
+            object_uri = "/f5-system-snmp:communities"
+            uri = base_uri + object_uri
+            payload = {'community': []}
             for snmp_community in params['snmp_community']:
-                object_uri = "/f5-system-snmp:communities"
-                uri = base_uri + object_uri
-                payload = {'community': [{'name': snmp_community['name'], 'config': snmp_community['config']}]}
-                response = self.client.post(uri, data=payload)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                payload['community'].append({'name': snmp_community['name'], 'config': snmp_community['config']})
+            response = self.client.post(uri, data=payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
 
         if 'snmp_target' in params:
+            object_uri = "/f5-system-snmp:targets"
+            uri = base_uri + object_uri
+            payload = {'target': []}
             for snmp_target in params['snmp_target']:
-                object_uri = "/f5-system-snmp:targets"
-                uri = base_uri + object_uri
-                payload = {'target': [{'name': snmp_target['name'], 'config': snmp_target['config']}]}
-                response = self.client.post(uri, data=payload)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                payload['target'].append({'name': snmp_target['name'], 'config': snmp_target['config']})
+            response = self.client.post(uri, data=payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
 
         if 'snmp_user' in params:
+            object_uri = "/f5-system-snmp:users"
+            uri = base_uri + object_uri
+            payload = {'user': []}
             for snmp_user in params['snmp_user']:
-                object_uri = "/f5-system-snmp:users"
-                uri = base_uri + object_uri
-                payload = {'user': [{'name': snmp_user['name'], 'config': snmp_user['config']}]}
-                response = self.client.post(uri, data=payload)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                payload['user'].append({'name': snmp_user['name'], 'config': snmp_user['config']})
+            response = self.client.post(uri, data=payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
 
         if 'snmp_mib' in params:
             for snmp_mib in params['snmp_mib']:
@@ -786,14 +791,40 @@ class ModuleManager(object):
         base_uri = "/openconfig-system:system/f5-system-snmp:snmp/f5-system-snmp:"
 
         if 'snmp_community' in params:
-            uri = base_uri + "communities"
-            config = {'communities': {"community": []}}
-            for snmp_community in params['snmp_community']:
-                object = {'name': snmp_community['name'], 'config': snmp_community['config']}
-                config['communities']['community'].append(object)
-            response = self.client.patch(uri, data=config)
-            if response['code'] not in [200, 201, 202, 204]:
-                raise F5ModuleError(response['contents'])
+            update_communities = []
+            create_communities = []
+            for wcommunity in self.want.snmp_community:
+                match = False
+                for hcommunity in self.have.snmp_community:
+                    if wcommunity['name'] == hcommunity['name']:
+                        match = True
+                        break
+                if match:
+                    update_communities.append(wcommunity)
+                else:
+                    create_communities.append(wcommunity)
+
+            if len(create_communities) > 0:
+                uri = base_uri + "communities"
+                config = {'communities': {"community": []}}
+                for snmp_community in create_communities:
+                    for psnmp in params['snmp_community']:
+                        if psnmp['name'] == snmp_community['name']:
+                            object = {'name': psnmp['name'], 'config': psnmp['config']}
+                            config['communities']['community'].append(object)
+                response = self.client.patch(uri, data=config)
+                if response['code'] not in [200, 201, 202, 204]:
+                    raise F5ModuleError(response['contents'])
+
+            if len(update_communities) > 0:
+                for snmp_community in update_communities:
+                    for psnmp in params['snmp_community']:
+                        if psnmp['name'] == snmp_community['name']:
+                            uri = base_uri + "communities/f5-system-snmp:community={}/config".format(psnmp['name'])
+                            payload = {'config': psnmp['config']}
+                            response = self.client.put(uri, data=payload)
+                            if response['code'] not in [200, 201, 202, 204]:
+                                raise F5ModuleError(response['contents'])
 
         if 'snmp_target' in params:
             uri = base_uri + "targets"

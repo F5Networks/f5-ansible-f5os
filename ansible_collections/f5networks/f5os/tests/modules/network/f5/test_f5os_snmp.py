@@ -186,11 +186,11 @@ class TestManager(unittest.TestCase):
         mm.exists = Mock(return_value=True)
         mm.client.get = Mock(side_effect=[existing_data, existing_data_mib])
         mm.client.patch = Mock(return_value={'code': 200})
+        mm.client.put = Mock(return_value={'code': 200})
 
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
-        self.assertEqual(mm.client.patch.call_count, 1)
         self.assertEqual(mm.client.get.call_count, 2)
 
     def test_update_snmp_target(self, *args):
