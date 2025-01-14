@@ -124,7 +124,7 @@ class TestManager(unittest.TestCase):
                 ipv4_address="1.2.3.4",
                 ipv6_address="2001:0000:130F:0000:0000:09C0:876A:130B",
                 port="8080",
-                user="user1",
+                # user="user1",
             )],
         ))
 
@@ -202,7 +202,7 @@ class TestManager(unittest.TestCase):
                 ipv4_address="1.2.3.4",
                 ipv6_address="2001:0000:130F:0000:0000:09C0:876A:130B",
                 port="8080",
-                user="user1",
+                # user="user1",
             )],
         ))
 

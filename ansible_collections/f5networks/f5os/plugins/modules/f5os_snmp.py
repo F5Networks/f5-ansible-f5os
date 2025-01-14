@@ -135,6 +135,8 @@ options:
     default: present
 notes:
   - A PATCH call updates only the specified targets, communities, or users mentioned in the request leaving all other unmentioned things unchanged.
+  - A target cannot be mapped to a community if it is already mapped to a user.
+  - By default, the security model will be set to v3 when a target is mapped to a user.
 author:
   - Ravinder Reddy (@chinthalapalli)
   - Martin Vogel (@MVogel91)
@@ -793,9 +795,9 @@ class ModuleManager(object):
         if 'snmp_community' in params:
             update_communities = []
             create_communities = []
-            for wcommunity in self.want.snmp_community:
+            for wcommunity in self.want.snmp_community or []:
                 match = False
-                for hcommunity in self.have.snmp_community:
+                for hcommunity in self.have.snmp_community or []:
                     if wcommunity['name'] == hcommunity['name']:
                         match = True
                         break
@@ -933,7 +935,11 @@ class ArgumentSpec(object):
                               required=True),
                     ipv6_address=dict(type='str'),
                     user=dict(type='str')
-                )
+                ),
+                mutually_exclusive=[
+                    ['community', 'user'],
+                    ['security_model', 'user'],
+                ]
             ),
             snmp_mib=dict(
                 type='dict',
@@ -950,6 +956,7 @@ class ArgumentSpec(object):
         )
         self.argument_spec = {}
         self.argument_spec.update(argument_spec)
+        self.mutually_exclusive = []
         self.required_one_of = [('snmp_community', 'snmp_target', 'snmp_user', 'snmp_mib')]
 
 
@@ -959,7 +966,8 @@ def main():
     module = AnsibleModule(
         argument_spec=spec.argument_spec,
         supports_check_mode=spec.supports_check_mode,
-        required_one_of=spec.required_one_of
+        required_one_of=spec.required_one_of,
+        mutually_exclusive=spec.mutually_exclusive
     )
 
     try:
