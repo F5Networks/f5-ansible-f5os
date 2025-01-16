@@ -124,7 +124,7 @@ class TestManager(unittest.TestCase):
                 ipv4_address="1.2.3.4",
                 ipv6_address="2001:0000:130F:0000:0000:09C0:876A:130B",
                 port="8080",
-                user="user1",
+                # user="user1",
             )],
         ))
 
@@ -159,12 +159,12 @@ class TestManager(unittest.TestCase):
         mm = ModuleManager(module=module)
         mm.client.platform = 'rSeries Platform'
         mm.exists = Mock(return_value=False)
-        mm.client.post = Mock(return_value={'code': 201})
+        mm.client.patch = Mock(return_value={'code': 201})
 
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
-        self.assertEqual(mm.client.post.call_count, 1)
+        self.assertEqual(mm.client.patch.call_count, 1)
 
     def test_update_snmp_community(self, *args):
         set_module_args(dict(
@@ -185,12 +185,12 @@ class TestManager(unittest.TestCase):
         mm.client.platform = 'rSeries Platform'
         mm.exists = Mock(return_value=True)
         mm.client.get = Mock(side_effect=[existing_data, existing_data_mib])
+        mm.client.patch = Mock(return_value={'code': 200})
         mm.client.put = Mock(return_value={'code': 200})
 
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
-        self.assertEqual(mm.client.put.call_count, 1)
         self.assertEqual(mm.client.get.call_count, 2)
 
     def test_update_snmp_target(self, *args):
@@ -202,7 +202,7 @@ class TestManager(unittest.TestCase):
                 ipv4_address="1.2.3.4",
                 ipv6_address="2001:0000:130F:0000:0000:09C0:876A:130B",
                 port="8080",
-                user="user1",
+                # user="user1",
             )],
         ))
 
@@ -217,12 +217,12 @@ class TestManager(unittest.TestCase):
         mm.client.platform = 'rSeries Platform'
         mm.exists = Mock(return_value=True)
         mm.client.get = Mock(side_effect=[existing_data, existing_data_mib])
-        mm.client.put = Mock(return_value={'code': 200})
+        mm.client.patch = Mock(return_value={'code': 200})
 
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
-        self.assertEqual(mm.client.put.call_count, 1)
+        self.assertEqual(mm.client.patch.call_count, 1)
         self.assertEqual(mm.client.get.call_count, 2)
 
     @patch.object(f5os_snmp, 'Connection')

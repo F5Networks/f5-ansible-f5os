@@ -15,6 +15,17 @@ description:
   - Manages STP config.
 version_added: "1.8.0"
 options:
+  mode:
+    description:
+      - Specifies the mode of the spanning tree protocol.
+      - The default value is STP.
+    type: str
+    default: stp
+    choices:
+      - stp
+      - rstp
+      - mstp
+    version_added: "1.14.0"
   hello_time:
     description:
       - Specifies the time interval, in seconds, that the rSeries system transmits spanning tree information to adjacent bridges in the network.
@@ -46,6 +57,62 @@ options:
       - The default value is 32768. The valid range is from 0 to 61440 in multiples of 4096.
     type: int
     default: 32768
+  mstp_instances:
+    version_added: "1.14.0"
+    description:
+      - Specifies the MSTP instances to configure.
+    type: list
+    elements: dict
+    suboptions:
+      instance_id:
+        description:
+          - Specifies the mstp instance ID.
+        type: int
+      vlans:
+        description:
+          - Specifies the VLANs to include in the mstp instance.
+        type: list
+        elements: int
+      bridge_priority:
+        description:
+          - Specifies the bridge priority for the mstp instance.
+        type: int
+      interface:
+        description:
+        - Specifies the interface associated with the mstp instance.
+        type: dict
+        suboptions:
+          name:
+            description:
+              - Specifies the interface name.
+            type: str
+          cost:
+            description:
+              - Used to calculate the cost of sending spanning tree traffic through the interface to an adjacent bridge or spanning tree region.
+            type: int
+          port_priority:
+            description:
+              - Used as the port identifier together with the slot/port numbers.
+            type: int
+          edge_port:
+            description:
+              - Specifies whether the interface is an edge port.
+              - When enabled, indicates the interface or LAG is an edge port that does not receive any BPDU frames.
+            type: str
+            choices:
+              - EDGE_AUTO
+              - EDGE_ENABLE
+              - EDGE_DISABLE
+          link_type:
+            description:
+              - Specifies the type of optimization.
+              - P2P Optimizes for point-to-point spanning tree links (connects two spanning tree bridges only).
+              - Note that P2P is the only valid STP link type for a LAG.
+              - SHARED Optimizes for shared spanning tree links (connecting two or more spanning tree bridges).
+            type: str
+            choices:
+              - P2P
+              - SHARED
   interfaces:
     description: Specifies interfaces for which we want to enable STP.
     type: dict
@@ -166,6 +233,7 @@ class Parameters(AnsibleF5Parameters):
     }
 
     api_attributes = [
+        'mstp_instances'
     ]
 
     returnables = [
@@ -174,7 +242,8 @@ class Parameters(AnsibleF5Parameters):
         'forwarding_delay',
         'hold_count',
         'bridge_priority',
-        'interfaces'
+        'interfaces',
+        'mstp_instances'
     ]
 
     updatables = [
@@ -183,11 +252,16 @@ class Parameters(AnsibleF5Parameters):
         'forwarding_delay',
         'hold_count',
         'bridge_priority',
-        'interfaces'
+        'interfaces',
+        'mstp_instances'
     ]
 
 
 class ApiParameters(Parameters):
+
+    @property
+    def mstp_instances(self):
+        return self._values['mstp-instances']
 
     @property
     def hello_time(self):
@@ -276,6 +350,8 @@ class ModuleParameters(Parameters):
 
     @property
     def bridge_priority(self):
+        if self._values['mode'] == 'mstp':
+            return None
         if self._values['bridge_priority'] is None:
             return 32768
         if 0 > self._values['bridge_priority'] or self._values['bridge_priority'] > 61440 or self._values['bridge_priority'] % 4096 != 0:
@@ -283,6 +359,50 @@ class ModuleParameters(Parameters):
                 "Valid bridge_priority must be in range 0-61440 and a multiple of 4096."
             )
         return self._values['bridge_priority']
+
+    @property
+    def mstp_instances(self):
+        mst_instances = {'mst-instance': []}
+        instances = self._values["mstp_instances"]
+        if instances is None:
+            return None
+
+        for instance in instances:
+            instance_id = instance['instance_id']
+            vlans = instance['vlans']
+            bridge_priority = instance['bridge_priority']
+            interface = instance.get('interface')
+
+            mst_instance = {
+                "mst-id": instance_id,
+                "config": {
+                    "mst-id": instance_id,
+                    "bridge-priority": bridge_priority,
+                    "vlan": vlans
+                }
+            }
+
+            if interface is not None:
+                mst_instance['interfaces'] = {
+                    "interface": []
+                }
+
+                interface_payload = {
+                    "name": interface['name'],
+                    "config": {
+                        "name": interface['name'],
+                        "cost": interface['cost'],
+                        "port-priority": interface['port_priority'],
+                        "edge-port": interface['edge_port'],
+                        "link-type": interface['link_type']
+                    }
+                }
+
+                mst_instance['interfaces']['interface'].append(interface_payload)
+
+            mst_instances['mst-instance'].append(mst_instance)
+
+            return mst_instances
 
     @property
     def interfaces(self):
@@ -359,6 +479,18 @@ class Difference(object):
                 return attr1
         except AttributeError:  # pragma: no cover
             return attr1
+
+    @property
+    def mstp_instances(self):
+        want = self.want.mstp_instances
+        have = self.have.mstp_instances
+
+        if want is not None:
+            if have is not None:
+                if want != have:
+                    return {"mstp_instances": want}
+            else:
+                return {"mstp_instances": want}
 
     @property
     def interfaces(self):
@@ -440,11 +572,14 @@ class ModuleManager(object):
         return True
 
     def enable_stp_protocol(self):
-        payload = {
-            "enabled-protocol": [
-                "f5-openconfig-spanning-tree-types:STP"
-            ]
-        }
+        mode = self.want.mode
+        payload = {}
+
+        if mode in ['rstp', 'mstp']:
+            payload['enabled-protocol'] = [f"openconfig-spanning-tree-types:{mode.upper()}"]
+        else:
+            payload['enabled-protocol'] = [f"f5-openconfig-spanning-tree-types:{mode.upper()}"]
+
         # Posting Global Config
 
         uri = "/openconfig-spanning-tree:stp/global/config"
@@ -454,16 +589,28 @@ class ModuleManager(object):
             raise F5ModuleError(response['contents'])
 
     def patch_stp_config(self):
-        uri = "/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/config"
+        mode = self.want.mode
+
+        if mode in ['rstp', 'mstp']:
+            uri = f"/openconfig-spanning-tree:stp/{mode}/config"
+        else:
+            uri = "/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/config"
+
+        if mode in ['rstp', 'mstp']:
+            config_key = "openconfig-spanning-tree:config"
+        else:
+            config_key = "f5-openconfig-spanning-tree:config"
+
+        cfg = {
+            "hello-time": self.want.hello_time,
+            "max-age": self.want.max_age,
+            "forwarding-delay": self.want.forwarding_delay,
+            "hold-count": self.want.hold_count,
+            "bridge-priority": self.want.bridge_priority
+        }
 
         payload = {
-            "f5-openconfig-spanning-tree:config": {
-                "hello-time": self.want.hello_time,
-                "max-age": self.want.max_age,
-                "forwarding-delay": self.want.forwarding_delay,
-                "hold-count": self.want.hold_count,
-                "bridge-priority": self.want.bridge_priority
-            }
+            config_key: {k: v for k, v in cfg.items() if v is not None}
         }
 
         response = self.client.patch(uri, data=payload)
@@ -473,8 +620,14 @@ class ModuleManager(object):
 
     def post_stp_interface(self):
         # Posting Interfaces - cost , port-priority
+        mode = self.want.mode
+        if mode in ['rstp']:
+            config_key = "openconfig-spanning-tree:interface"
+        else:
+            config_key = "f5-openconfig-spanning-tree:interface"
+
         interfaces = {
-            "f5-openconfig-spanning-tree:interface": [
+            config_key: [
                 {
                     'name': self.want.interfaces['name'],
                     'config': {
@@ -485,7 +638,12 @@ class ModuleManager(object):
                 }
             ]
         }
-        uri = '/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/interfaces'
+
+        if mode in ['rstp']:
+            uri = f"/openconfig-spanning-tree:stp/{mode}/interfaces"
+        else:
+            uri = '/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/interfaces'
+
         response = self.client.post(uri, data=interfaces)
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
@@ -509,10 +667,16 @@ class ModuleManager(object):
             raise F5ModuleError(response['contents'])
 
     def patch_stp_interface(self):
+        mode = self.want.mode
         interface_name = self.want.interfaces['name'].replace('/', '%2F')
 
+        if mode in ['rstp', 'mstp']:
+            config_key = "openconfig-spanning-tree:interface"
+        else:
+            config_key = "f5-openconfig-spanning-tree:config"
+
         interfaces = {
-            "f5-openconfig-spanning-tree:config": {
+            config_key: {
                 'name': self.want.interfaces['name'],
                 'cost': self.want.interfaces['cost'],
                 "port-priority": self.want.interfaces['port_priority'],
@@ -538,11 +702,46 @@ class ModuleManager(object):
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
 
+    def create_mstp_on_device(self):
+        uri = "/openconfig-spanning-tree:stp/mstp/openconfig-spanning-tree:mst-instances"
+        mst_instances = self.want.mstp_instances
+        interfaces = {"interface": []}
+
+        for instance in mst_instances['mst-instance']:
+            interface = instance.get('interfaces')
+
+            if interface is not None:
+                for i in interface['interface']:
+                    interfaces['interface'].append({
+                        "name": i["config"]["name"],
+                        "config": {
+                            "name": i["config"]["name"],
+                            "edge-port": "openconfig-spanning-tree-types:" + i["config"]["edge-port"],
+                            "link-type": i["config"]['link-type'],
+                        }
+                    })
+                    del i["config"]["edge-port"]
+                    del i["config"]["link-type"]
+
+        response = self.client.post(uri, data=mst_instances)
+        if response['code'] not in [200, 201, 202, 204]:
+            raise F5ModuleError(response['contents'])
+
+        if interfaces['interface']:
+            uri = '/openconfig-spanning-tree:stp/interfaces'
+            response = self.client.post(uri, data=interfaces)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+
     def create_on_device(self):
 
         self.enable_stp_protocol()
 
         self.patch_stp_config()
+
+        if self.want.mode == 'mstp':
+            self.create_mstp_on_device()
+            return True
 
         if self.want.interfaces is not None:
             self.have = self.read_current_from_device()
@@ -596,8 +795,49 @@ class ModuleManager(object):
             return True
         return False
 
+    def update_mstp_instances(self, params):
+        payload = {"mst-instances": params["mstp_instances"]}
+        uri = "/openconfig-spanning-tree:stp/mstp/openconfig-spanning-tree:mst-instances"
+        response = self.client.put(uri, data=payload)
+        if response['code'] not in [200, 201, 202, 204]:
+            raise F5ModuleError(response['contents'])
+
+    def update_mstp_interfaces(self, params):
+        uri = '/openconfig-spanning-tree:stp/interfaces'
+        response = self.client.patch(uri, data=params)
+        if response['code'] not in [200, 201, 202, 204]:
+            raise F5ModuleError(response['contents'])
+
+    def update_mstp_on_device(self):
+        params = self.changes.api_params()
+
+        if "mstp_instances" in params:
+            interfaces = {"interface": []}
+
+            for instance in params["mstp_instances"]["mst-instance"]:
+                interface = instance.get('interfaces')
+                if interface is not None:
+                    for i in interface['interface']:
+                        interfaces['interface'].append({
+                            "name": i["config"]["name"],
+                            "config": {
+                                "name": i["config"]["name"],
+                                "edge-port": "openconfig-spanning-tree-types:" + i["config"]["edge-port"],
+                                "link-type": i["config"]['link-type'],
+                            }
+                        })
+                        del i["config"]["edge-port"]
+                        del i["config"]["link-type"]
+
+            self.update_mstp_instances(params)
+            self.update_mstp_interfaces({"interfaces": interfaces})
+
     def update_on_device(self):
         self.patch_stp_config()
+
+        if self.want.mode == 'mstp':
+            self.update_mstp_on_device()
+            return True
 
         if self.want.interfaces is not None:
             self.have = self.read_current_from_device()
@@ -612,38 +852,107 @@ class ModuleManager(object):
 
         return True
 
-    def read_current_from_device(self):
+    def read_current_mstp(self):
+        uri = "/openconfig-spanning-tree:stp"
+        response = self.client.get(uri)
 
-        uri = "/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/config"
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+
+        mstp_obj = response['contents']['openconfig-spanning-tree:stp']['mstp']
+        del mstp_obj['state']
+        mstp_instance_interface = dict()
+        interfaces = response['contents']['openconfig-spanning-tree:stp'].get('interfaces')
+
+        for inst in mstp_obj['mst-instances']['mst-instance']:
+            del inst['state']
+            if 'interfaces' in inst:
+                if 'interface' in inst['interfaces']:
+                    for intf in inst['interfaces']['interface']:
+                        del intf['state']
+                        name = intf['name']
+                        mstp_instance_interface[name] = intf
+
+        if interfaces is not None:
+            if 'interface' in interfaces:
+                for intf in interfaces['interface']:
+                    name = intf['name']
+                    if name in mstp_instance_interface:
+                        i = mstp_instance_interface[name]
+                        i["config"]["edge-port"] = intf['config']['edge-port'].split(":")[1]
+                        i["config"]["link-type"] = intf['config']['link-type']
+
+        stp_cfg = mstp_obj["config"]
+        mst_inst = mstp_obj["mst-instances"]
+        del mstp_obj["config"]
+        del mstp_obj["mst-instances"]
+        mstp_obj.update(stp_cfg)
+        mstp_obj["mstp-instances"] = mst_inst
+
+        return ApiParameters(params=mstp_obj)
+
+    def read_current_from_device(self):
+        mode = self.want.mode
+
+        if mode == 'mstp':
+            return self.read_current_mstp()
+
+        if mode == 'rstp':
+            uri = "/openconfig-spanning-tree:stp"
+        else:
+            uri = "/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/config"
+
         response = self.client.get(uri)
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
-        stp = {}
-        stp['hello-time'] = response['contents']['f5-openconfig-spanning-tree:config']['hello-time']
-        stp['max-age'] = response['contents']['f5-openconfig-spanning-tree:config']['max-age']
-        stp['forwarding-delay'] = response['contents']['f5-openconfig-spanning-tree:config']['forwarding-delay']
-        stp['hold-count'] = response['contents']['f5-openconfig-spanning-tree:config']['hold-count']
-        stp['bridge-priority'] = response['contents']['f5-openconfig-spanning-tree:config']['bridge-priority']
-        uri = "/openconfig-spanning-tree:stp/interfaces"
-        response = self.client.get(uri)
+        if mode in ['rstp', 'mstp']:
+            stp = response['contents']['openconfig-spanning-tree:stp']['rstp']['config']
+        else:
+            stp = response['contents']['f5-openconfig-spanning-tree:config']
 
-        if response['code'] not in [200, 201, 202, 204]:
-            raise F5ModuleError(response['contents'])
+        if mode in ['rstp']:
+            uri = "/openconfig-spanning-tree:stp"
+            response = self.client.get(uri)
 
-        if 'openconfig-spanning-tree:interfaces' in response['contents']:
-            stp['interfaces'] = response['contents']['openconfig-spanning-tree:interfaces']['interface']
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+            rstp_obj = response['contents']['openconfig-spanning-tree:stp']['rstp']
+            if 'interfaces' in rstp_obj:
+                if 'interface' in rstp_obj['interfaces']:
+                    stp['interfaces'] = rstp_obj['interfaces']['interface']
 
-        if 'interfaces' in stp:
-            for interface in stp['interfaces']:
-                name = interface['name']
-                name = name.replace('/', '%2F')
-                uri = '/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/interfaces/interface=' + name + '/config'
-                response = self.client.get(uri)
-                if response['code'] not in [200, 201, 202]:
-                    raise F5ModuleError(response['contents'])
+            if 'interfaces' in stp:
+                for interface in stp['interfaces']:
+                    name = interface['name']
+                    name = name.replace('/', '%2F')
+                    uri = '/openconfig-spanning-tree:stp/interfaces/interface=' + name + '/config'
+                    response = self.client.get(uri)
+                    if response['code'] not in [200, 201, 202]:
+                        raise F5ModuleError(response['contents'])
 
-                interface['config']['cost'] = response['contents']['f5-openconfig-spanning-tree:config']['cost']
-                interface['config']['port-priority'] = response['contents']['f5-openconfig-spanning-tree:config']['port-priority']
+                    interface['config']['edge-port'] = response['contents']['openconfig-spanning-tree:config']['edge-port']
+                    interface['config']['link-type'] = response['contents']['openconfig-spanning-tree:config']['link-type']
+        else:
+            uri = "/openconfig-spanning-tree:stp/interfaces"
+            response = self.client.get(uri)
+
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+
+            if 'openconfig-spanning-tree:interfaces' in response['contents']:
+                stp['interfaces'] = response['contents']['openconfig-spanning-tree:interfaces']['interface']
+
+            if 'interfaces' in stp:
+                for interface in stp['interfaces']:
+                    name = interface['name']
+                    name = name.replace('/', '%2F')
+                    uri = '/openconfig-spanning-tree:stp/f5-openconfig-spanning-tree:stp/interfaces/interface=' + name + '/config'
+                    response = self.client.get(uri)
+                    if response['code'] not in [200, 201, 202]:
+                        raise F5ModuleError(response['contents'])
+
+                    interface['config']['cost'] = response['contents']['f5-openconfig-spanning-tree:config']['cost']
+                    interface['config']['port-priority'] = response['contents']['f5-openconfig-spanning-tree:config']['port-priority']
 
         return ApiParameters(params=stp)
 
@@ -677,7 +986,14 @@ class ModuleManager(object):
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
         config = response['contents']['openconfig-spanning-tree:stp']
-        if 'global' in config and 'f5-openconfig-spanning-tree-types:STP' in config['global']['config']['enabled-protocol']:
+
+        mode = self.want.mode
+        if mode in ['rstp', 'mstp']:
+            config_str = f'openconfig-spanning-tree-types:{mode.upper()}'
+        else:
+            config_str = f'f5-openconfig-spanning-tree-types:{mode.upper()}'
+
+        if 'global' in config and config_str in config['global']['config']['enabled-protocol']:
             return True
         return False
 
@@ -686,6 +1002,11 @@ class ArgumentSpec(object):
     def __init__(self):
         self.supports_check_mode = True
         argument_spec = dict(
+            mode=dict(
+                type="str",
+                default='stp',
+                choices=['stp', 'rstp', 'mstp']
+            ),
             hello_time=dict(
                 type="int",
                 default=2
@@ -706,6 +1027,31 @@ class ArgumentSpec(object):
                 type="int",
                 default=32768
             ),
+            mstp_instances=dict(
+                type="list",
+                elements="dict",
+                options=dict(
+                    instance_id=dict(type="int"),
+                    vlans=dict(type="list", elements="int"),
+                    bridge_priority=dict(type="int"),
+                    interface=dict(
+                        type="dict",
+                        options=dict(
+                            name=dict(type="str"),
+                            cost=dict(type="int"),
+                            port_priority=dict(type="int"),
+                            edge_port=dict(
+                                type="str",
+                                choices=["EDGE_AUTO", "EDGE_ENABLE", "EDGE_DISABLE"]
+                            ),
+                            link_type=dict(
+                                type="str",
+                                choices=["P2P", "SHARED"]
+                            )
+                        )
+                    )
+                )
+            ),
             interfaces=dict(
                 type="dict",
                 options=dict(
@@ -722,13 +1068,13 @@ class ArgumentSpec(object):
                     ),
                     edge_port=dict(
                         type="str",
-                        default='EDGE_AUTO',
-                        choices=['EDGE_AUTO', 'EDGE_ENABLE', 'EDGE_DISABLE']
+                        default="EDGE_AUTO",
+                        choices=["EDGE_AUTO", "EDGE_ENABLE", "EDGE_DISABLE"]
                     ),
                     link_type=dict(
                         type="str",
-                        choices=['P2P', 'SHARED'],
-                        default='P2P'
+                        choices=["P2P", "SHARED"],
+                        default="P2P"
                     )
                 )
             ),
@@ -739,6 +1085,14 @@ class ArgumentSpec(object):
         )
         self.argument_spec = {}
         self.argument_spec.update(argument_spec)
+
+        self.required_if = [
+            ['mode', 'mstp', ['mstp_instances']]
+        ]
+        self.mutually_exclusive = [
+            ['interfaces', 'mstp_instances'],
+            ['bridge_priority', 'mstp_instances']
+        ]
 
 
 def main():

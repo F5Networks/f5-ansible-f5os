@@ -1,0 +1,6 @@
+{
+    "openconfig-system:config": {
+        "enabled": true,
+        "enable-ntp-auth": true
+    }
+}

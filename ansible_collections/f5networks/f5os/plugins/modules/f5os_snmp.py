@@ -133,6 +133,10 @@ options:
       - present
       - absent
     default: present
+notes:
+  - A PATCH call updates only the specified targets, communities, or users mentioned in the request leaving all other unmentioned things unchanged.
+  - A target cannot be mapped to a community if it is already mapped to a user.
+  - By default, the security model will be set to v3 when a target is mapped to a user.
 author:
   - Ravinder Reddy (@chinthalapalli)
   - Martin Vogel (@MVogel91)
@@ -235,6 +239,7 @@ snmp_mib:
 '''
 
 import datetime
+import copy
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
@@ -364,8 +369,8 @@ class UsableChanges(Changes):
         if self._values['snmp_target'] is None:
             return None
         snmp_targets = []
-        snmp_target = dict()
         for val in self._values['snmp_target']:
+            snmp_target = dict()
             target_config = dict()
             target_config['name'] = val['name']
 
@@ -384,10 +389,16 @@ class UsableChanges(Changes):
                     'port': val['port'],
                 }
                 target_config['ipv4'] = ipv4_dict
+            elif val['ipv6_address'] is not None:
+                ipv6_dict = {
+                    'address': val['ipv6_address'],
+                    'port': val['port'],
+                }
+                target_config['ipv6'] = ipv6_dict
 
             snmp_target['config'] = target_config
             snmp_target['name'] = val['name']
-            snmp_targets.append(snmp_target)
+            snmp_targets.append(copy.deepcopy(snmp_target))
         return snmp_targets
 
     @property
@@ -462,21 +473,34 @@ class Difference(object):  # pragma: no cover
     def snmp_community(self):
         '''Discrepancy between Module name (security_model) and API name (security-model)'''
         if getattr(self.want, 'snmp_community') is not None:
+
+            if self.have.snmp_community is None:
+                return self.want.snmp_community
+
             for wcommunity in self.want.snmp_community:
+                match = False
                 for hcommunity in self.have.snmp_community:
                     if wcommunity['name'] == hcommunity['name']:
                         if wcommunity['security_model'] == hcommunity['security-model']:
-                            return None
-                        return self.want.snmp_community
+                            match = True
+                            break
+                if not match:
+                    return self.want.snmp_community
+            return None
 
     @property
     def snmp_target(self):
         '''Discrepancy between Module name (security_model, ipv4_address, ipv6_address, port) and
         API name (security-model, ipv4:{address, port}, ipv6:{address, port})'''
         if getattr(self.want, 'snmp_target') is not None:
+            if self.have.snmp_target is None:
+                return self.want.snmp_target
+
             for wtarget in self.want.snmp_target:
+                nameMatch = False
                 for htarget in self.have.snmp_target:
                     if wtarget['name'] == htarget['name']:
+                        nameMatch = True
                         if 'security_model' in wtarget and wtarget['security_model'] is not None:
                             if 'security-model' not in htarget:
                                 return self.want.snmp_target
@@ -515,7 +539,9 @@ class Difference(object):  # pragma: no cover
                             if wtarget['port'] != htarget[ip_ver]['port']:
                                 return self.want.snmp_target
 
-                        return None
+                if not nameMatch:
+                    return self.want.snmp_target
+            return None
 
     @property
     def snmp_user(self):
@@ -523,8 +549,10 @@ class Difference(object):  # pragma: no cover
         and API name (authentication-protocol, authentication-password, privacy-protocol, privacy-password)'''
         if getattr(self.want, 'snmp_user') is not None:
             for wuser in self.want.snmp_user:
+                userMatch = False
                 for huser in self.have.snmp_user:
                     if wuser['name'] == huser['name']:
+                        userMatch = True
                         if 'auth_proto' in wuser:
                             if 'authentication-protocol' not in huser:
                                 return self.want.snmp_user
@@ -548,8 +576,9 @@ class Difference(object):  # pragma: no cover
                                 return self.want.snmp_user
                             if wuser['privacy_passwd'] != huser['privacy-password']:
                                 return self.want.snmp_user
-
-                        return None
+                if not userMatch:
+                    return self.want.snmp_user
+            return None
 
     @property
     def snmp_mib(self):
@@ -624,9 +653,8 @@ class ModuleManager(object):
         changed = False
         result = dict()
         state = self.want.state
-
-        if self.client.platform == 'Velos Controller':
-            raise F5ModuleError("Target device is a VELOS controller, aborting.")
+        # if self.client.platform == 'Velos Controller':
+        #     raise F5ModuleError("Target device is a VELOS controller, aborting.")
         if state == "present":
             changed = self.present()
         elif state == "absent":
@@ -689,9 +717,10 @@ class ModuleManager(object):
     def exists(self) -> bool:
         '''Check object existance on F5OS system'''
         base_uri = "/openconfig-system:system/f5-system-snmp:snmp"
-        for object in ['snmp_community', 'snmp_target', 'snmp_user']:
+        for object in ['snmp_community', 'snmp_target', 'snmp_user', 'snmp_mib']:
             if (hasattr(self.want, object) and getattr(self.want, object) is not None):
                 for val in getattr(self.want, object):
+                    object_uri = ''
                     if object == 'snmp_community':
                         object_uri = "/communities/community={}".format(val['name'])
                     elif object == 'snmp_target':
@@ -706,10 +735,12 @@ class ModuleManager(object):
 
                     response = self.client.get(uri)
                     if response['code'] == 404:
-                        return False
+                        # return False
+                        continue
                     if response['code'] not in [200, 201, 202]:
                         raise F5ModuleError(response['contents'])
-        return True
+                    return True
+        return False
 
     def create_on_device(self):
         '''API communication to actually create the objects on the F5OS system'''
@@ -717,37 +748,40 @@ class ModuleManager(object):
         base_uri = "/openconfig-system:system/f5-system-snmp:snmp"
 
         if 'snmp_community' in params:
+            object_uri = "/f5-system-snmp:communities"
+            uri = base_uri + object_uri
+            payload = {'community': []}
             for snmp_community in params['snmp_community']:
-                object_uri = "/f5-system-snmp:communities"
-                uri = base_uri + object_uri
-                payload = {'community': [{'name': snmp_community['name'], 'config': snmp_community['config']}]}
-                response = self.client.post(uri, data=payload)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                payload['community'].append({'name': snmp_community['name'], 'config': snmp_community['config']})
+            response = self.client.post(uri, data=payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
 
         if 'snmp_target' in params:
+            object_uri = "/f5-system-snmp:targets"
+            uri = base_uri + object_uri
+            payload = {'target': []}
             for snmp_target in params['snmp_target']:
-                object_uri = "/f5-system-snmp:targets"
-                uri = base_uri + object_uri
-                payload = {'target': [{'name': snmp_target['name'], 'config': snmp_target['config']}]}
-                response = self.client.post(uri, data=payload)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                payload['target'].append({'name': snmp_target['name'], 'config': snmp_target['config']})
+            response = self.client.post(uri, data=payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
 
         if 'snmp_user' in params:
+            object_uri = "/f5-system-snmp:users"
+            uri = base_uri + object_uri
+            payload = {'user': []}
             for snmp_user in params['snmp_user']:
-                object_uri = "/f5-system-snmp:users"
-                uri = base_uri + object_uri
-                payload = {'user': [{'name': snmp_user['name'], 'config': snmp_user['config']}]}
-                response = self.client.post(uri, data=payload)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                payload['user'].append({'name': snmp_user['name'], 'config': snmp_user['config']})
+            response = self.client.post(uri, data=payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
 
         if 'snmp_mib' in params:
             for snmp_mib in params['snmp_mib']:
                 uri = "/SNMPv2-MIB:SNMPv2-MIB/system"
-                payload = snmp_mib['config']
-                response = self.client.post(uri, data=payload)
+                payload = {'SNMPv2-MIB:system': snmp_mib['config']}
+                response = self.client.patch(uri, data=payload)
                 if response['code'] not in [200, 201, 202, 204]:
                     raise F5ModuleError(response['contents'])
 
@@ -756,34 +790,63 @@ class ModuleManager(object):
     def update_on_device(self):
         '''API communication to actually update the objects on the F5OS system'''
         params = self.changes.api_params()
-        base_uri = "/openconfig-system:system/f5-system-snmp:snmp"
+        base_uri = "/openconfig-system:system/f5-system-snmp:snmp/f5-system-snmp:"
 
         if 'snmp_community' in params:
-            for snmp_community in params['snmp_community']:
-                object_uri = "/f5-system-snmp:communities/f5-system-snmp:community={}/config".format(snmp_community['name'])
-                uri = base_uri + object_uri
-                payload = {'config': snmp_community['config']}
-                response = self.client.put(uri, data=payload)
+            update_communities = []
+            create_communities = []
+            for wcommunity in self.want.snmp_community or []:
+                match = False
+                for hcommunity in self.have.snmp_community or []:
+                    if wcommunity['name'] == hcommunity['name']:
+                        match = True
+                        break
+                if match:
+                    update_communities.append(wcommunity)
+                else:
+                    create_communities.append(wcommunity)
+
+            if len(create_communities) > 0:
+                uri = base_uri + "communities"
+                config = {'communities': {"community": []}}
+                for snmp_community in create_communities:
+                    for psnmp in params['snmp_community']:
+                        if psnmp['name'] == snmp_community['name']:
+                            object = {'name': psnmp['name'], 'config': psnmp['config']}
+                            config['communities']['community'].append(object)
+                response = self.client.patch(uri, data=config)
                 if response['code'] not in [200, 201, 202, 204]:
                     raise F5ModuleError(response['contents'])
+
+            if len(update_communities) > 0:
+                for snmp_community in update_communities:
+                    for psnmp in params['snmp_community']:
+                        if psnmp['name'] == snmp_community['name']:
+                            uri = base_uri + "communities/f5-system-snmp:community={}/config".format(psnmp['name'])
+                            payload = {'config': psnmp['config']}
+                            response = self.client.put(uri, data=payload)
+                            if response['code'] not in [200, 201, 202, 204]:
+                                raise F5ModuleError(response['contents'])
 
         if 'snmp_target' in params:
+            uri = base_uri + "targets"
+            config = {'targets': {"target": []}}
             for snmp_target in params['snmp_target']:
-                object_uri = "/f5-system-snmp:targets/f5-system-snmp:target={}/config".format(snmp_target['name'])
-                uri = base_uri + object_uri
-                payload = {'config': snmp_target['config']}
-                response = self.client.put(uri, data=payload)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                object = {'name': snmp_target['name'], 'config': snmp_target['config']}
+                config['targets']['target'].append(object)
+            response = self.client.patch(uri, data=config)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
 
         if 'snmp_user' in params:
+            uri = base_uri + "users"
+            config = {'users': {"user": []}}
             for snmp_user in params['snmp_user']:
-                object_uri = "/f5-system-snmp:users/f5-system-snmp:user={}/config".format(snmp_user['name'])
-                uri = base_uri + object_uri
-                payload = {'config': snmp_user['config']}
-                response = self.client.put(uri, data=payload)
-                if response['code'] not in [200, 201, 202, 204]:
-                    raise F5ModuleError(response['contents'])
+                object = {'name': snmp_user['name'], 'config': snmp_user['config']}
+                config['users']['user'].append(object)
+            response = self.client.patch(uri, data=config)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
 
         if 'snmp_mib' in params:
             for snmp_mib in params['snmp_mib']:
@@ -872,7 +935,11 @@ class ArgumentSpec(object):
                               required=True),
                     ipv6_address=dict(type='str'),
                     user=dict(type='str')
-                )
+                ),
+                mutually_exclusive=[
+                    ['community', 'user'],
+                    ['security_model', 'user'],
+                ]
             ),
             snmp_mib=dict(
                 type='dict',
@@ -889,6 +956,7 @@ class ArgumentSpec(object):
         )
         self.argument_spec = {}
         self.argument_spec.update(argument_spec)
+        self.mutually_exclusive = []
         self.required_one_of = [('snmp_community', 'snmp_target', 'snmp_user', 'snmp_mib')]
 
 
@@ -898,7 +966,8 @@ def main():
     module = AnsibleModule(
         argument_spec=spec.argument_spec,
         supports_check_mode=spec.supports_check_mode,
-        required_one_of=spec.required_one_of
+        required_one_of=spec.required_one_of,
+        mutually_exclusive=spec.mutually_exclusive
     )
 
     try:

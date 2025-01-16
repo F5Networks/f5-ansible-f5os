@@ -5,7 +5,7 @@ managing Velos chassis and rSeries platform lifecycles as well as F5OS tenant an
 
 ## Requirements
 
- - ansible >= 2.15
+ - ansible >= 2.14
 
 ## Python Version
 This collection is supported on Python 3.9 and above.
@@ -106,11 +106,11 @@ Individuals or business entities who contribute to this project must complete an
 being included in this project.
 
 
-[repoinstall]: https://docs.ansible.com/ansible/latest/user_guide/collections_using.html#installing-a-collection-from-a-git-repository
+[repoinstall]: https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html#installing-a-collection-from-a-git-repository
 [dailybuild]: https://f5-ansible.s3.amazonaws.com/collections/f5networks-f5os-devel.tar.gz
 [ansible_issues]: https://github.com/F5Networks/f5-ansible-f5os/issues
 [License]: https://www.gnu.org/licenses/gpl-3.0.txt
-[ansiblehelp]: http://clouddocs.f5.com/products/orchestration/ansible/devel/
+[ansiblehelp]: https://clouddocs.f5.com/products/orchestration/ansible/devel/
 [execenv]: https://docs.ansible.com/automation-controller/latest/html/userguide/execution_environments.html
-[f5execenv]: http://clouddocs.f5.com/products/orchestration/ansible/devel/usage/exec-env.html
-[F5 Contributor License Agreement]: http://clouddocs.f5.com/products/orchestration/ansible/devel/usage/contributor.html
+[f5execenv]: https://clouddocs.f5.com/products/orchestration/ansible/devel/usage/exec-env.html
+[F5 Contributor License Agreement]: https://clouddocs.f5.com/products/orchestration/ansible/devel/usage/contributor.html
