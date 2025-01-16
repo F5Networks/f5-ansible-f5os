@@ -4,6 +4,21 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.14.0
+=======
+
+Major Changes
+-------------
+
+- f5os_snmp - allowed module to work for VELOS system controllers, added IPv6 support, fixed issues for multiple SNMP targets, community and users.
+
+Minor Changes
+-------------
+
+- f5os_ntp_server - added support to enable/disable NTP service and NTP Authentication
+- f5os_stp_config - added support for mstp
+- f5os_stp_config - added support for rstp
+
 v1.13.0
 =======
 

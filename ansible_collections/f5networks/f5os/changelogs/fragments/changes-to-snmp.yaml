@@ -1,3 +1,0 @@
----
-major_changes:
-  - f5os_snmp - allowed module to work for VELOS system controllers, added IPv6 support, fixed issues for multiple SNMP targets, community and users.

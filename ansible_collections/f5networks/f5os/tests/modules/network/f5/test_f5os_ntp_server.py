@@ -110,18 +110,19 @@ class TestManager(unittest.TestCase):
         )
 
         current_ntp = load_fixture('ntp_server_get.json')
+        current_ntp_config = load_fixture('ntp_config.json')
 
         mm = ModuleManager(module=module)
         mm.client.platform = 'rSeries Platform'
         mm.exists = Mock(return_value=True)
-        mm.client.get = Mock(return_value={'code': 200, 'contents': current_ntp})
+        mm.client.get = Mock(side_effect=[{'code': 200, 'contents': current_ntp}, {'code': 200, 'contents': current_ntp_config}])
         mm.client.patch = Mock(return_value={'code': 204})
 
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
         self.assertEqual(mm.client.patch.call_count, 1)
-        self.assertEqual(mm.client.get.call_count, 1)
+        self.assertEqual(mm.client.get.call_count, 2)
 
     def test_update_no_change(self, *args):
         set_module_args(dict(
@@ -135,16 +136,17 @@ class TestManager(unittest.TestCase):
         )
 
         current_ntp = load_fixture('ntp_server_get.json')
+        current_ntp_config = load_fixture('ntp_config.json')
 
         mm = ModuleManager(module=module)
         mm.client.platform = 'rSeries Platform'
         mm.exists = Mock(return_value=True)
-        mm.client.get = Mock(return_value={'code': 200, 'contents': current_ntp})
+        mm.client.get = Mock(side_effect=[{'code': 200, 'contents': current_ntp}, {'code': 200, 'contents': current_ntp_config}])
 
         results = mm.exec_module()
 
         self.assertFalse(results['changed'])
-        self.assertEqual(mm.client.get.call_count, 1)
+        self.assertEqual(mm.client.get.call_count, 2)
         self.assertEqual(mm.client.patch.call_count, 0)
         self.assertEqual(mm.client.post.call_count, 0)
 

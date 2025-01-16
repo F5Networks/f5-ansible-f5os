@@ -34,6 +34,14 @@ options:
     description:
       - Specifies to enable iburst for the NTP service. Specify false to disable it.
     type: bool
+  ntp_service:
+    description:
+      - Specifies to enable NTP service if passed True. Specify false to disable it.
+    type: bool
+  ntp_authentication:
+    description:
+      - Specifies to enable NTP Authentication if passed True. Specify false to disable it.
+    type: bool
   state:
     description:
       - The NTP server state.
@@ -103,19 +111,25 @@ class Parameters(AnsibleF5Parameters):
         'key_id',
         'iburst',
         'prefer',
+        'ntp_service',
+        'ntp_authentication'
     ]
 
     returnables = [
         'server',
         'key_id',
         'iburst',
-        'prefer'
+        'prefer',
+        'ntp_service',
+        'ntp_authentication'
     ]
 
     updatables = [
         'key_id',
         'iburst',
         'prefer',
+        'ntp_service',
+        'ntp_authentication'
     ]
 
 
@@ -135,6 +149,16 @@ class ApiParameters(Parameters):
     @property
     def prefer(self):
         return self._values['config'].get('prefer')
+
+    @property
+    def ntp_service(self):
+        self._values['config'].get('enabled')
+        return self._values['config'].get('enabled')
+
+    @property
+    def ntp_authentication(self):
+        self._values['config'].get('enable-ntp-auth')
+        return self._values['config'].get('enable-ntp-auth')
 
 
 class ModuleParameters(Parameters):
@@ -168,6 +192,8 @@ class Difference(object):  # pragma: no cover
 
     def compare(self, param):
         try:
+            if param in ['prefer', 'iburst', 'ntp_authentication', 'ntp_service']:
+                return self.check_ntp_field(param)
             result = getattr(self, param)
             return result
         except AttributeError:
@@ -182,17 +208,13 @@ class Difference(object):  # pragma: no cover
         except AttributeError:
             return attr1
 
-    @property
-    def prefer(self):
-        if (self.want.prefer and self.have.prefer) or (not self.want.prefer and not self.have.prefer):
-            return None
-        return self.want.prefer
+    def check_ntp_field(self, param):
+        want_value = getattr(self.want, param)
+        have_value = getattr(self.have, param)
 
-    @property
-    def iburst(self):
-        if (self.want.iburst and self.have.iburst) or (not self.want.iburst and not self.have.iburst):
+        if (want_value and have_value) or (not want_value and not have_value):
             return None
-        return self.want.iburst
+        return want_value
 
 
 class ModuleManager(object):
@@ -337,6 +359,20 @@ class ModuleManager(object):
 
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
+
+        ntp_payload = {'config': {}}
+        if 'ntp_service' in params:
+            ntp_payload['config']['enabled'] = params['ntp_service']
+
+        if 'ntp_authentication' in params:
+            ntp_payload['config']['enable-ntp-auth'] = params['ntp_authentication']
+
+        if len(ntp_payload['config']) > 0:
+            uri = '/openconfig-system:system/ntp/config'
+            response = self.client.patch(uri, data=ntp_payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+
         return True
 
     def update_on_device(self):
@@ -364,6 +400,20 @@ class ModuleManager(object):
         response = self.client.patch(uri, data=payload)
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
+
+        ntp_payload = {'config': {}}
+
+        if 'ntp_service' in params:
+            ntp_payload['config']['enabled'] = params['ntp_service']
+
+        if 'ntp_authentication' in params:
+            ntp_payload['config']['enable-ntp-auth'] = params['ntp_authentication']
+        if len(ntp_payload['config']) > 0:
+            uri = '/openconfig-system:system/ntp/config'
+            response = self.client.patch(uri, data=ntp_payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+
         return True
 
     def remove_from_device(self):
@@ -380,6 +430,13 @@ class ModuleManager(object):
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
 
+        uri = "/openconfig-system:system/ntp/config"
+        config_response = self.client.get(uri)
+        if config_response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(config_response['contents'])
+        config_data = config_response['contents']['openconfig-system:config']
+        response['contents']['openconfig-system:server'][0]['config']['enabled'] = config_data['enabled']
+        response['contents']['openconfig-system:server'][0]['config']['enable-ntp-auth'] = config_data['enable-ntp-auth']
         params = response['contents']['openconfig-system:server'][0]
         return ApiParameters(params=params)
 
@@ -392,6 +449,8 @@ class ArgumentSpec(object):
             key_id=dict(type='int'),
             prefer=dict(type='bool'),
             iburst=dict(type='bool'),
+            ntp_service=dict(type='bool'),
+            ntp_authentication=dict(type='bool'),
             state=dict(
                 default='present',
                 choices=['present', 'absent']
