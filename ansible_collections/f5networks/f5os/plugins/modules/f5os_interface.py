@@ -37,6 +37,26 @@ options:
       - Configures the VLAN ID to associate with the interface.
       - The C(native_vlans) parameter is used for untagged traffic.
     type: int
+  enabled:
+    description:
+      - "Configures the interface state as Enabled if C(True) or Disabled id C(False)."
+      - "Configures the Operational Status as UP if C(True) or DOWN id C(False)."
+    type: bool
+    version_added: "1.15.0"
+  description:
+    description:
+      - "Configures the description of Interface"
+    type: str
+    version_added: "1.15.0"
+  forward_error_correction:
+    description:
+      - "Configures the forward error correction on Interface"
+    type: str
+    version_added: "1.15.0"
+    choices:
+      - auto
+      - enabled
+      - disabled
   state:
     description:
       - If C(present), creates the specified object if it does not exist, or updates the existing object.
@@ -48,9 +68,11 @@ options:
     default: present
 notes:
   - This module will not execute on VELOS controller.
+  - MTU, Interface Type are not editable.
 author:
   - Ravinder Reddy (@chinthalapalli)
   - Wojciech Wypior (@wojtek0806)
+  - Prateek Ramani (@ramani)
 '''
 EXAMPLES = r'''
 - name: Creating VLAN444
@@ -145,12 +167,18 @@ class Parameters(AnsibleF5Parameters):
         'native_vlan',
         'interface_type',
         'trunk_vlans',
+        'enabled',
+        'description',
+        'forward_error_correction'
     ]
 
     updatables = [
         'name',
         'native_vlan',
         'trunk_vlans',
+        'enabled',
+        'description',
+        'forward_error_correction'
     ]
 
 
@@ -177,6 +205,22 @@ class ApiParameters(Parameters):
         if 'openconfig-vlan:switched-vlan' not in interface:
             return None
         return interface['openconfig-vlan:switched-vlan']['config'].get('native-vlan', None)
+
+    @property
+    def enabled(self):
+        return self._values['config']['enabled']
+
+    @property
+    def description(self):
+        if 'description' not in self._values['config']:
+            return None
+        return self._values['config']['description']
+
+    @property
+    def forward_error_correction(self):
+        if 'f5-interface:forward-error-correction' not in self._values['config']:
+            return None
+        return self._values['config']['f5-interface:forward-error-correction']
 
 
 class ModuleParameters(Parameters):
@@ -264,6 +308,13 @@ class Difference(object):
     @property
     def trunk_vlans(self):
         return cmp_simple_list(self.want.trunk_vlans, self.have.trunk_vlans)
+
+    @property
+    def enabled(self):
+        if self.want.enabled == self.have.enabled:
+            return None
+        else:
+            return self.want.enabled
 
 
 class ModuleManager(object):
@@ -374,6 +425,26 @@ class ModuleManager(object):
     def update_on_device(self):
         params = self.changes.to_return()
         interface_encoded = self._encode_interface_name()
+
+        payload = {}
+        if 'enabled' in params or params.get('description') or params.get('forward_error_correction'):
+            uri = f"/openconfig-interfaces:interfaces/interface={interface_encoded}"
+
+            config = dict()
+            if 'enabled' in params:
+                config['enabled'] = params['enabled']
+            if params.get('description'):
+                config['description'] = params['description']
+            if params.get('forward_error_correction'):
+                config['f5-interface:forward-error-correction'] = params['forward_error_correction']
+
+            payload = {'interface': []}
+            payload['interface'].append({"config": config})
+
+            response = self.client.patch(uri, data=payload)
+            if response['code'] not in [200, 201, 202, 204]:
+                raise F5ModuleError(response['contents'])
+
         vlans = dict()
         if params.get('trunk_vlans', None):
             vlans['trunk-vlans'] = params['trunk_vlans']
@@ -386,7 +457,7 @@ class ModuleManager(object):
             response = self.client.put(uri, data=payload)
             if response['code'] not in [200, 201, 202, 204]:
                 raise F5ModuleError(response['contents'])
-            return True
+        return True
 
     def remove_from_device(self):
         self.remove_vlans()
@@ -465,6 +536,13 @@ class ArgumentSpec(object):
             ),
             native_vlan=dict(
                 type="int",
+            ),
+            description=dict(),
+            enabled=dict(
+                type="bool",
+            ),
+            forward_error_correction=dict(
+                choices=['auto', 'enabled', 'disabled']
             ),
             state=dict(
                 default='present',

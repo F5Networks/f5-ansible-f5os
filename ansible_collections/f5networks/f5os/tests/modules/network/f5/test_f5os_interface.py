@@ -64,6 +64,9 @@ class TestParameters(unittest.TestCase):
             name='1.0',
             trunk_vlans=[444],
             native_vlan=111,
+            enabled=False,
+            description="Test Description",
+            forward_error_correction="auto",
             state='present'
         )
 
@@ -72,6 +75,9 @@ class TestParameters(unittest.TestCase):
         self.assertEqual(p.name, '1.0')
         self.assertListEqual(p.trunk_vlans, [444])
         self.assertEqual(p.native_vlan, 111)
+        self.assertEqual(p.enabled, False)
+        self.assertEqual(p.description, 'Test Description')
+        self.assertEqual(p.forward_error_correction, 'auto')
 
     def test_api_parameters(self):
         args = load_fixture('load_velos_partition_interface_config.json')
