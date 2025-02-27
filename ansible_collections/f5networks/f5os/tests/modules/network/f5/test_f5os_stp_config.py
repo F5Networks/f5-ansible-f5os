@@ -191,7 +191,7 @@ class TestManager(unittest.TestCase):
         self.p2.stop()
         self.mock_module_helper.stop()
 
-    def test_enable_lldp_config(self, *args):
+    def test_enable_stp_config(self, *args):
         set_module_args(dict(
             hello_time=2,
             max_age=7,
@@ -232,7 +232,7 @@ class TestManager(unittest.TestCase):
         results = mm.exec_module()
         self.assertTrue(results['changed'])
 
-    def test_enable_lldp_fails(self, *args):
+    def test_enable_stp_fails(self, *args):
         set_module_args(dict(
             hello_time=2,
             max_age=7,
@@ -265,7 +265,7 @@ class TestManager(unittest.TestCase):
         self.assertIn('server error', err.exception.args[0])
         self.assertTrue(mm.client.post.called)
 
-    def test_update_lldp_config(self, *args):
+    def test_update_stp_config(self, *args):
         set_module_args(dict(
             hello_time=2,
             max_age=7,
@@ -306,7 +306,7 @@ class TestManager(unittest.TestCase):
         results = mm.exec_module()
         self.assertTrue(results['changed'])
 
-    def test_remove_lldp_config(self, *args):
+    def test_remove_stp_config(self, *args):
         set_module_args(dict(
             hello_time=2,
             max_age=7,
@@ -340,6 +340,100 @@ class TestManager(unittest.TestCase):
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
+
+    def test_create_rstp_config(self, *args):
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(
+                name=1.0,
+                cost=2,
+                port_priority=128,
+                edge_port='EDGE_DISABLE',
+                link_type='SHARED',
+            ),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=204, contents=dict()),
+            dict(code=204, contents=dict()),
+        ])
+        mm.client.patch = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+        ])
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=dict(load_fixture('f5os_stp_config_global.json'))),
+            dict(code=200, contents=dict(load_fixture('f5os_stp_config.json'))),
+            dict(code=204, contents=dict()),
+        ])
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+        self.assertEqual(mm.client.post.call_count, 3)
+        self.assertEqual(mm.client.patch.call_count, 1)
+
+    def test_update_rstp_config(self, *args):
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(
+                name=2.0,
+                cost=2,
+                port_priority=128,
+                edge_port='EDGE_DISABLE',
+                link_type='SHARED',
+            ),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        existing_rstp_config = load_fixture('f5os_existing_rstp_config.json')
+        existing_rstp_interface = load_fixture('f5os_rstp_interface.json')
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        # mm.client.post = Mock(side_effect=[
+        #     dict(code=204, contents=dict()),
+        #     dict(code=204, contents=dict()),
+        #     dict(code=204, contents=dict()),
+        # ])
+        mm.client.post = Mock(return_value=dict(code=204))
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=existing_rstp_config),
+            dict(code=200, contents=existing_rstp_interface),
+            dict(code=200, contents=existing_rstp_config),
+            dict(code=200, contents=existing_rstp_interface),
+            # dict(code=204, contents=dict()),
+        ])
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+        self.assertEqual(mm.client.post.call_count, 2)
+        self.assertEqual(mm.client.patch.call_count, 1)
 
     def test_create_mstp_config(self, *args):
         set_module_args(dict(

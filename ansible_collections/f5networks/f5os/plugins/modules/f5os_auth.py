@@ -26,6 +26,8 @@ options:
     servergroups:
         description:
             - Specifies Server Groups for remote authentication
+            - This option will be deprecated in future versions.
+            - We have separated server group configurations into separate module C(f5os_auth_server) to enhance modularity and granularity.
         type: list
         elements: dict
         suboptions:

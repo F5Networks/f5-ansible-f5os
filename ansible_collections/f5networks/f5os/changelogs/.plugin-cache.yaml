@@ -25,6 +25,11 @@ plugins:
       name: f5os_auth
       namespace: ''
       version_added: 1.10.0
+    f5os_auth_server:
+      description: Manage Auth Server Groups and Server inside it.
+      name: f5os_auth_server
+      namespace: ''
+      version_added: 1.15.0
     f5os_config_backup:
       description: Manage F5OS config backups.
       name: f5os_config_backup
@@ -40,6 +45,11 @@ plugins:
       name: f5os_dns
       namespace: ''
       version_added: 1.8.0
+    f5os_fdb:
+      description: Manage Layer 2 forwarding database (FDB) entry in the system
+      name: f5os_fdb
+      namespace: ''
+      version_added: 1.15.0
     f5os_interface:
       description: Manage network interfaces on F5OS based systems
       name: f5os_interface
@@ -80,6 +90,11 @@ plugins:
       name: f5os_qkview
       namespace: ''
       version_added: 1.0.0
+    f5os_qos_traffic_priority:
+      description: Manage QoS Traffic Priorities on F5OS
+      name: f5os_qos_traffic_priority
+      namespace: ''
+      version_added: 1.15.0
     f5os_snmp:
       description: Manage SNMP Communities, Users, and Targets using openAPI on F5OS
         based systems
@@ -163,4 +178,4 @@ plugins:
   strategy: {}
   test: {}
   vars: {}
-version: 1.14.1
+version: 1.15.0

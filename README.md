@@ -75,18 +75,19 @@ Please file any bugs, questions, or enhancement requests by using [ansible_issue
 
 ## Your ideas
 
-
 What types of modules do you want created? If you have a use case and can sufficiently describe the behavior 
 you want to see, open an issue and we will hammer out the details.
 
 If you've got the time, consider sending an email that introduces yourself and what you do. 
 We love hearing about how you're using the F5OS collection for Ansible.
 
-> **_NOTE:_** **This repository is a mirror, only issues submissions are accepted.**
+**_NOTE:_** **This repository is a mirror, only issues submissions are accepted.**
+
+- F5 Ansible Module Development Team
 
 ## Copyright
 
-Copyright 2023 F5 Networks Inc.
+Copyright 2025 F5 Networks Inc.
 
 
 ## License

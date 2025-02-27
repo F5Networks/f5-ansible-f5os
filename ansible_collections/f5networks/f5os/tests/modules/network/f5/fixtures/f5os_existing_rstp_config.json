@@ -1,0 +1,113 @@
+{
+    "openconfig-spanning-tree:stp": {
+        "global": {
+            "config": {
+                "enabled-protocol": [
+                    "openconfig-spanning-tree-types:RSTP"
+                ]
+            },
+            "state": {
+                "enabled-protocol": [
+                    "openconfig-spanning-tree-types:RSTP"
+                ]
+            }
+        },
+        "rstp": {
+            "config": {
+                "hello-time": 1,
+                "max-age": 7,
+                "forwarding-delay": 15,
+                "hold-count": 7,
+                "bridge-priority": 28672
+            },
+            "state": {
+                "hello-time": 1,
+                "max-age": 7,
+                "forwarding-delay": 15,
+                "hold-count": 7,
+                "bridge-priority": 28672,
+                "bridge-address": "14:a9:d0:48:14:23",
+                "designated-root-priority": 28672,
+                "designated-root-address": "14:a9:d0:48:14:23",
+                "root-port": 0,
+                "root-cost": 0,
+                "topology-changes": "1",
+                "time-since-topology-change": "3801341"
+            },
+            "interfaces": {
+                "interface": [
+                    {
+                        "name": "1.0",
+                        "config": {
+                            "name": "1.0",
+                            "cost": 1,
+                            "port-priority": 128
+                        },
+                        "state": {
+                            "name": "1.0",
+                            "cost": 1,
+                            "port-priority": 128,
+                            "port-num": 1,
+                            "port-state": "openconfig-spanning-tree-types:BLOCKING",
+                            "designated-root-priority": 8192,
+                            "designated-root-address": "02:1c:73:ff:64:bb",
+                            "designated-cost": 0,
+                            "designated-bridge-priority": 16384,
+                            "designated-bridge-address": "44:4c:a8:26:31:55",
+                            "designated-port-priority": 128,
+                            "designated-port-num": 53,
+                            "forward-transisitions": "1",
+                            "counters": {
+                                "bpdu-sent": "2",
+                                "bpdu-received": "437842"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "mstp": {
+            "config": {
+                "name": "32768:14:a9:d0:48:14:23",
+                "revision": 1,
+                "max-hop": 20,
+                "hello-time": 2,
+                "max-age": 7,
+                "forwarding-delay": 16,
+                "hold-count": 7
+            },
+            "state": {
+                "hold-count": 6
+            }
+        },
+        "interfaces": {
+            "interface": [
+                {
+                    "name": "1.0",
+                    "config": {
+                        "name": "1.0",
+                        "edge-port": "openconfig-spanning-tree-types:EDGE_DISABLE",
+                        "link-type": "SHARED"
+                    },
+                    "state": {
+                        "name": "1.0",
+                        "edge-port": "openconfig-spanning-tree-types:EDGE_DISABLE",
+                        "link-type": "SHARED"
+                    }
+                }
+            ]
+        },
+        "f5-openconfig-spanning-tree:stp": {
+            "config": {
+                "hello-time": 1,
+                "max-age": 6,
+                "forwarding-delay": 15,
+                "hold-count": 6,
+                "bridge-priority": 32768
+            },
+            "state": {
+                "hold-count": 6
+            }
+        }
+    }
+}

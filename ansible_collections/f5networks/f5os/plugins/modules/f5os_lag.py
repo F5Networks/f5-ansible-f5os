@@ -26,12 +26,14 @@ options:
       - Configures multiple VLAN IDs to associate with the Link Aggregation Group.
       - The C(trunk_vlans) parameter is used for tagged traffic.
       - The order of these VLANs is ignored, the module orders the VLANs automatically.
+      - To Delete all Trunk VLANs, use C(trunk_vlans) as [] or skip this parameter.
     type: list
     elements: int
   native_vlan:
     description:
       - Configures the VLAN ID to associate with the Link Aggregation Group.
       - The C(native_vlans) parameter is used for untagged traffic.
+      - To Delete the Native VLAN, skip this parameter.
     type: int
   lag_type:
     description:
@@ -366,7 +368,20 @@ class Difference(object):
             return attr1
 
     @property
+    def native_vlan(self):
+        if not self.want.native_vlan and self.have.native_vlan:
+            return {'native_vlan': None}
+        return self.want.native_vlan if self.want.native_vlan != self.have.native_vlan else None
+
+    @property
     def trunk_vlans(self):
+        want_empty = not self.want.trunk_vlans or self.want.trunk_vlans == []
+        have_empty = not self.have.trunk_vlans or self.have.trunk_vlans == []
+
+        if want_empty and have_empty:
+            return None
+        if want_empty and not have_empty:
+            return []
         return cmp_simple_list(self.want.trunk_vlans, self.have.trunk_vlans)
 
     @property
@@ -549,13 +564,29 @@ class ModuleManager(object):
             self._add_lacp_config()
         return True
 
+    def _build_vlan_config(self, params):
+        vlans = {}
+        trunk_vlans = params.get('trunk_vlans', None)
+        native_vlan = params.get('native_vlan', None)
+
+        if trunk_vlans is not None:
+            vlans['trunk-vlans'] = trunk_vlans
+
+        if native_vlan is not None:
+            vlans['native-vlan'] = native_vlan
+        if not vlans:
+            if trunk_vlans is None and self.want.native_vlan is None:
+                if self.have.trunk_vlans:
+                    vlans['trunk-vlans'] = self.have.trunk_vlans
+                else:
+                    vlans['trunk-vlans'] = []
+
+        return vlans
+
     def update_on_device(self):
         params = self.changes.to_return()
-        vlans = dict()
-        if params.get('trunk_vlans', None):
-            vlans['trunk-vlans'] = params['trunk_vlans']
-        if params.get('native_vlan', None):
-            vlans['native-vlan'] = params['native_vlan']
+        vlans = self._build_vlan_config(params)
+
         if vlans:
             uri = f"/openconfig-interfaces:interfaces/interface={self.want.name}" \
                   f"/openconfig-if-aggregate:aggregation/openconfig-vlan:switched-vlan"

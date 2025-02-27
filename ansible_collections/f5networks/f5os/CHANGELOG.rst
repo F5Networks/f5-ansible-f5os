@@ -4,6 +4,34 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.15.0
+=======
+
+Major Changes
+-------------
+
+- f5os_auth - Depreciated Server Groups and Servers.
+- f5os_auth_server - Added new module f5os_auth_server to manage Server Groups and Servers.
+
+Minor Changes
+-------------
+
+- f5os_fdb - Add support for f5os_fdb module
+- f5os_interface - added support to update Enabled (Interface State), Description, and Forward Error Correction on f5os_interface.
+- f5os_qos_traffic_priority - Add new module, f5os_qos_traffic_priority.
+
+Bugfixes
+--------
+
+- f5os_lag - Issue Fixes - Remove all Vlans (Trunk Vlans, Native Vlans) from Lag.
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_auth_server - Manage Auth Server Groups and Server inside it.
+- f5networks.f5os.f5os_fdb - Manage Layer 2 forwarding database (FDB) entry in the system
+- f5networks.f5os.f5os_qos_traffic_priority - Manage QoS Traffic Priorities on F5OS
+
 v1.14.1
 =======
 

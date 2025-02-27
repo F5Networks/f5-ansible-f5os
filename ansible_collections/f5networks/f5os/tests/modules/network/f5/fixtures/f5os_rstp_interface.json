@@ -1,0 +1,7 @@
+{
+    "openconfig-spanning-tree:config": {
+        "name": "1.0",
+        "edge-port": "openconfig-spanning-tree-types:EDGE_DISABLE",
+        "link-type": "SHARED"
+    }
+}
