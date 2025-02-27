@@ -1,0 +1,39 @@
+{
+    "f5-l2fdb:entry": [
+      {
+        "mac-address": "11:11:11:11:11:12",
+        "vlan": 123,
+        "tag-type": "tag_type_vid",
+        "config": {
+          "mac-address": "11:11:11:11:11:12",
+          "vlan": 123,
+          "tag-type": "tag_type_vid",
+          "vid": 123,
+          "entry-type": "STATIC",
+          "ifh-fields": {
+            "ndi-id": 4095,
+            "mirroring": "disabled"
+          }
+        },
+        "state": {
+          "vlan": 123,
+          "tag-type": "tag_type_vid",
+          "vid": 123,
+          "entry-type": "STATIC",
+          "ifh-fields": {
+            "ndi-id": 4095
+          }
+        },
+        "interface": {
+          "interface-ref": {
+            "config": {
+              "interface": "2/2.0"
+            },
+            "state": {
+              "interface": "2/2.0"
+            }
+          }
+        }
+      }
+    ]
+  }

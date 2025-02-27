@@ -348,6 +348,7 @@ class TestManager(unittest.TestCase):
         mm = ModuleManager(module=module)
         mm.client.platform = 'rSeries Platform'
         mm.exists = Mock(return_value=True)
+        mm.should_update = Mock(return_value=False)
         mm._get_interfaces = Mock(return_value=['1.0'])
         mm.client.get = Mock(side_effect=[
             dict(code=200, contents=load_fixture('load_f5os_lag_interface.json')),

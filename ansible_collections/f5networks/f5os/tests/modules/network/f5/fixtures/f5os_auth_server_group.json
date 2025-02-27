@@ -1,0 +1,44 @@
+{
+    "openconfig-system:server-group": [
+      {
+        "name": "test_server",
+        "config": {
+          "name": "test_server",
+          "type": "openconfig-aaa:TACACS"
+        },
+        "state": {
+          "name": "test_server",
+          "type": "openconfig-aaa:TACACS"
+        },
+        "servers": {
+          "server": [
+            {
+              "address": "2.2.2.2",
+              "config": {
+                "address": "2.2.2.2"
+              },
+              "tacacs": {
+                "config": {
+                  "port": 49,
+                  "secret-key": "$8$cBhdxsEpsuOiwZ33AupKTWCoQTpnRY1Hgxo5E1gae5I="
+                }
+              }
+            },
+            {
+              "address": "3.3.3.3",
+              "config": {
+                "address": "3.3.3.3"
+              },
+              "tacacs": {
+                "config": {
+                  "port": 49,
+                  "secret-key": "$8$b43h8jpcOWfmIx34K7+c365PkhqEVS5YrhxT0zzceNM="
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+  
