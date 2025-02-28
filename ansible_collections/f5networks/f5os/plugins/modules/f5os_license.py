@@ -24,12 +24,13 @@ options:
     type: str
   addon_keys:
     description:
-        - Specifies additional registration keys from a license server for the device license activation.
-        - This parameter is optional when activating a device license.
+      - Specifies additional registration keys from a license server for the device license activation.
+      - This parameter is optional when activating a device license.
     type: list
     elements: str
   license_server:
-    description: Specifies the license server URL.
+    description:
+      - Specifies the license server URL.
     type: str
     default: activate.f5.com
   state:
