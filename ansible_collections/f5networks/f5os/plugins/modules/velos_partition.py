@@ -59,6 +59,18 @@ options:
       - By default, the chassis partition is not associated with any slots.
     type: list
     elements: int
+  configuration_volume:
+    description:
+      - Partition configuration volume size in GB.
+    type: int
+  partition_volume:
+    description:
+      - Partition images volume size in GB
+    type: int
+  shared_volume:
+    description:
+      - Partition shared volume size in GB.
+    type: int
   wait_time:
     description:
       - Max number of seconds to wait after creating a chassis partition for it to
@@ -142,6 +154,9 @@ class Parameters(AnsibleF5Parameters):
     api_map = {
         'iso-version': 'os_version',
         'mgmt-ip': 'mgmt_ip',
+        'configuration-volume': 'configuration_volume',
+        'images-volume': 'images_volume',
+        'shared-volume': 'shared_volume'
     }
 
     api_attributes = [
@@ -150,6 +165,9 @@ class Parameters(AnsibleF5Parameters):
         'iso-version',
         'mgmt-ip',
         'slots',
+        'configuration-volume',
+        'images-volume',
+        'shared-volume',
     ]
 
     returnables = [
@@ -161,6 +179,9 @@ class Parameters(AnsibleF5Parameters):
         'enabled',
         'os_version',
         'slots',
+        'configuration_volume',
+        'images_volume',
+        'shared_volume'
     ]
 
     updatables = [
@@ -172,6 +193,9 @@ class Parameters(AnsibleF5Parameters):
         'enabled',
         'os_version',
         'slots',
+        'configuration_volume',
+        'images_volume',
+        'shared_volume'
     ]
 
 
@@ -207,6 +231,27 @@ class ApiParameters(Parameters):
             return None
         if 'ipv6' in self._values['mgmt_ip'] and self._values['mgmt_ip']['ipv6'] is not None:
             return self._values['mgmt_ip']['ipv6']['gateway']
+
+    @property
+    def configuration_volume(self):
+        if self._values['configuration_volume'] is None:
+            return None
+        else:
+            return self._values['configuration_volume']
+
+    @property
+    def images_volume(self):
+        if self._values['images_volume'] is None:
+            return None
+        else:
+            return self._values['images_volume']
+
+    @property
+    def shared_volume(self):
+        if self._values['shared_volume'] is None:
+            return None
+        else:
+            return self._values['shared_volume']
 
 
 class ModuleParameters(Parameters):
@@ -631,6 +676,9 @@ class ArgumentSpec(object):
             ipv4_mgmt_gateway=dict(),
             ipv6_mgmt_address=dict(),
             ipv6_mgmt_gateway=dict(),
+            configuration_volume=dict(type='int'),
+            images_volume=dict(type='int'),
+            shared_volume=dict(type='int'),
             os_version=dict(),
             slots=dict(
                 type='list',
