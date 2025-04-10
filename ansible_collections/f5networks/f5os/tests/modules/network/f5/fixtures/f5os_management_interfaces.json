@@ -1,0 +1,65 @@
+{
+    "f5-mgmt-ip:mgmt-ip": {
+      "config": {
+        "dhcp-enabled": false,
+        "ipv4": {
+          "controller-1": {
+            "address": "10.144.140.121"
+          },
+          "controller-2": {
+            "address": "10.144.140.122"
+          },
+          "floating": {
+            "address": "10.144.140.120"
+          },
+          "prefix-length": 20,
+          "gateway": "10.144.140.254"
+        },
+        "ipv6": {
+          "controller-1": {
+            "address": "::"
+          },
+          "controller-2": {
+            "address": "::"
+          },
+          "floating": {
+            "address": "::"
+          },
+          "prefix-length": 0,
+          "gateway": "::"
+        }
+      },
+      "state": {
+        "fixed-addresses": {
+          "fixed-address": [
+            {
+              "controller": 1,
+              "ipv4-address": "10.144.140.121",
+              "ipv4-prefix-length": 20,
+              "ipv4-gateway": "10.144.140.254",
+              "ipv6-address": "::",
+              "ipv6-prefix-length": 0,
+              "ipv6-gateway": "::",
+              "mac-address": "00:94:a1:8f:bc:7d"
+            },
+            {
+              "controller": 2,
+              "ipv4-address": "10.144.140.122",
+              "ipv4-prefix-length": 20,
+              "ipv4-gateway": "10.144.140.254",
+              "ipv6-address": "::",
+              "ipv6-prefix-length": 0,
+              "ipv6-gateway": "::",
+              "mac-address": "00:94:a1:8f:bc:7e"
+            }
+          ]
+        },
+        "floating": {
+          "ipv4-address": "10.144.140.120",
+          "ipv6-address": "::",
+          "mac-address": "00:94:a1:8f:bc:7c"
+        }
+      }
+    }
+  }
+  

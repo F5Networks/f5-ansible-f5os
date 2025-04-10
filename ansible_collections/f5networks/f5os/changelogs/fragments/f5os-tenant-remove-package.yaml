@@ -1,0 +1,4 @@
+---
+major_changes:
+  - removed unused packages from collections
+  - f5os_tenant - Made node paramter as required, and removed contrsaint on vCPU.

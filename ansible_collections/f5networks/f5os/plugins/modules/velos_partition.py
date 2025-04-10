@@ -63,7 +63,7 @@ options:
     description:
       - Partition configuration volume size in GB.
     type: int
-  partition_volume:
+  images_volume:
     description:
       - Partition images volume size in GB
     type: int

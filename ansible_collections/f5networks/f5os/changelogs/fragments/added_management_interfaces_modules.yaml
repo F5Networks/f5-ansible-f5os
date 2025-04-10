@@ -1,0 +1,4 @@
+---
+minor_changes:
+  - velos_controller_management_interfaces - Added Management Interfaces Module for Velos Controller.
+  - rseries_management_interfaces - Added Management Interfaces Module for rSeries.

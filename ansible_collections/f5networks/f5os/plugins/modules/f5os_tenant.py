@@ -34,9 +34,10 @@ options:
     description:
       - List of integers. Specifies on which blade C(nodes) the tenants are deployed.
       - Required for create operations.
-      - For single-blade platforms like rSeries, provide only the value of 1.
+      - For single-blade platforms like B(rSeries), provide only the value of B(1).
     type: list
     elements: int
+    required: True
   mgmt_ip:
     description:
       - IP address used to connect to the deployed tenant.
@@ -63,20 +64,8 @@ options:
     description:
       - The number of vCPUs added to the tenant.
       - Required for create operations.
+      - For Details on max CPU cores and sizing, see the F5 documentation L(F5 VELOS Performance and Sizing,https://clouddocs.f5.com/training/community/velos-training/html/velos_performance_and_sizing.html). # noqa: E501
     type: int
-    choices:
-      - 1
-      - 2
-      - 4
-      - 6
-      - 8
-      - 10
-      - 12
-      - 14
-      - 16
-      - 18
-      - 20
-      - 22
   memory:
     description:
       - The amount of memory (in KB) provided to the tenant.
@@ -158,12 +147,12 @@ EXAMPLES = r'''
 - name: Create tenant 'foo'
   f5os_tenant:
     name: foo
-    image_name: BIGIP-bigip14.1.x-miro-14.1.2.3-0.0.182.ALL-VELOS.qcow2.zip
+    image_name: BIGIP-17.5.0-0.0.15.ALL-F5OS.qcow2.zip.bundle
     nodes:
       - 1
-    mgmt_ip: 10.144.3.17
-    mgmt_prefix: 19
-    mgmt_gateway: 10.146.127.254
+    mgmt_ip: 10.10.10.10
+    mgmt_prefix: 24
+    mgmt_gateway: 10.10.10.1
     vlans: [245]
     cpu_cores: 2
     memory: 4096
@@ -539,7 +528,6 @@ class ModuleManager(object):
                     changed.update(change)
                 else:
                     changed[k] = change
-        # raise F5ModuleError(f"have: {self.have.__dict__} \n want: {self.want.__dict__} \n changed: {changed}")
         if changed:
             self.changes = UsableChanges(params=changed)
             return True
@@ -629,7 +617,6 @@ class ModuleManager(object):
 
     def create_on_device(self):
         params = self.changes.api_params()
-        # raise F5ModuleError(f"params: {params}")
         payload = dict(tenant=[dict(name=self.want.name, config=params)])
 
         uri = "/f5-tenants:tenants"
@@ -641,7 +628,6 @@ class ModuleManager(object):
 
     def update_on_device(self):
         params = self.changes.api_params()
-        # raise F5ModuleError(f"have: {params}")
         keys = list(params.keys())
 
         if 'running-state' in keys:
@@ -685,14 +671,13 @@ class ArgumentSpec(object):
             image_name=dict(),
             type=dict(type='str'),
             deployment_file=dict(type='str'),
-            nodes=dict(type='list', elements='int'),
+            nodes=dict(type='list', elements='int', required=True),
             mgmt_ip=dict(),
             mgmt_prefix=dict(type='int'),
             mgmt_gateway=dict(),
             vlans=dict(type='list', elements='int'),
             cpu_cores=dict(
                 type='int',
-                choices=[1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]
             ),
             memory=dict(type='int'),
             virtual_disk_size=dict(type='int'),

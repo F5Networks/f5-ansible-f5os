@@ -285,6 +285,7 @@ class TestManager(unittest.TestCase):
     def test_tenant_update(self, *args):
         set_module_args(dict(
             name='foo',
+            nodes=[1],
             vlans=[444, 333],
             running_state='deployed',
         ))
@@ -314,6 +315,7 @@ class TestManager(unittest.TestCase):
     def test_tenant_update_no_change(self, *args):
         set_module_args(dict(
             name='foo',
+            nodes=[1],
             state='present'
         ))
 
@@ -333,6 +335,7 @@ class TestManager(unittest.TestCase):
     def test_tenant_update_fails_error_response(self, *args):
         set_module_args(dict(
             name='foo',
+            nodes=[1],
             vlans=[444, 333],
             running_state='deployed',
         ))
@@ -357,6 +360,7 @@ class TestManager(unittest.TestCase):
     def test_tenant_remove(self, *args):
         set_module_args(dict(
             name='foo',
+            nodes=[1],
             state='absent'
         ))
 
@@ -379,6 +383,7 @@ class TestManager(unittest.TestCase):
     def test_tenant_remove_error_response(self, *args):
         set_module_args(dict(
             name='foo',
+            nodes=[1],
             state='absent'
         ))
 
@@ -402,6 +407,7 @@ class TestManager(unittest.TestCase):
     def test_velos_controller_raises(self, *args):
         set_module_args(dict(
             name='foobar',
+            nodes=[1],
             state='absent'
         ))
 
@@ -423,6 +429,7 @@ class TestManager(unittest.TestCase):
     def test_main_function_success(self, *args):
         set_module_args(dict(
             name='foobar',
+            nodes=[1],
             state='present',
         ))
 
@@ -438,6 +445,7 @@ class TestManager(unittest.TestCase):
     def test_main_function_failed(self, *args):
         set_module_args(dict(
             name='foobar',
+            nodes=[1],
             state='absent',
         ))
 
@@ -450,6 +458,7 @@ class TestManager(unittest.TestCase):
     def test_device_call_functions(self):
         set_module_args(dict(
             name="foobar",
+            nodes=[1],
             state='present'
         ))
 
