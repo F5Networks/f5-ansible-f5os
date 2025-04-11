@@ -1,0 +1,15 @@
+{
+    "f5-qos:meter-group": [
+        {
+            "name": "test_meter",
+            "meters": {
+                "traffic-priority": [
+                    {
+                        "name": "dummy2",
+                        "weight": 1
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -4,6 +4,29 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.16.0
+=======
+
+Major Changes
+-------------
+
+- f5os_tenant - Made node paramter as required, and removed contrsaint on vCPU.
+- removed unused packages from collections
+
+Minor Changes
+-------------
+
+- rseries_management_interfaces - Added Management Interfaces Module for rSeries.
+- velos_controller_management_interfaces - Added Management Interfaces Module for Velos Controller.
+- velos_partition - Added configuration-volume, images-volume & shared-volume fields to Velos Partition Module.
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_qos_mapping - Manage QoS Mappings on F5OS
+- f5networks.f5os.rseries_management_interfaces - Manage DHCP, IPv4 and IPv6 on F5OS rSeries devices
+- f5networks.f5os.velos_controller_management_interfaces - Manage DHCP, IPv4 and IPv6 on F5OS devices
+
 v1.15.0
 =======
 

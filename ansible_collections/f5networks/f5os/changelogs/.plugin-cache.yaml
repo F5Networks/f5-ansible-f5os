@@ -90,6 +90,16 @@ plugins:
       name: f5os_qkview
       namespace: ''
       version_added: 1.0.0
+    f5os_qos_mapping:
+      description: Manage QoS Mappings on F5OS
+      name: f5os_qos_mapping
+      namespace: ''
+      version_added: 1.16.0
+    f5os_qos_meter_group:
+      description: Manage QoS meter groups on F5OS
+      name: f5os_qos_meter_group
+      namespace: ''
+      version_added: 1.0.0
     f5os_qos_traffic_priority:
       description: Manage QoS Traffic Priorities on F5OS
       name: f5os_qos_traffic_priority
@@ -151,6 +161,16 @@ plugins:
       name: f5os_vlan
       namespace: ''
       version_added: 1.0.0
+    rseries_management_interfaces:
+      description: Manage DHCP, IPv4 and IPv6 on F5OS rSeries devices
+      name: rseries_management_interfaces
+      namespace: ''
+      version_added: 1.16.0
+    velos_controller_management_interfaces:
+      description: Manage DHCP, IPv4 and IPv6 on F5OS devices
+      name: velos_controller_management_interfaces
+      namespace: ''
+      version_added: 1.16.0
     velos_partition:
       description: Manage VELOS chassis partitions
       name: velos_partition
@@ -178,4 +198,4 @@ plugins:
   strategy: {}
   test: {}
   vars: {}
-version: 1.15.0
+version: 1.16.0

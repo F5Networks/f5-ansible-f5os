@@ -24,12 +24,13 @@ options:
     type: str
   addon_keys:
     description:
-        - Specifies additional registration keys from a license server for the device license activation.
-        - This parameter is optional when activating a device license.
+      - Specifies additional registration keys from a license server for the device license activation.
+      - This parameter is optional when activating a device license.
     type: list
     elements: str
   license_server:
-    description: Specifies the license server URL.
+    description:
+      - Specifies the license server URL.
     type: str
     default: activate.f5.com
   state:
@@ -45,6 +46,7 @@ options:
 notes:
   - License deactivation/Revokation is not supported for F5OS devices/not supported in this module.
   - This module supports only automatic license activation using the registration key.
+  - license can't be installed on Standby
 author:
   - Ravinder Reddy (@chinthalapalli)
 '''
@@ -335,6 +337,8 @@ class ModuleManager(object):
             return False
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
+        if 'registration-key' not in response['contents']['f5-system-licensing:licensing']['state']:
+            return False
         if response['contents']['f5-system-licensing:licensing']['state']['registration-key']['base'] != self.want.registration_key:
             return False
         # Define a regex pattern to capture the License end date

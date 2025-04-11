@@ -1,0 +1,38 @@
+{
+    "f5-mgmt-ip:mgmt-ip": {
+      "config": {
+        "dhcp-enabled": false,
+        "ipv4": {
+          "system": {
+            "address": "10.144.140.80"
+          },
+          "prefix-length": 24,
+          "gateway": "10.144.140.254"
+        },
+        "ipv6": {
+          "system": {
+            "address": "2001:db8:1::2"
+          },
+          "prefix-length": 66,
+          "gateway": "2001:db8:1::1"
+        }
+      },
+      "state": {
+        "ipv4": {
+          "system": {
+            "address": "10.144.140.80"
+          },
+          "prefix-length": 24,
+          "gateway": "10.144.140.254"
+        },
+        "ipv6": {
+          "system": {
+            "address": "2001:db8:1::2"
+          },
+          "prefix-length": 66,
+          "gateway": "2001:db8:1::1"
+        }
+      }
+    }
+  }
+  

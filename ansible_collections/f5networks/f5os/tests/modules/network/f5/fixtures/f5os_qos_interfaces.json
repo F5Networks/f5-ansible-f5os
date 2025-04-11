@@ -1,0 +1,24 @@
+{
+    "f5-qos:interface": [
+        {
+            "name": "1.0",
+            "meter-group": "test_meter"
+        },
+        {
+            "name": "2/1.0",
+            "meter-group": "tmg"
+        },
+        {
+            "name": "2/2.0",
+            "meter-group": "tmg"
+        },
+        {
+            "name": "Arista_second",
+            "meter-group": "testmg"
+        },
+        {
+            "name": "lag-prod",
+            "meter-group": "test_meter"
+        }
+    ]
+}
