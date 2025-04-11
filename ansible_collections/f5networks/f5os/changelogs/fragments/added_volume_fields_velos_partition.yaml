@@ -1,3 +1,0 @@
----
-minor_changes:
-  - velos_partition - Added configuration-volume, images-volume & shared-volume fields to Velos Partition Module.

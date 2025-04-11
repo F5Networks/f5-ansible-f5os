@@ -188,6 +188,32 @@ releases:
       name: f5os_qos_traffic_priority
       namespace: ''
     release_date: '2025-02-27'
+  1.16.0:
+    changes:
+      major_changes:
+      - f5os_tenant - Made node paramter as required, and removed contrsaint on vCPU.
+      - removed unused packages from collections
+      minor_changes:
+      - rseries_management_interfaces - Added Management Interfaces Module for rSeries.
+      - velos_controller_management_interfaces - Added Management Interfaces Module
+        for Velos Controller.
+      - velos_partition - Added configuration-volume, images-volume & shared-volume
+        fields to Velos Partition Module.
+    fragments:
+    - added_management_interfaces_modules.yaml
+    - added_volume_fields_velos_partition.yaml
+    - f5os-tenant-remove-package.yaml
+    modules:
+    - description: Manage QoS Mappings on F5OS
+      name: f5os_qos_mapping
+      namespace: ''
+    - description: Manage DHCP, IPv4 and IPv6 on F5OS rSeries devices
+      name: rseries_management_interfaces
+      namespace: ''
+    - description: Manage DHCP, IPv4 and IPv6 on F5OS devices
+      name: velos_controller_management_interfaces
+      namespace: ''
+    release_date: '2025-04-11'
   1.2.0:
     modules:
     - description: Manage F5OS config backups.

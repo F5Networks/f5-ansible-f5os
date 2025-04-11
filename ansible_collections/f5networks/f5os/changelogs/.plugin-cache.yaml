@@ -1,0 +1,201 @@
+objects:
+  role: {}
+plugins:
+  become: {}
+  cache: {}
+  callback: {}
+  cliconf: {}
+  connection: {}
+  filter: {}
+  httpapi:
+    f5os:
+      description: HttpApi Plugin for F5OS devices
+      name: f5os
+      version_added: 1.0.0
+  inventory: {}
+  lookup: {}
+  module:
+    f5os_allowed_ips:
+      description: Manage allowed IPs using openAPI on F5OS based systems
+      name: f5os_allowed_ips
+      namespace: ''
+      version_added: 1.9.0
+    f5os_auth:
+      description: Manage authentication settings
+      name: f5os_auth
+      namespace: ''
+      version_added: 1.10.0
+    f5os_auth_server:
+      description: Manage Auth Server Groups and Server inside it.
+      name: f5os_auth_server
+      namespace: ''
+      version_added: 1.15.0
+    f5os_config_backup:
+      description: Manage F5OS config backups.
+      name: f5os_config_backup
+      namespace: ''
+      version_added: 1.2.0
+    f5os_device_info:
+      description: Collect information from F5OS devices
+      name: f5os_device_info
+      namespace: ''
+      version_added: 1.0.0
+    f5os_dns:
+      description: Manage DNS on F5OS Devices
+      name: f5os_dns
+      namespace: ''
+      version_added: 1.8.0
+    f5os_fdb:
+      description: Manage Layer 2 forwarding database (FDB) entry in the system
+      name: f5os_fdb
+      namespace: ''
+      version_added: 1.15.0
+    f5os_interface:
+      description: Manage network interfaces on F5OS based systems
+      name: f5os_interface
+      namespace: ''
+      version_added: 1.0.0
+    f5os_lag:
+      description: Manage LAG interfaces on F5OS based systems
+      name: f5os_lag
+      namespace: ''
+      version_added: 1.0.0
+    f5os_license:
+      description: Manage F5OS license activation and deactivation.
+      name: f5os_license
+      namespace: ''
+      version_added: 1.10.0
+    f5os_lldp_config:
+      description: Manage LLDP config
+      name: f5os_lldp_config
+      namespace: ''
+      version_added: 1.8.0
+    f5os_logging:
+      description: Manage logging settings
+      name: f5os_logging
+      namespace: ''
+      version_added: 1.10.0
+    f5os_ntp_server:
+      description: Manage NTP servers on F5OS based systems
+      name: f5os_ntp_server
+      namespace: ''
+      version_added: 1.8.0
+    f5os_primarykey:
+      description: Manage F5OS Devices Primary-key Setting.
+      name: f5os_primarykey
+      namespace: ''
+      version_added: 1.11.0
+    f5os_qkview:
+      description: Manage Generation of qkview file
+      name: f5os_qkview
+      namespace: ''
+      version_added: 1.0.0
+    f5os_qos_mapping:
+      description: Manage QoS Mappings on F5OS
+      name: f5os_qos_mapping
+      namespace: ''
+      version_added: 1.16.0
+    f5os_qos_meter_group:
+      description: Manage QoS meter groups on F5OS
+      name: f5os_qos_meter_group
+      namespace: ''
+      version_added: 1.0.0
+    f5os_qos_traffic_priority:
+      description: Manage QoS Traffic Priorities on F5OS
+      name: f5os_qos_traffic_priority
+      namespace: ''
+      version_added: 1.15.0
+    f5os_snmp:
+      description: Manage SNMP Communities, Users, and Targets using openAPI on F5OS
+        based systems
+      name: f5os_snmp
+      namespace: ''
+      version_added: 1.9.0
+    f5os_stp_config:
+      description: Manage STP config
+      name: f5os_stp_config
+      namespace: ''
+      version_added: 1.8.0
+    f5os_system:
+      description: Manage generic system settings
+      name: f5os_system
+      namespace: ''
+      version_added: 1.10.0
+    f5os_system_image_import:
+      description: Manage F5OS System image import.
+      name: f5os_system_image_import
+      namespace: ''
+      version_added: 1.11.0
+    f5os_system_image_install:
+      description: Manage F5OS system software installation.
+      name: f5os_system_image_install
+      namespace: ''
+      version_added: 1.11.0
+    f5os_tenant:
+      description: Manage F5OS tenants
+      name: f5os_tenant
+      namespace: ''
+      version_added: 1.0.0
+    f5os_tenant_image:
+      description: Manage F5OS tenant images
+      name: f5os_tenant_image
+      namespace: ''
+      version_added: 1.0.0
+    f5os_tenant_wait:
+      description: Wait for a F5OS tenant condition before continuing
+      name: f5os_tenant_wait
+      namespace: ''
+      version_added: 1.0.0
+    f5os_tls_cert_key:
+      description: Manage TLS certificate and key on F5OS devices.
+      name: f5os_tls_cert_key
+      namespace: ''
+      version_added: 1.11.0
+    f5os_user:
+      description: Manage Users and roles on F5OS based systems
+      name: f5os_user
+      namespace: ''
+      version_added: 1.9.0
+    f5os_vlan:
+      description: Manage VLANs on F5OS based systems
+      name: f5os_vlan
+      namespace: ''
+      version_added: 1.0.0
+    rseries_management_interfaces:
+      description: Manage DHCP, IPv4 and IPv6 on F5OS rSeries devices
+      name: rseries_management_interfaces
+      namespace: ''
+      version_added: 1.16.0
+    velos_controller_management_interfaces:
+      description: Manage DHCP, IPv4 and IPv6 on F5OS devices
+      name: velos_controller_management_interfaces
+      namespace: ''
+      version_added: 1.16.0
+    velos_partition:
+      description: Manage VELOS chassis partitions
+      name: velos_partition
+      namespace: ''
+      version_added: 1.0.0
+    velos_partition_change_password:
+      description: Provides access to VELOS chassis partition user authentication
+        methods
+      name: velos_partition_change_password
+      namespace: ''
+      version_added: 1.0.0
+    velos_partition_image:
+      description: Manage VELOS chassis partition images
+      name: velos_partition_image
+      namespace: ''
+      version_added: 1.0.0
+    velos_partition_wait:
+      description: Wait for a VELOS chassis partition to match a condition before
+        continuing
+      name: velos_partition_wait
+      namespace: ''
+      version_added: 1.0.0
+  netconf: {}
+  shell: {}
+  strategy: {}
+  test: {}
+  vars: {}
+version: 1.16.0

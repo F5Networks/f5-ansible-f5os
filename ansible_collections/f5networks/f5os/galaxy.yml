@@ -1,7 +1,6 @@
 authors:
-  - Ravinder Reddy (@chinthalapalli)
-  - Rohit Upadhyay (@urohit011)
   - Wojciech Wypior (@wojtek0806)
+  - Rohit Upadhyay (@urohit011)
 dependencies:
   ansible.netcommon: ">=2.0.0"
 description: F5OS based Collection for Ansible
@@ -31,4 +30,4 @@ tags:
   - networking
   - rseries
   - velos
-version: 1.16.0-devel
+version: 1.16.0
