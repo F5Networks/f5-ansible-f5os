@@ -91,7 +91,10 @@ class HttpApi(HttpApiBase):
         body = kwargs.pop('payload', None)
         method = kwargs.pop('method', None)
         port = self.connection.get_option('port')
-        url = url.replace(ROOT, '/api/data') if port == 443 else url
+        if "/restconf/operations" in url:
+            url = url.replace('/restconf/operations', '/api/operations') if port == 443 else url
+        else:
+            url = url.replace(ROOT, '/api/data') if port == 443 else url
         # allow for empty json to be passed as payload, useful for some endpoints
         data = json.dumps(body) if body or body == {} else None
         retries = 3

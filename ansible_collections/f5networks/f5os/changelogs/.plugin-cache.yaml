@@ -136,6 +136,11 @@ plugins:
       name: f5os_tenant
       namespace: ''
       version_added: 1.0.0
+    f5os_tenant_console_enable:
+      description: Manage tenant-console user access on F5 devices via RESTCONF/OpenApi
+      name: f5os_tenant_console_enable
+      namespace: ''
+      version_added: 1.17.0
     f5os_tenant_image:
       description: Manage F5OS tenant images
       name: f5os_tenant_image
@@ -156,6 +161,11 @@ plugins:
       name: f5os_user
       namespace: ''
       version_added: 1.9.0
+    f5os_user_password_change:
+      description: Change passwords for F5OS user accounts
+      name: f5os_user_password_change
+      namespace: ''
+      version_added: 1.17.0
     f5os_vlan:
       description: Manage VLANs on F5OS based systems
       name: f5os_vlan
@@ -198,4 +208,4 @@ plugins:
   strategy: {}
   test: {}
   vars: {}
-version: 1.37.0
+version: 1.18.0

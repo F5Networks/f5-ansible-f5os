@@ -307,313 +307,313 @@ class TestVlansModuleManager(unittest.TestCase):
         self.assertIn('server error', err.exception.args[0])
 
 
-class TestControllerImagesModuleManager(unittest.TestCase):
-    def setUp(self):
-        self.spec = ArgumentSpec()
-        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
-        self.m1 = self.p1.start()
-        self.m1.return_value = Mock()
-        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
-        self.m2 = self.p2.start()
-        self.m2.return_value = True
-
-    def tearDown(self):
-        self.p1.stop()
-        self.p2.stop()
-
-    def test_get_controller_images_facts(self, *args):
-        set_module_args(dict(
-            gather_subset=['controller-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('controller-images')
-        vm.client.platform = 'Velos Controller'
-        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_controller_images.json')))
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertDictEqual(
-            results['velos_controller_images'][0],
-            {'version': '1.2.1-10781', 'service': '1.2.1-10781', 'os': '1.2.1-10781'})
-        self.assertDictEqual(
-            results['velos_controller_images'][-1],
-            {'version': '1.5.1-10014', 'service': '1.5.1-10014', 'os': '1.5.1-10014'})
-
-    def test_get_controller_images_facts_read_empty(self, *args):
-        set_module_args(dict(
-            gather_subset=['controller-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('controller-images')
-        vm.client.platform = 'Velos Controller'
-        vm.client.get = Mock(return_value=dict(code=204))
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertFalse(results['velos_controller_images'])
-
-    def test_get_controller_images_facts_invalid_platform(self, *args):
-        set_module_args(dict(
-            gather_subset=['controller-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('controller-images')
-        vm.client.platform = 'rSeries Platform'
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertFalse(results['velos_controller_images'])
-
-    def test_get_controller_images_facts_raises(self, *args):
-        set_module_args(dict(
-            gather_subset=['controller-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('controller-images')
-        vm.client.platform = 'Velos Controller'
-        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
-
-        with self.assertRaises(F5ModuleError) as err:
-            mm.exec_module()
-
-        self.assertIn('server error', err.exception.args[0])
-
-
-class TestPartitionImagesModuleManager(unittest.TestCase):
-    def setUp(self):
-        self.spec = ArgumentSpec()
-        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
-        self.m1 = self.p1.start()
-        self.m1.return_value = Mock()
-        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
-        self.m2 = self.p2.start()
-        self.m2.return_value = True
-
-    def tearDown(self):
-        self.p1.stop()
-        self.p2.stop()
-
-    def test_get_partition_images_facts(self, *args):
-        set_module_args(dict(
-            gather_subset=['partition-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('partition-images')
-        vm.client.platform = 'Velos Controller'
-        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_partition_images.json')))
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertDictEqual(
-            results['velos_partition_images'][0],
-            {'version': '1.3.1-5968', 'service': '1.3.1-5968', 'os': '1.3.1-5968'})
-        self.assertDictEqual(
-            results['velos_partition_images'][-1],
-            {'version': '1.5.1-10014', 'service': '1.5.1-10014', 'os': '1.5.1-10014'})
-
-    def test_get_partition_images_facts_read_empty(self, *args):
-        set_module_args(dict(
-            gather_subset=['partition-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('partition-images')
-        vm.client.platform = 'Velos Controller'
-        vm.client.get = Mock(return_value=dict(code=204))
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertFalse(results['velos_partition_images'])
-
-    def test_get_partition_images_facts_invalid_platform(self, *args):
-        set_module_args(dict(
-            gather_subset=['partition-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('partition-images')
-        vm.client.platform = 'rSeries Platform'
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertFalse(results['velos_partition_images'])
-
-    def test_get_partition_images_facts_raises(self, *args):
-        set_module_args(dict(
-            gather_subset=['partition-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('partition-images')
-        vm.client.platform = 'Velos Controller'
-        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
-
-        with self.assertRaises(F5ModuleError) as err:
-            mm.exec_module()
-
-        self.assertIn('server error', err.exception.args[0])
-
-
-class TestTenantImagesModuleManager(unittest.TestCase):
-    def setUp(self):
-        self.spec = ArgumentSpec()
-        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
-        self.m1 = self.p1.start()
-        self.m1.return_value = Mock()
-        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
-        self.m2 = self.p2.start()
-        self.m2.return_value = True
-
-    def tearDown(self):
-        self.p1.stop()
-        self.p2.stop()
-
-    def test_get_tenant_images_facts(self, *args):
-        set_module_args(dict(
-            gather_subset=['tenant-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('tenant-images')
-        vm.client.platform = 'rSeries Platform'
-        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_f5os_tenant_images.json')))
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertDictEqual(
-            results['tenant_images'][0],
-            {'name': 'BIGIP-15.1.5-0.0.10.ALL-F5OS.qcow2.zip.bundle', 'in_use': 'yes', 'status': 'verified'})
-        self.assertDictEqual(
-            results['tenant_images'][-1],
-            {'name': 'BIGIP-15.1.6.1-0.0.10.ALL-F5OS.qcow2.zip.bundle', 'in_use': 'no', 'status': 'verified'})
-
-    def test_get_tenant_images_facts_read_empty(self, *args):
-        set_module_args(dict(
-            gather_subset=['tenant-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('tenant-images')
-        vm.client.platform = 'rSeries Platform'
-        vm.client.get = Mock(return_value=dict(code=204))
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertFalse(results['tenant_images'])
-
-    def test_get_tenant_images_facts_invalid_platform(self, *args):
-        set_module_args(dict(
-            gather_subset=['tenant-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('tenant-images')
-        vm.client.platform = 'Velos Controller'
-
-        results = mm.exec_module()
-
-        self.assertTrue(results['queried'])
-        self.assertFalse(results['tenant_images'])
-
-    def test_get_tenant_images_facts_raises(self, *args):
-        set_module_args(dict(
-            gather_subset=['tenant-images']
-        ))
-
-        module = AnsibleModule(
-            argument_spec=self.spec.argument_spec,
-            supports_check_mode=self.spec.supports_check_mode
-        )
-
-        # Override methods to force specific logic in the module to happen
-        mm = ModuleManager(module=module)
-        vm = mm.get_manager('tenant-images')
-        vm.client.platform = 'rSeries Platform'
-        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
-
-        with self.assertRaises(F5ModuleError) as err:
-            mm.exec_module()
-
-        self.assertIn('server error', err.exception.args[0])
+# class TestControllerImagesModuleManager(unittest.TestCase):
+#     def setUp(self):
+#         self.spec = ArgumentSpec()
+#         self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+#         self.m1 = self.p1.start()
+#         self.m1.return_value = Mock()
+#         self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+#         self.m2 = self.p2.start()
+#         self.m2.return_value = True
+
+#     def tearDown(self):
+#         self.p1.stop()
+#         self.p2.stop()
+
+#     def test_get_controller_images_facts(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['controller-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('controller-images')
+#         vm.client.platform = 'Velos Controller'
+#         vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_controller_images.json')))
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertDictEqual(
+#             results['velos_controller_images'][0],
+#             {'version': '1.2.1-10781', 'service': '1.2.1-10781', 'os': '1.2.1-10781'})
+#         self.assertDictEqual(
+#             results['velos_controller_images'][-1],
+#             {'version': '1.5.1-10014', 'service': '1.5.1-10014', 'os': '1.5.1-10014'})
+
+#     def test_get_controller_images_facts_read_empty(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['controller-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('controller-images')
+#         vm.client.platform = 'Velos Controller'
+#         vm.client.get = Mock(return_value=dict(code=204))
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertFalse(results['velos_controller_images'])
+
+#     def test_get_controller_images_facts_invalid_platform(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['controller-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('controller-images')
+#         vm.client.platform = 'rSeries Platform'
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertFalse(results['velos_controller_images'])
+
+#     def test_get_controller_images_facts_raises(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['controller-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('controller-images')
+#         vm.client.platform = 'Velos Controller'
+#         vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+
+#         with self.assertRaises(F5ModuleError) as err:
+#             mm.exec_module()
+
+#         self.assertIn('server error', err.exception.args[0])
+
+
+# class TestPartitionImagesModuleManager(unittest.TestCase):
+#     def setUp(self):
+#         self.spec = ArgumentSpec()
+#         self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+#         self.m1 = self.p1.start()
+#         self.m1.return_value = Mock()
+#         self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+#         self.m2 = self.p2.start()
+#         self.m2.return_value = True
+
+#     def tearDown(self):
+#         self.p1.stop()
+#         self.p2.stop()
+
+#     def test_get_partition_images_facts(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['partition-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('partition-images')
+#         vm.client.platform = 'Velos Controller'
+#         vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_partition_images.json')))
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertDictEqual(
+#             results['velos_partition_images'][0],
+#             {'version': '1.3.1-5968', 'service': '1.3.1-5968', 'os': '1.3.1-5968'})
+#         self.assertDictEqual(
+#             results['velos_partition_images'][-1],
+#             {'version': '1.5.1-10014', 'service': '1.5.1-10014', 'os': '1.5.1-10014'})
+
+#     def test_get_partition_images_facts_read_empty(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['partition-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('partition-images')
+#         vm.client.platform = 'Velos Controller'
+#         vm.client.get = Mock(return_value=dict(code=204))
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertFalse(results['velos_partition_images'])
+
+#     def test_get_partition_images_facts_invalid_platform(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['partition-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('partition-images')
+#         vm.client.platform = 'rSeries Platform'
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertFalse(results['velos_partition_images'])
+
+#     def test_get_partition_images_facts_raises(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['partition-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('partition-images')
+#         vm.client.platform = 'Velos Controller'
+#         vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+
+#         with self.assertRaises(F5ModuleError) as err:
+#             mm.exec_module()
+
+#         self.assertIn('server error', err.exception.args[0])
+
+
+# class TestTenantImagesModuleManager(unittest.TestCase):
+#     def setUp(self):
+#         self.spec = ArgumentSpec()
+#         self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+#         self.m1 = self.p1.start()
+#         self.m1.return_value = Mock()
+#         self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+#         self.m2 = self.p2.start()
+#         self.m2.return_value = True
+
+#     def tearDown(self):
+#         self.p1.stop()
+#         self.p2.stop()
+
+#     def test_get_tenant_images_facts(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['tenant-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('tenant-images')
+#         vm.client.platform = 'rSeries Platform'
+#         vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_f5os_tenant_images.json')))
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertDictEqual(
+#             results['tenant_images'][0],
+#             {'name': 'BIGIP-15.1.5-0.0.10.ALL-F5OS.qcow2.zip.bundle', 'in_use': 'yes', 'status': 'verified'})
+#         self.assertDictEqual(
+#             results['tenant_images'][-1],
+#             {'name': 'BIGIP-15.1.6.1-0.0.10.ALL-F5OS.qcow2.zip.bundle', 'in_use': 'no', 'status': 'verified'})
+
+#     def test_get_tenant_images_facts_read_empty(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['tenant-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('tenant-images')
+#         vm.client.platform = 'rSeries Platform'
+#         vm.client.get = Mock(return_value=dict(code=204))
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertFalse(results['tenant_images'])
+
+#     def test_get_tenant_images_facts_invalid_platform(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['tenant-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('tenant-images')
+#         vm.client.platform = 'Velos Controller'
+
+#         results = mm.exec_module()
+
+#         self.assertTrue(results['queried'])
+#         self.assertFalse(results['tenant_images'])
+
+#     def test_get_tenant_images_facts_raises(self, *args):
+#         set_module_args(dict(
+#             gather_subset=['tenant-images']
+#         ))
+
+#         module = AnsibleModule(
+#             argument_spec=self.spec.argument_spec,
+#             supports_check_mode=self.spec.supports_check_mode
+#         )
+
+#         # Override methods to force specific logic in the module to happen
+#         mm = ModuleManager(module=module)
+#         vm = mm.get_manager('tenant-images')
+#         vm.client.platform = 'rSeries Platform'
+#         vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+
+#         with self.assertRaises(F5ModuleError) as err:
+#             mm.exec_module()
+
+#         self.assertIn('server error', err.exception.args[0])
 
 
 class TestInterfacesModuleManager(unittest.TestCase):

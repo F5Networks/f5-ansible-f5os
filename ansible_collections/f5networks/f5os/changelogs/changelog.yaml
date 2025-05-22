@@ -214,6 +214,17 @@ releases:
       name: velos_controller_management_interfaces
       namespace: ''
     release_date: '2025-04-11'
+  1.18.0:
+    changes:
+      major_changes:
+      - f5os_device_info - Collect inforation about partitions on velos controller
+      - f5os_device_info - Collect information about tenants on velos partititons
+      - f5os_tenant_console_enable - Enable tenant console user access
+      - f5os_user_password_change - Module to change the password of local user
+    fragments:
+    - f5os-device-info-changes.yaml
+    - f5os-tenant-console-enable.yaml
+    release_date: '2025-05-22'
   1.2.0:
     modules:
     - description: Manage F5OS config backups.

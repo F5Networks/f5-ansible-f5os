@@ -31,7 +31,9 @@ options:
       - vlans
       - controller-images
       - partition-images
+      - partitions-info
       - tenant-images
+      - tenants-info
       - system-info
       - "!all"
       - "!interfaces"
@@ -39,10 +41,13 @@ options:
       - "!vlans"
       - "!controller-images"
       - "!partition-images"
+      - "!partitions-info"
       - "!tenant-images"
+      - "!tenants-info"
       - "!system-info"
     aliases: ['include']
 author:
+  - Ravinder Reddy (@chinthalapalli)
   - Wojciech Wypior (@wojtek0806)
 '''
 
@@ -64,6 +69,7 @@ EXAMPLES = r'''
       - all
       - "!system-info"
 '''
+
 RETURN = r'''
 lag_interfaces:
   description: Information about Link Aggregate Group (LAG) interfaces on the platform.
@@ -368,6 +374,39 @@ velos_controller_images:
       type: str
       sample: 1.2.1-10781
   sample: hash/dictionary of values
+velos_partitions:
+  description: Information about F5OS partitions avilable on the VELOS controller.
+  returned: When C(partitions-info) is specified in C(gather_subset).
+  type: complex
+  contains:
+    name:
+      description:
+        - Name of the partition.
+      returned: queried
+      type: str
+      sample: partition-1
+    config:
+      returned: queried
+      type: complex
+      description:
+        - partition configuration information, it is complex type object.
+        - Contains info about partition B(configuration-volume), B(integrity-check), B(mgmt-ip), B(pxe-server), B(shared-volume), B(image-volume), B(iso-version), B(enabled). # noqa E501
+      contains:
+        configuration-volume:
+          returned: queried
+          description: configuration-volume information.
+          type: int
+          sample: 100
+        shared-volume:
+          returned: queried
+          description: shared-volume information.
+          type: int
+          sample: 0
+        image-volume:
+          returned: queried
+          description: image-volume information.
+          type: int
+          sample: 0
 velos_partition_images:
   description: Information about F5OS partition ISO images uploaded on the VELOS controller.
   returned: When C(partition-images) is specified in C(gather_subset).
@@ -416,6 +455,11 @@ tenant_images:
       type: str
       sample: verified
   sample: hash/dictionary of values
+tenants_info:
+  description: Information about list of B(tenants) avilable on the F5OS platform.
+  returned: When C(tenants-info) is specified in C(gather_subset).
+  type: list
+  elements: dict
 system_info:
   description: System Information on the F5OS platform.
   returned: When C(system-info) is specified in C(gather_subset).
@@ -589,6 +633,15 @@ class BaseManager(object):
         self.client = kwargs.get('client', None)
         self.kwargs = kwargs
 
+    def read_system_state(self):
+        uri = "/openconfig-system:system/state"
+        response = self.client.get(uri)
+        if response['code'] == 204:
+            return []
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['openconfig-system:state']
+
 
 class Parameters(AnsibleF5Parameters):
     @property
@@ -692,8 +745,6 @@ class ControllerImagesFactManager(BaseManager):
         return result
 
     def _exec_module(self):
-        if not self.client.platform == 'Velos Controller':
-            return []
         results = []
         facts = self.read_facts()
         for item in facts:
@@ -704,6 +755,9 @@ class ControllerImagesFactManager(BaseManager):
 
     def read_facts(self):
         results = []
+        system_state = self.read_system_state()
+        if not self.client.platform == 'Velos Controller':
+            return []
         collection = self.read_collection_from_device()
         for resource in collection:
             params = VelosImagesParameters(params=resource)
@@ -733,8 +787,6 @@ class PartitionImagesFactManager(BaseManager):
         return result
 
     def _exec_module(self):
-        if not self.client.platform == 'Velos Controller':
-            return []
         results = []
         facts = self.read_facts()
         for item in facts:
@@ -745,6 +797,9 @@ class PartitionImagesFactManager(BaseManager):
 
     def read_facts(self):
         results = []
+        system_state = self.read_system_state()
+        if not self.client.platform == 'Velos Controller':
+            return []
         collection = self.read_collection_from_device()
         for resource in collection:
             params = VelosImagesParameters(params=resource)
@@ -760,6 +815,56 @@ class PartitionImagesFactManager(BaseManager):
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
         return response['contents']['f5-system-image:iso']['iso']
+
+
+class PartitionsInfoParameters(BaseParameters):
+    api_map = {}
+    returnables = [
+        'name',
+        'config'
+    ]
+
+
+class PartitionsFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(PartitionsFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(velos_partitions=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        results = sorted(results, key=lambda k: k['name'])
+        return results
+
+    def read_facts(self):
+        results = []
+        system_state = self.read_system_state()
+        if not self.client.platform == 'Velos Controller':
+            return []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = PartitionsInfoParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/f5-system-partition:partitions"
+        response = self.client.get(uri)
+
+        if response['code'] == 204:
+            return []
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-system-partition:partitions']['partition']
 
 
 class TenantImagesParameters(BaseParameters):
@@ -790,8 +895,6 @@ class TenantImagesFactManager(BaseManager):
         return result
 
     def _exec_module(self):
-        if self.client.platform == 'Velos Controller':
-            return []
         results = []
         facts = self.read_facts()
         for item in facts:
@@ -802,6 +905,9 @@ class TenantImagesFactManager(BaseManager):
 
     def read_facts(self):
         results = []
+        system_state = self.read_system_state()
+        if self.client.platform == 'Velos Controller':
+            return []
         collection = self.read_collection_from_device()
         for resource in collection:
             params = TenantImagesParameters(params=resource)
@@ -817,6 +923,56 @@ class TenantImagesFactManager(BaseManager):
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
         return response['contents']['f5-tenant-images:images']['image']
+
+
+class TenantsInfoParameters(BaseParameters):
+    returnables = [
+        'name',
+        'config',
+        'state'
+    ]
+
+
+class TenantsInfoFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(TenantsInfoFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(tenants_info=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        results = sorted(results, key=lambda k: k['name'])
+        return results
+
+    def read_facts(self):
+        results = []
+        system_state = self.read_system_state()
+        if self.client.platform == 'Velos Controller':
+            return []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = TenantsInfoParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/f5-tenants:tenants"
+        response = self.client.get(uri)
+
+        if response['code'] == 204:
+            return []
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-tenants:tenants']['tenant']
 
 
 class InterfacesParameters(BaseParameters):
@@ -1381,6 +1537,21 @@ class SystemInfoFactManager(BaseManager):
                 result.append(info)
         return result
 
+    # def read_partition_management_info(self):
+    #     uri = "/openconfig-platform:components"
+    #     response = self.client.get(uri)
+    #     if response['code'] not in [200, 201, 202]:
+    #         raise F5ModuleError(response['contents'])
+    #     comps = response['contents']['openconfig-platform:components']['component']
+    #     result = list()
+    #     for comp in comps:
+    #         info = dict()
+    #         if comp['name'].startswith('blade'):
+    #             info['name'] = comp['name']
+    #             info['os'] = comp['f5-platform:software']['state']['software-components']['software-component']
+    #             result.append(info)
+    #     return result
+
 
 class ModuleManager(object):
     def __init__(self, *args, **kwargs):
@@ -1394,7 +1565,9 @@ class ModuleManager(object):
             'vlans': VlansFactManager,
             'controller-images': ControllerImagesFactManager,
             'partition-images': PartitionImagesFactManager,
+            'partitions-info': PartitionsFactManager,
             'tenant-images': TenantImagesFactManager,
+            'tenants-info': TenantsInfoFactManager,
             'system-info': SystemInfoFactManager
         }
 
@@ -1415,7 +1588,6 @@ class ModuleManager(object):
                 queried=False
             )
             return result
-
         result = self.execute_managers(managers)
         if result:
             result['queried'] = True
@@ -1486,7 +1658,9 @@ class ArgumentSpec(object):
                     'vlans',
                     'controller-images',
                     'partition-images',
+                    'partitions-info',
                     'tenant-images',
+                    'tenants-info',
                     'system-info',
 
                     # Negations of meta choices
@@ -1498,7 +1672,9 @@ class ArgumentSpec(object):
                     '!vlans',
                     '!controller-images',
                     '!partition-images',
+                    '!partitions-info',
                     '!tenant-images',
+                    '!tenants-info',
                     '!system-info',
                 ]
             ),
@@ -1518,9 +1694,7 @@ def main():
     try:
         mm = ModuleManager(module=module, connection=Connection(module._socket_path))
         results = mm.exec_module()
-
         ansible_facts = dict()
-
         for key, value in iteritems(results):
             key = 'ansible_net_%s' % key
             ansible_facts[key] = value

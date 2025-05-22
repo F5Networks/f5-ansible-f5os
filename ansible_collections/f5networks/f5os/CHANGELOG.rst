@@ -7,6 +7,17 @@ F5Networks.F5OS Release Notes
 v1.37.0
 =======
 
+v1.18.0
+=======
+
+Major Changes
+-------------
+
+- f5os_device_info - Collect inforation about partitions on velos controller
+- f5os_device_info - Collect information about tenants on velos partititons
+- f5os_tenant_console_enable - Enable tenant console user access
+- f5os_user_password_change - Module to change the password of local user
+
 v1.16.0
 =======
 
