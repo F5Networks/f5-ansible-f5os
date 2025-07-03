@@ -140,7 +140,7 @@ setattr(paramiko_logger, 'disabled', True)
 
 
 def hard_timeout(module, want, start):  # pragma: no cover
-    elapsed = datetime.datetime.utcnow() - start
+    elapsed = datetime.datetime.now(datetime.UTC) - start
     module.fail_json(
         msg=want.msg or "Timeout when waiting for Velos Partition", elapsed=elapsed.seconds
     )
@@ -220,20 +220,20 @@ class ModuleManager(object):
         # setup handler before scheduling signal, to eliminate a race
         # signal.alarm(int(self.want.timeout))
 
-        start = datetime.datetime.utcnow()
+        start = datetime.datetime.now(datetime.UTC)
         if self.want.delay:
             time.sleep(float(self.want.delay))
         end = start + datetime.timedelta(seconds=int(self.want.timeout))
 
         partition_state = self.wait_for_partition(start, end)
-        elapsed = datetime.datetime.utcnow() - start
+        elapsed = datetime.datetime.now(datetime.UTC) - start
         self.changes.update({'elapsed': elapsed.seconds,
                              'partition_state': partition_state})
         return False
 
     def wait_for_partition(self, start, end):
         partition_state = {}
-        while datetime.datetime.utcnow() < end:
+        while datetime.datetime.now(datetime.UTC) < end:
             time.sleep(int(self.want.sleep))
             try:
                 # The first test verifies that the tenant exists on the specified
@@ -258,7 +258,7 @@ class ModuleManager(object):
                 self.module.debug(str(ex))
                 continue
         else:
-            elapsed = datetime.datetime.utcnow() - start
+            elapsed = datetime.datetime.now(datetime.UTC) - start
             self.module.fail_json(
                 msg=self.want.msg or "Timeout waiting for desired partition state", elapsed=elapsed.seconds,
                 partition_state=partition_state

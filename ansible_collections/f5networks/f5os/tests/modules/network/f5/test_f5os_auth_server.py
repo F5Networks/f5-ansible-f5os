@@ -73,6 +73,29 @@ class TestParameters(unittest.TestCase):
         self.assertEqual(p.server['timeout'], '5')
         self.assertEqual(p.state, 'present')
 
+    def test_module_parameters(self):
+        args = dict(
+            name='test_server',
+            provider_type='radius',
+            server=dict(
+                server_ip='1.1.1.1',
+                port=1000,
+                secret='test',
+                timeout='5'
+            ),
+            state='present'
+        )
+
+        p = ModuleParameters(params=args)
+
+        self.assertEqual(p.name, 'test_server')
+        self.assertEqual(p.provider_type, 'radius')
+        self.assertEqual(p.server[0]["server_ip"], '1.1.1.1')
+        self.assertEqual(p.server[0]['port'], 1000)
+        self.assertEqual(p.server[0]['secret'], 'test')
+        self.assertEqual(p.server[0]['timeout'], '5')
+        self.assertEqual(p.state, 'present')
+
 
 class TestManager(unittest.TestCase):
     def setUp(self):

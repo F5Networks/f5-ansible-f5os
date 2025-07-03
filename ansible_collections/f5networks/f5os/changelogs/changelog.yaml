@@ -225,6 +225,28 @@ releases:
     - f5os-device-info-changes.yaml
     - f5os-tenant-console-enable.yaml
     release_date: '2025-05-22'
+  1.19.0:
+    changes:
+      major_changes:
+      - f5os_device_info - Added Support for collecting QOS info on F5OS platfroms
+      - f5os_device_info - Added Support for collecting SNMP info on F5OS platfroms
+      - f5os_ha_active_controller - Added new module `f5os_ha_active_controller` to
+        manage high availability active controller configuration on F5OS devices.
+      - f5os_tenant_wait - Added a background thread to check `/api/` to check on
+        liveness.
+      - f5os_tenant_wait - The `sleep` parameter now only delays after a failed check,
+        not before the first check.
+      - f5os_tenant_wait - Updated documentation and provided real-world playbook
+        examples for usage and conditional task execution.
+    fragments:
+    - f5os-device-info-changes.yaml
+    - f5os-ha-config.yaml
+    - f5os_tenant_wait_logging_and_api_ready.yaml
+    modules:
+    - description: Managing high availability for the VELOS partition
+      name: velos_partition_ha_config
+      namespace: ''
+    release_date: '2025-07-03'
   1.2.0:
     modules:
     - description: Manage F5OS config backups.

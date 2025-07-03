@@ -7,6 +7,24 @@ F5Networks.F5OS Release Notes
 v1.37.0
 =======
 
+v1.19.0
+=======
+
+Major Changes
+-------------
+
+- f5os_device_info - Added Support for collecting QOS info on F5OS platfroms
+- f5os_device_info - Added Support for collecting SNMP info on F5OS platfroms
+- f5os_ha_active_controller - Added new module `f5os_ha_active_controller` to manage high availability active controller configuration on F5OS devices.
+- f5os_tenant_wait - Added a background thread to check `/api/` to check on liveness.
+- f5os_tenant_wait - The `sleep` parameter now only delays after a failed check, not before the first check.
+- f5os_tenant_wait - Updated documentation and provided real-world playbook examples for usage and conditional task execution.
+
+New Modules
+-----------
+
+- f5networks.f5os.velos_partition_ha_config - Managing high availability for the VELOS partition
+
 v1.18.0
 =======
 

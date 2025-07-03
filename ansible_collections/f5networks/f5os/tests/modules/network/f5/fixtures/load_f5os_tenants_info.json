@@ -1,0 +1,99 @@
+{
+    "f5-tenants:tenants": {
+        "tenant": [
+            {
+                "name": "ldap-auth-tenant",
+                "config": {
+                    "name": "ldap-auth-tenant",
+                    "type": "BIG-IP",
+                    "image": "BIGIP-17.1.0.1-0.0.4.ALL-F5OS.qcow2.zip.bundle",
+                    "nodes": [
+                        1
+                    ],
+                    "mgmt-ip": "10.14.14.82",
+                    "prefix-length": 24,
+                    "gateway": "10.14.14.254",
+                    "dag-ipv6-prefix-length": 128,
+                    "cryptos": "enabled",
+                    "vcpu-cores-per-node": 4,
+                    "memory": "14848",
+                    "storage": {
+                        "size": 82
+                    },
+                    "running-state": "deployed",
+                    "mac-data": {
+                        "f5-tenant-l2-inline:mac-block-size": "one"
+                    },
+                    "appliance-mode": {
+                        "enabled": false
+                    }
+                },
+                "state": {
+                    "name": "ldap-auth-tenant",
+                    "unit-key-hash": "Qn9AMUEBLH1jQ7Ovbd/eU7mx6gnUN4zHxifhTM6x9bUmcJ4Ret+7vOUCoVrGvJtKpbpCTOiVc2jrEaEezKtX1g==",
+                    "type": "BIG-IP",
+                    "image": "BIGIP-17.1.0.1-0.0.4.ALL-F5OS.qcow2.zip.bundle",
+                    "mgmt-ip": "10.14.14.82",
+                    "prefix-length": 24,
+                    "gateway": "10.14.14.254",
+                    "dag-ipv6-prefix-length": 128,
+                    "cryptos": "enabled",
+                    "vcpu-cores-per-node": 4,
+                    "qat-vf-count": 6,
+                    "memory": "14848",
+                    "storage": {
+                        "size": 82
+                    },
+                    "running-state": "deployed",
+                    "mac-data": {
+                        "base-mac": "00:94:a1:69:5d:14",
+                        "mac-pool-size": 1,
+                        "f5-tenant-l2-inline:mac-block": [
+                            {
+                                "mac": "00:94:a1:69:5d:14"
+                            }
+                        ]
+                    },
+                    "appliance-mode": {
+                        "enabled": false
+                    },
+                    "cpu-allocations": {
+                        "cpu-allocation": [
+                            {
+                                "node": 1,
+                                "cpus": [
+                                    6,
+                                    8,
+                                    22,
+                                    24
+                                ]
+                            }
+                        ]
+                    },
+                    "feature-flags": {
+                        "stats-stream-capable": true
+                    },
+                    "namespace": "default",
+                    "status": "Running",
+                    "primary-slot": 1,
+                    "image-version": "BIG-IP 17.1.0.1 0.0.4",
+                    "instances": {
+                        "instance": [
+                            {
+                                "node": 1,
+                                "pod-name": "ldap-auth-tenant-1",
+                                "instance-id": 1,
+                                "tenant-slot": 1,
+                                "phase": "Running",
+                                "creation-time": "2025-01-14T17:17:57Z",
+                                "ready-time": "2025-01-14T17:18:25Z",
+                                "status": "Started tenant instance",
+                                "mgmt-mac": "00:94:a1:69:5d:15"
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+}

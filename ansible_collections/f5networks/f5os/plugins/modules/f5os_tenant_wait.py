@@ -58,6 +58,7 @@ options:
       - This overrides the normal error message from a failure to meet the required conditions.
     type: str
 author:
+  - Ravinder Reddy (@chinthalapalli)
   - Wojciech Wypior (@wojtek0806)
 '''
 
@@ -83,6 +84,34 @@ EXAMPLES = r'''
     name: bigip_tenant1
     state: api-ready
     delay: 30
+
+- name: Create tenant 'ansible-tenant01'
+  f5os_tenant:
+    name: ansible-tenant01
+    image_name: BIGIP-17.5.0-0.0.15.ALL-F5OS.qcow2.zip.bundle
+    nodes:
+      - 1
+    mgmt_ip: 10.xxx.xxx.xx
+    mgmt_prefix: 24
+    mgmt_gateway: 10.xxx.xxx.xxx
+    cryptos: disabled
+    virtual_disk_size: 85
+    running_state: deployed
+    state: present
+
+- name: Wait for tenant to be deployed
+  f5os_tenant_wait:
+    name: ansible-tenant01
+    state: deployed
+    sleep: 30
+    timeout: 300
+
+- name: Wait for tenant to be api-ready
+  f5os_tenant_wait:
+    name: ansible-tenant01
+    state: api-ready
+    sleep: 30
+    timeout: 300
 '''
 
 RETURN = r'''
@@ -149,12 +178,12 @@ tenant_state:
 '''
 
 import datetime
-import json
 import logging
 import signal
 import time
 import traceback
 from urllib.error import HTTPError, URLError
+import threading
 
 try:
     import paramiko
@@ -279,49 +308,92 @@ class ModuleManager(object):
         return False
 
     def wait_for_tenant(self, start, end):
+        api_ready_flag = {'ready': False}
+        stop_event = threading.Event()
+        connection_error_count = 0
+        max_connection_errors = 5  # You can adjust this threshold as needed
+
+        def api_check_thread(flag, stop_event):
+            # logging.debug('api_check_thread started, will poll /api until ready or stop_event is set')
+            while datetime.datetime.now(datetime.timezone.utc) < end and not stop_event.is_set():
+                try:
+                    result = self.api_root_ready()
+                    # logging.debug('api_check_thread polled /api, result: %s', result)
+                    if result:
+                        flag['ready'] = True
+                        # logging.info('api_check_thread: /api is ready, setting flag and exiting thread')
+                        # time.sleep(int(10))
+                        # continue
+                except Exception as exc:
+                    # logging.error('api_check_thread: Exception while polling /api: %s', exc)
+                    pass
+                time.sleep(int(10))
+        api_thread = threading.Thread(target=api_check_thread, args=(api_ready_flag, stop_event))
+        api_thread.daemon = True
+        api_thread.start()
+
         tenant_state = {}
         while datetime.datetime.now(datetime.timezone.utc) < end:
-            time.sleep(int(self.want.sleep))
             try:
-                # The first test verifies that the tenant exists on the specified
-                # partition, indirectly verifying the partition API is reachable.
+                # logging.debug('Iteration started at %s', datetime.datetime.now(datetime.timezone.utc))
                 if not self.tenant_exists():
                     tenant_state.update(status='Tenant Not Found')
+                    # logging.debug('Tenant not found, sleeping for %s seconds', self.want.sleep)
+                    time.sleep(int(self.want.sleep))
                     continue
 
                 tenant_data = self.read_tenant_from_device()
+                # logging.debug('Polled tenant data: %s', tenant_data)
                 tenant_state = tenant_data.get('state', {})
+                # logging.debug('Polled tenant state: %s', tenant_state)
 
                 if self.want.state == 'configured' and self.tenant_is_configured(tenant_state):
+                    # logging.info('Tenant reached configured state.')
                     break
 
                 elif self.want.state == 'provisioned' and self.tenant_is_provisioned(tenant_state):
+                    # logging.info('Tenant reached provisioned state.')
                     break
 
                 elif self.want.state == 'deployed' and self.tenant_is_deployed(tenant_state):
+                    # logging.info('Tenant reached deployed state.')
                     break
 
                 elif self.want.state == 'ssh-ready' and self.tenant_ssh_ready(tenant_data):
+                    # logging.info('Tenant SSH is ready.')
                     break
 
                 elif self.want.state == 'api-ready' and self.tenant_api_ready(tenant_data):
+                    # logging.info('Tenant API is ready.')
                     break
 
-                # No match - log state data
-                self.module.debug(json.dumps(tenant_data))
+                # logging.debug('Desired state not reached, sleeping for %s seconds', self.want.sleep)
+                time.sleep(int(self.want.sleep))
 
             except AnsibleConnectionError as ex:  # pragma: no cover
-                raise F5ModuleError(ex.args[0])
+                connection_error_count += 1
+                # logging.warning('AnsibleConnectionError occurred %d times (max %d): %s', connection_error_count, max_connection_errors, ex)
+                if connection_error_count > max_connection_errors:
+                    stop_event.set()
+                    api_thread.join(timeout=1)
+                    raise F5ModuleError(ex.args[0])
+                time.sleep(int(self.want.sleep))
+                continue
 
-            except Exception as ex:  # pragma: no cover
-                self.module.debug(str(ex))
+            except Exception as exc:  # pragma: no cover
+                # logging.error('Exception in wait_for_tenant loop: %s', exc)
+                time.sleep(int(self.want.sleep))
                 continue
         else:
             elapsed = datetime.datetime.now(datetime.timezone.utc) - start
+            stop_event.set()
+            api_thread.join(timeout=1)
             self.module.fail_json(
                 msg=self.want.msg or "Timeout waiting for desired tenant state", elapsed=elapsed.seconds,
                 tenant_state=tenant_state
             )
+        stop_event.set()
+        api_thread.join(timeout=1)
         return tenant_state
 
     def tenant_exists(self):
@@ -535,6 +607,15 @@ class ModuleManager(object):
             if conn_refused in urlerr.reason:
                 return False
             raise
+
+    def api_root_ready(self):
+        # uri = ""
+        response = self.client.get("", scope='/api')
+        # raise F5ModuleError(f'response :{response}')
+        # Consider API ready if we get a 200 or 401 response
+        if response['code'] in [200, 401]:
+            return True
+        return False
 
 
 class ArgumentSpec(object):
