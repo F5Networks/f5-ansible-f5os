@@ -8,6 +8,7 @@ __metaclass__ = type
 
 import json
 import os
+import pytest
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -24,6 +25,8 @@ from ansible_collections.f5networks.f5os.tests.modules.utils import (
     set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 )
 
+from ansible_collections.f5networks.f5os.plugins.module_utils.client import F5Client
+from ansible_collections.f5networks.f5os.plugins.modules.f5os_ntp_server import UsableChanges
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
 fixture_data = {}
@@ -254,3 +257,87 @@ class TestManager(unittest.TestCase):
         mm.exists = Mock(return_value=False)
         res8 = mm.absent()
         self.assertFalse(res8)
+
+
+class DummyClient(F5Client):
+    def __init__(self, responses=None):
+        super().__init__(module=None, client=None)
+        self._responses = responses or {}
+        self._calls = []
+
+    def patch(self, url, data=None, **kwargs):
+        self._calls.append(('patch', url, data))
+        return self._responses.get(url, {'code': 200, 'contents': {}})
+
+
+def test_update_on_device_full_coverage():
+    params = {
+        'server': '1.2.3.4',
+        'prefer': True,
+        'iburst': True,
+        'ntp_service': True,
+        'ntp_authentication': True,
+    }
+    # Simulate all patch calls succeed
+    responses = {
+        "/openconfig-system:system/ntp/openconfig-system:servers/server=1.2.3.4": {'code': 200, 'contents': {}},
+        '/openconfig-system:system/ntp/config': {'code': 200, 'contents': {}}
+    }
+
+    class DummyModule:
+        def __init__(self, params):
+            self.params = params
+    dummy_module = DummyModule(params)
+    mgr = ModuleManager(module=dummy_module)
+    mgr.client = DummyClient(responses)
+    mgr.changes = UsableChanges(params=params)
+    assert mgr.update_on_device() is True
+
+
+def test_update_on_device_patch_error():
+    params = {
+        'server': '1.2.3.4',
+        'prefer': True,
+        'iburst': True,
+        'ntp_service': True,
+        'ntp_authentication': True,
+    }
+    # Simulate first patch call fails
+    responses = {
+        "/openconfig-system:system/ntp/openconfig-system:servers/server=1.2.3.4": {'code': 500, 'contents': {'error': 'fail'}},
+    }
+
+    class DummyModule:
+        def __init__(self, params):
+            self.params = params
+    dummy_module = DummyModule(params)
+    mgr = ModuleManager(module=dummy_module)
+    mgr.client = DummyClient(responses)
+    mgr.changes = UsableChanges(params=params)
+    with pytest.raises(F5ModuleError):
+        mgr.update_on_device()
+
+
+def test_update_on_device_ntp_patch_error():
+    params = {
+        'server': '1.2.3.4',
+        'prefer': True,
+        'iburst': True,
+        'ntp_service': True,
+        'ntp_authentication': True,
+    }
+    # Simulate ntp config patch call fails
+    responses = {
+        "/openconfig-system:system/ntp/openconfig-system:servers/server=1.2.3.4": {'code': 200, 'contents': {}},
+        '/openconfig-system:system/ntp/config': {'code': 500, 'contents': {'error': 'fail'}}
+    }
+
+    class DummyModule:
+        def __init__(self, params):
+            self.params = params
+    dummy_module = DummyModule(params)
+    mgr = ModuleManager(module=dummy_module)
+    mgr.client = DummyClient(responses)
+    mgr.changes = UsableChanges(params=params)
+    with pytest.raises(F5ModuleError):
+        mgr.update_on_device()

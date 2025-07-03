@@ -192,6 +192,11 @@ plugins:
       name: velos_partition_change_password
       namespace: ''
       version_added: 1.0.0
+    velos_partition_ha_config:
+      description: Managing high availability for the VELOS partition
+      name: velos_partition_ha_config
+      namespace: ''
+      version_added: 1.19.0
     velos_partition_image:
       description: Manage VELOS chassis partition images
       name: velos_partition_image
@@ -208,4 +213,4 @@ plugins:
   strategy: {}
   test: {}
   vars: {}
-version: 1.18.0
+version: 1.19.0

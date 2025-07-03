@@ -1,0 +1,314 @@
+{
+    "f5-system-partition:partitions": {
+        "partition": [
+            {
+                "name": "eco02",
+                "config": {
+                    "enabled": true,
+                    "iso-version": "1.7.0-5542",
+                    "configuration-volume": 10,
+                    "images-volume": 15,
+                    "shared-volume": 10,
+                    "pxe-server": "internal",
+                    "mgmt-ip": {
+                        "ipv4": {
+                            "address": "10.144.10.142",
+                            "prefix-length": 25,
+                            "gateway": "10.144.10.254"
+                        },
+                        "ipv6": {
+                            "address": "::",
+                            "prefix-length": 0,
+                            "gateway": "::"
+                        }
+                    },
+                    "integrity-check": {
+                        "enabled": true,
+                        "threshold-value": 3
+                    }
+                },
+                "state": {
+                    "id": 1,
+                    "integrity-check": {
+                        "controllers": {
+                            "controller": [
+                                {
+                                    "controller": 1,
+                                    "enabled": true,
+                                    "threshold-value": 3,
+                                    "run-status": {
+                                        "services": "not-triggered"
+                                    }
+                                },
+                                {
+                                    "controller": 2,
+                                    "enabled": true,
+                                    "threshold-value": 3,
+                                    "run-status": {
+                                        "services": "not-triggered"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "os-version": "1.7.0-5542",
+                    "service-version": "1.7.0-5542",
+                    "install-status": "none",
+                    "controllers": {
+                        "controller": [
+                            {
+                                "controller": 1,
+                                "partition-id": 1,
+                                "partition-status": "running-standby",
+                                "running-service-version": "1.7.0-5542",
+                                "status-seconds": "9735434",
+                                "status-age": "112d",
+                                "volumes": {
+                                    "volume": [
+                                        {
+                                            "volume-name": "config",
+                                            "total-size": "10G",
+                                            "available-size": "9.8G"
+                                        },
+                                        {
+                                            "volume-name": "images",
+                                            "total-size": "15G",
+                                            "available-size": "12G"
+                                        },
+                                        {
+                                            "volume-name": "shared",
+                                            "total-size": "10G",
+                                            "available-size": "10G"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "controller": 2,
+                                "partition-id": 1,
+                                "partition-status": "running-active",
+                                "running-service-version": "1.7.0-5542",
+                                "status-seconds": "9735712",
+                                "status-age": "112d",
+                                "volumes": {
+                                    "volume": [
+                                        {
+                                            "volume-name": "config",
+                                            "total-size": "10G",
+                                            "available-size": "9.8G"
+                                        },
+                                        {
+                                            "volume-name": "images",
+                                            "total-size": "15G",
+                                            "available-size": "12G"
+                                        },
+                                        {
+                                            "volume-name": "shared",
+                                            "total-size": "10G",
+                                            "available-size": "10G"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "eco04",
+                "config": {
+                    "enabled": true,
+                    "iso-version": "1.7.0-5542",
+                    "configuration-volume": 10,
+                    "images-volume": 15,
+                    "shared-volume": 10,
+                    "pxe-server": "internal",
+                    "mgmt-ip": {
+                        "ipv4": {
+                            "address": "10.144.10.144",
+                            "prefix-length": 25,
+                            "gateway": "10.144.10.254"
+                        },
+                        "ipv6": {
+                            "address": "::",
+                            "prefix-length": 0,
+                            "gateway": "::"
+                        }
+                    },
+                    "integrity-check": {
+                        "enabled": true,
+                        "threshold-value": 3
+                    }
+                },
+                "state": {
+                    "id": 2,
+                    "integrity-check": {
+                        "controllers": {
+                            "controller": [
+                                {
+                                    "controller": 1,
+                                    "enabled": true,
+                                    "threshold-value": 3,
+                                    "run-status": {
+                                        "services": "not-triggered"
+                                    }
+                                },
+                                {
+                                    "controller": 2,
+                                    "enabled": true,
+                                    "threshold-value": 3,
+                                    "run-status": {
+                                        "services": "not-triggered"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "os-version": "1.7.0-5542",
+                    "service-version": "1.7.0-5542",
+                    "install-status": "none",
+                    "controllers": {
+                        "controller": [
+                            {
+                                "controller": 1,
+                                "partition-id": 2,
+                                "partition-status": "running-active",
+                                "running-service-version": "1.7.0-5542",
+                                "status-seconds": "9735786",
+                                "status-age": "112d",
+                                "volumes": {
+                                    "volume": [
+                                        {
+                                            "volume-name": "config",
+                                            "total-size": "10G",
+                                            "available-size": "9.6G"
+                                        },
+                                        {
+                                            "volume-name": "images",
+                                            "total-size": "15G",
+                                            "available-size": "5.0G"
+                                        },
+                                        {
+                                            "volume-name": "shared",
+                                            "total-size": "10G",
+                                            "available-size": "10G"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "controller": 2,
+                                "partition-id": 2,
+                                "partition-status": "running-standby",
+                                "running-service-version": "1.7.0-5542",
+                                "status-seconds": "9735780",
+                                "status-age": "112d",
+                                "volumes": {
+                                    "volume": [
+                                        {
+                                            "volume-name": "config",
+                                            "total-size": "10G",
+                                            "available-size": "9.7G"
+                                        },
+                                        {
+                                            "volume-name": "images",
+                                            "total-size": "15G",
+                                            "available-size": "5.0G"
+                                        },
+                                        {
+                                            "volume-name": "shared",
+                                            "total-size": "10G",
+                                            "available-size": "10G"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "none",
+                "config": {
+                    "enabled": false,
+                    "configuration-volume": 10,
+                    "images-volume": 15,
+                    "shared-volume": 10,
+                    "pxe-server": "internal",
+                    "mgmt-ip": {
+                        "ipv4": {
+                            "address": "0.0.0.0",
+                            "prefix-length": 0,
+                            "gateway": "0.0.0.0"
+                        },
+                        "ipv6": {
+                            "address": "::",
+                            "prefix-length": 0,
+                            "gateway": "::"
+                        }
+                    },
+                    "integrity-check": {
+                        "enabled": true,
+                        "threshold-value": 3
+                    }
+                },
+                "state": {
+                    "id": 0,
+                    "install-status": "none",
+                    "controllers": {
+                        "controller": [
+                            {
+                                "controller": 1,
+                                "partition-id": 0,
+                                "partition-status": "disabled",
+                                "volumes": {
+                                    "volume": [
+                                        {
+                                            "volume-name": "config",
+                                            "total-size": "-NA-",
+                                            "available-size": "-NA-"
+                                        },
+                                        {
+                                            "volume-name": "images",
+                                            "total-size": "-NA-",
+                                            "available-size": "-NA-"
+                                        },
+                                        {
+                                            "volume-name": "shared",
+                                            "total-size": "-NA-",
+                                            "available-size": "-NA-"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "controller": 2,
+                                "partition-id": 0,
+                                "partition-status": "disabled",
+                                "volumes": {
+                                    "volume": [
+                                        {
+                                            "volume-name": "config",
+                                            "total-size": "-NA-",
+                                            "available-size": "-NA-"
+                                        },
+                                        {
+                                            "volume-name": "images",
+                                            "total-size": "-NA-",
+                                            "available-size": "-NA-"
+                                        },
+                                        {
+                                            "volume-name": "shared",
+                                            "total-size": "-NA-",
+                                            "available-size": "-NA-"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+}

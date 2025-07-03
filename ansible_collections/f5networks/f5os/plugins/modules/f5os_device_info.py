@@ -34,6 +34,8 @@ options:
       - partitions-info
       - tenant-images
       - tenants-info
+      - snmp-info
+      - qos-info
       - system-info
       - "!all"
       - "!interfaces"
@@ -44,6 +46,8 @@ options:
       - "!partitions-info"
       - "!tenant-images"
       - "!tenants-info"
+      - "!snmp-info"
+      - "!qos-info"
       - "!system-info"
     aliases: ['include']
 author:
@@ -458,6 +462,16 @@ tenant_images:
 tenants_info:
   description: Information about list of B(tenants) avilable on the F5OS platform.
   returned: When C(tenants-info) is specified in C(gather_subset).
+  type: list
+  elements: dict
+snmp_info:
+  description: Information about list of B(SNMP) configuration avilable on the F5OS platform.
+  returned: When C(snmp-info) is specified in C(gather_subset).
+  type: list
+  elements: dict
+qos_info:
+  description: Information about list of B(QOS) configuration avilable on the F5OS platform.
+  returned: When C(qos-info) is specified in C(gather_subset).
   type: list
   elements: dict
 system_info:
@@ -973,6 +987,106 @@ class TenantsInfoFactManager(BaseManager):
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
         return response['contents']['f5-tenants:tenants']['tenant']
+
+
+class SnmpParameters(BaseParameters):
+    api_map = {}
+    returnables = [
+        'users',
+        'communities',
+        'targets'
+    ]
+
+
+class SnmpFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(SnmpFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(snmp_info=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        # results = sorted(results, key=lambda k: k['communities']['community'])
+        return results
+
+    def read_facts(self):
+        results = []
+        system_state = self.read_system_state()
+        collection = self.read_collection_from_device()
+        params = SnmpParameters(params=collection)
+        results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/f5-system-snmp:snmp"
+        response = self.client.get(uri)
+
+        if response['code'] == 204:
+            return []
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-system-snmp:snmp']
+
+
+class QosParameters(BaseParameters):
+    api_map = {
+        'global-setting': 'global_setting',
+        'meter-setting': 'meter_setting'
+    }
+    returnables = [
+        'global_setting',
+        'meter_setting'
+    ]
+
+
+class QosFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(QosFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(qos_info=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        # results = sorted(results, key=lambda k: k['name'])
+        return results
+
+    def read_facts(self):
+        results = []
+        system_state = self.read_system_state()
+        if self.client.platform != 'Velos Partition':
+            return []
+        collection = self.read_collection_from_device()
+        params = QosParameters(params=collection)
+        results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/f5-qos:qos"
+        response = self.client.get(uri)
+
+        if response['code'] == 204:
+            return []
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-qos:qos']
 
 
 class InterfacesParameters(BaseParameters):
@@ -1568,6 +1682,8 @@ class ModuleManager(object):
             'partitions-info': PartitionsFactManager,
             'tenant-images': TenantImagesFactManager,
             'tenants-info': TenantsInfoFactManager,
+            'snmp-info': SnmpFactManager,
+            'qos-info': QosFactManager,
             'system-info': SystemInfoFactManager
         }
 
@@ -1661,6 +1777,8 @@ class ArgumentSpec(object):
                     'partitions-info',
                     'tenant-images',
                     'tenants-info',
+                    'snmp-info',
+                    'qos-info',
                     'system-info',
 
                     # Negations of meta choices
@@ -1675,6 +1793,8 @@ class ArgumentSpec(object):
                     '!partitions-info',
                     '!tenant-images',
                     '!tenants-info',
+                    '!snmp-info',
+                    '!qos-info',
                     '!system-info',
                 ]
             ),

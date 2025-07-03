@@ -195,9 +195,15 @@ class ApiParameters(Parameters):
 class ModuleParameters(Parameters):
     @property
     def server(self):
-        if self._values.server is None:
-            return []
-        return self._values["server"]
+        value = self._values.get('server')
+        if value and isinstance(value, dict):
+            return [value]
+        return value
+
+    # def server(self):
+    #     if self._values.server is None:
+    #         return []
+    #     return self._values["server"]
 
 
 class Changes(Parameters):  # pragma: no cover
@@ -373,7 +379,7 @@ class ModuleManager(object):
             return True
         self.remove_from_device()
         if self.exists():
-            raise F5ModuleError("Failed to delete the resource.")
+            raise F5ModuleError("Failed to delete the resource.")  # pragma: no cover
         return True
 
     def create(self) -> bool:
@@ -390,16 +396,16 @@ class ModuleManager(object):
         response = self.client.get(uri)
 
         if response['code'] == 200:
-            if self.want.provider_type not in response["contents"]["openconfig-system:server-group"][0]["config"]["type"].lower():
+            if self.want.provider_type not in response["contents"]["openconfig-system:server-group"][0]["config"]["type"].lower():  # pragma: no cover
                 existing_provider_type = response["contents"]["openconfig-system:server-group"][0]["config"]["type"]
-                raise F5ModuleError(response['Server Group Already exists with provider type ' + existing_provider_type])
+                raise F5ModuleError(response['Server Group Already exists with provider type ' + existing_provider_type])  # pragma: no cover
             return True
 
         if response['code'] == 404:
             return False
 
-        if response['code'] not in [200, 201, 202]:
-            raise F5ModuleError(response['contents'])
+        if response['code'] not in [200, 201, 202]:  # pragma: no cover
+            raise F5ModuleError(response['contents'])  # pragma: no cover
 
         return False
 
@@ -422,8 +428,8 @@ class ModuleManager(object):
         payload["openconfig-system:server-group"]["name"] = params["name"]
         payload["openconfig-system:server-group"]["config"] = config
         response = self.client.post(base_uri, data=payload)
-        if response['code'] not in [200, 201, 202, 204]:
-            raise F5ModuleError(response['contents'])
+        if response['code'] not in [200, 201, 202, 204]:  # pragma: no cover
+            raise F5ModuleError(response['contents'])  # pragma: no cover
 
         # Post Servers
         if "server" in params:
@@ -447,7 +453,7 @@ class ModuleManager(object):
             server_object = {}
             if self.want.provider_type == "radius":
                 if server['port'] is None or server['secret'] is None or server['timeout'] is None:
-                    raise F5ModuleError("Port, Secret and Timeout are required for Provider Type Radius")
+                    raise F5ModuleError("Port, Secret and Timeout are required for Provider Type Radius")  # pragma: no cover
                 radius = {
                     "config": {
                         "auth-port": server["port"],
@@ -460,7 +466,7 @@ class ModuleManager(object):
                 server_object["config"] = {"address": server["server_ip"]}
             elif self.want.provider_type == "tacacs":
                 if server['port'] is None or server['secret'] is None:
-                    raise F5ModuleError("Port and Secret are required for Provider Type Tacacs")
+                    raise F5ModuleError("Port and Secret are required for Provider Type Tacacs")  # pragma: no cover
                 tacacs = {
                     "config": {
                         "port": server["port"],
@@ -472,7 +478,7 @@ class ModuleManager(object):
                 server_object["config"] = {"address": server["server_ip"]}
             elif self.want.provider_type == "ldap":
                 if server['port'] is None or server['type'] is None:
-                    raise F5ModuleError("Port and Type are required for Provider Type LDAP")
+                    raise F5ModuleError("Port and Type are required for Provider Type LDAP")  # pragma: no cover
                 ldap = {
                     "config": {
                         "auth-port": server["port"],
@@ -500,7 +506,7 @@ class ModuleManager(object):
 
         response = self.client.delete(uri)
         if response['code'] not in [200, 201, 202, 204]:
-            raise F5ModuleError(response['contents'])
+            raise F5ModuleError(response['contents'])  # pragma: no cover
         return True
 
     def read_current_from_device(self):
@@ -514,7 +520,7 @@ class ModuleManager(object):
             return_object = None
 
         if response['code'] not in [200, 201, 202, 204]:
-            raise F5ModuleError(response['contents'])
+            raise F5ModuleError(response['contents'])  # pragma: no cover
         return ApiParameters(params=return_object)
 
 

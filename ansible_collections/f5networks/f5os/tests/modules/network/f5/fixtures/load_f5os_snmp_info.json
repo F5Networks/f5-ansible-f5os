@@ -1,0 +1,70 @@
+{
+    "f5-system-snmp:snmp": {
+        "users": {
+            "user": [
+                {
+                    "name": "test",
+                    "config": {
+                        "name": "test",
+                        "authentication-protocol": "none",
+                        "privacy-protocol": "none"
+                    },
+                    "state": {
+                        "name": "test",
+                        "authentication-protocol": "none",
+                        "privacy-protocol": "none"
+                    }
+                }
+            ]
+        },
+        "communities": {
+            "community": [
+                {
+                    "name": "community1",
+                    "config": {
+                        "name": "community1",
+                        "security-model": [
+                            "v2c"
+                        ]
+                    },
+                    "state": {
+                        "name": "community1",
+                        "security-model": [
+                            "v2c"
+                        ]
+                    }
+                },
+                {
+                    "name": "community2",
+                    "config": {
+                        "name": "community2",
+                        "security-model": [
+                            "v2c"
+                        ]
+                    },
+                    "state": {
+                        "name": "community2",
+                        "security-model": [
+                            "v2c"
+                        ]
+                    }
+                }
+            ]
+        },
+        "engine-id": {
+            "config": {
+                "value": "mac"
+            },
+            "state": {
+                "engine-id": "80:00:2f:f4:03:00:94:a1:69:5d:02",
+                "type": "mac"
+            }
+        },
+        "config": {
+            "port": 161
+        },
+        "state": {
+            "port": 161
+        }
+    }
+}
