@@ -1,0 +1,3 @@
+---
+minor_changes:
+  - f5os_device_info - Added server-groups, users and fdb information collection for F5OS devices.

@@ -37,6 +37,9 @@ options:
       - snmp-info
       - qos-info
       - system-info
+      - server-groups
+      - users
+      - fdb
       - "!all"
       - "!interfaces"
       - "!lag-interfaces"
@@ -49,6 +52,9 @@ options:
       - "!snmp-info"
       - "!qos-info"
       - "!system-info"
+      - "!server-groups"
+      - "!users"
+      - "!fdb"
     aliases: ['include']
 author:
   - Ravinder Reddy (@chinthalapalli)
@@ -354,6 +360,76 @@ vlans:
       type: int
       sample: 444
   sample: hash/dictionary of values
+server_groups:
+  description: Information about Server Groups on the platform.
+  returned: When C(server-groups) is specified in C(gather_subset).
+  type: complex
+  contains:
+    name:
+      description:
+        - Name of the Server Group.
+      returned: queried
+      type: str
+      sample: test-server-group
+    type:
+      description:
+        - Type of the Server Group.
+      returned: queried
+      type: str
+      sample: openconfig-aaa:RADIUS
+  sample: hash/dictionary of values
+users:
+  description: Information about users on the platform.
+  returned: When C(users) is specified in C(gather_subset).
+  type: complex
+  contains:
+    username:
+      description:
+        - Name of the user.
+      returned: queried
+      type: str
+      sample: test-user
+    role:
+      description:
+        - Role of the user.
+      returned: queried
+      type: str
+      sample: user
+    expiry_status:
+      description:
+        - Expiry status of the user.
+      returned: queried
+      type: str
+      sample: enabled
+    last_change:
+      description:
+        - Date and time when the user was last changed.
+      returned: queried
+      type: str
+      sample: "2024-08-06"
+fdb:
+  description: Information about the Forwarding Database (FDB) on the platform.
+  returned: When C(fdb) is specified in C(gather_subset).
+  type: complex
+  contains:
+    mac_address:
+      description:
+        - MAC address of the device.
+      returned: queried
+      type: str
+      sample: 00:94:a1:69:4f:02
+    tag_type:
+      description:
+        - Tag type of the device.
+      returned: queried
+      type: str
+      sample: tag_type_vid
+    vlan:
+      description:
+        - VLAN associated with the device.
+      returned: queried
+      type: int
+      sample: 100
 velos_controller_images:
   description: Information about F5OS controller ISO images uploaded on the VELOS controller.
   returned: When C(controller-images) is specified in C(gather_subset).
@@ -695,6 +771,190 @@ class VlansParameters(BaseParameters):
     @property
     def name(self):
         return self._values['config'].get('name')
+
+
+class FdbParameters(BaseParameters):
+    api_map = {
+        'mac-address': 'mac_address',
+        'tag-type': 'tag_type',
+        'vlan': 'vlan'
+    }
+
+    returnables = [
+        'mac_address',
+        'tag_type',
+        'vlan'
+    ]
+
+    @property
+    def mac_address(self):
+        return self._values['config'].get('mac-address')
+
+    @property
+    def tag_type(self):
+        return self._values['config'].get('tag-type')
+
+    @property
+    def vlan(self):
+        return self._values['config'].get('vlan')
+
+
+class FdbFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(FdbFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(fdb=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        return results
+
+    def read_facts(self):
+        results = []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = FdbParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/f5-l2fdb:fdb/mac-table/entries/entry/"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-l2fdb:entry']
+
+
+class UsersParameters(BaseParameters):
+    api_map = {
+        'username': 'username',
+        'role': 'role',
+        'expiry-status': 'expiry_status',
+        'last-change': 'last_change'
+    }
+
+    returnables = [
+        'username',
+        'role',
+        'expiry_status',
+        'last_change'
+    ]
+
+    @property
+    def username(self):
+        return self._values['config'].get('username')
+
+    @property
+    def role(self):
+        return self._values['config'].get('role')
+
+    @property
+    def expiry_status(self):
+        return self._values['config'].get('expiry-status')
+
+    @property
+    def last_change(self):
+        return self._values['config'].get('last-change')
+
+
+class UserFactManager(BaseParameters):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(UserFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(users=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        results = sorted(results, key=lambda k: k['username'])
+        return results
+
+    def read_facts(self):
+        results = []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = UsersParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/aaa/authentication/f5-system-aaa:users/user"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-system-aaa:user']
+
+
+class ServerGroupsParameters(BaseParameters):
+    api_map = {
+        'server-group': 'server_group',
+    }
+
+    returnables = [
+        'name',
+        'type'
+    ]
+
+    @property
+    def name(self):
+        return self._values['config'].get('name')
+
+    @property
+    def type(self):
+        return self._values['config'].get('type')
+
+
+class ServerGroupsFactManager(BaseParameters):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(ServerGroupsFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(server_groups=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        results = sorted(results, key=lambda k: k['name'])
+        return results
+
+    def read_facts(self):
+        results = []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = ServerGroupsParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/aaa/server-groups/"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['openconfig-system:server-groups']['server-group']
 
 
 class VlansFactManager(BaseManager):
@@ -1677,6 +1937,9 @@ class ModuleManager(object):
             'interfaces': InterfacesFactManager,
             'lag-interfaces': LagInterfaceFactManager,
             'vlans': VlansFactManager,
+            'server-groups': ServerGroupsFactManager,
+            'users': UserFactManager,
+            'fdb': FdbFactManager,
             'controller-images': ControllerImagesFactManager,
             'partition-images': PartitionImagesFactManager,
             'partitions-info': PartitionsFactManager,
@@ -1780,7 +2043,9 @@ class ArgumentSpec(object):
                     'snmp-info',
                     'qos-info',
                     'system-info',
-
+                    'server-groups',
+                    'users',
+                    'fdb',
                     # Negations of meta choices
                     '!all',
 
@@ -1796,6 +2061,9 @@ class ArgumentSpec(object):
                     '!snmp-info',
                     '!qos-info',
                     '!system-info',
+                    '!server-groups',
+                    '!users',
+                    '!fdb'
                 ]
             ),
         )

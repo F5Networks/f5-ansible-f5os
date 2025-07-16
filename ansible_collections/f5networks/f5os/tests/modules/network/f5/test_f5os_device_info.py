@@ -211,6 +211,129 @@ class TestMainManager(unittest.TestCase):
         self.assertIn('This module has failed', result.exception.args[0]['msg'])
 
 
+class TestFdbManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_server_groups_facts(self, *args):
+        set_module_args(dict(
+            gather_subset=['fdb']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('fdb')
+
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_f5os_fdb.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+
+        self.assertDictEqual(results['fdb'][0], {'mac_address': "11:11:11:11:11:11", 'vlan': 123, 'tag_type': 'tag_type_vid'}),
+        self.assertDictEqual(results['fdb'][1], {'mac_address': "f4:15:63:fb:a0:1a", 'vlan': 3594, 'tag_type': 'tag_type_vid'}),
+        self.assertDictEqual(results['fdb'][2], {'mac_address': "f4:15:63:fb:a0:1a", 'vlan': 3595, 'tag_type': 'tag_type_vid'}),
+        self.assertDictEqual(results['fdb'][3], {'mac_address': "f4:15:63:fb:a0:1a", 'vlan': 3596, 'tag_type': 'tag_type_vid'}),
+
+
+class TestUserManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_server_groups_facts(self, *args):
+        set_module_args(dict(
+            gather_subset=['users']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('server-groups')
+        # vm.client.platform = 'rSeries Platform'
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_f5os_users.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+
+        self.assertDictEqual(results['users'][0], {'username': 'admin', 'role': 'admin', 'last_change': 20222, 'expiry_status': 'enabled'})
+        self.assertDictEqual(results['users'][1], {'username': 'ansible-tenant01', 'role': 'tenant-console', 'last_change': 0, 'expiry_status': 'locked'})
+        self.assertDictEqual(results['users'][2], {'username': 'ravibigip', 'role': 'tenant-console', 'last_change': 0, 'expiry_status': 'enabled'})
+        self.assertDictEqual(results['users'][3], {'username': 'root', 'role': 'root', 'last_change': 0, 'expiry_status': 'enabled'})
+        self.assertDictEqual(results['users'][4], {'username': 'testuser', 'role': 'operator', 'last_change': 0, 'expiry_status': 'enabled'})
+
+
+class TestServerGroupManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_server_groups_facts(self, *args):
+        set_module_args(dict(
+            gather_subset=['server-groups']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        # Override methods to force specific logic in the module to happen
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('server-groups')
+        # vm.client.platform = 'rSeries Platform'
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_f5os_server_groups.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+
+        self.assertDictEqual(results['server_groups'][0], {'name': 'CM', 'type': 'openconfig-aaa:RADIUS'})
+        self.assertDictEqual(results['server_groups'][1], {'name': 'sg01', 'type': 'openconfig-aaa:RADIUS'})
+        self.assertDictEqual(results['server_groups'][2], {'name': 'test', 'type': 'f5-openconfig-aaa-ocsp:OCSP'})
+        self.assertDictEqual(results['server_groups'][3], {'name': 'test_server', 'type': 'openconfig-aaa:RADIUS'})
+        self.assertDictEqual(results['server_groups'][4], {'name': 'test_tacacs', 'type': 'openconfig-aaa:TACACS'})
+        self.assertDictEqual(results['server_groups'][5], {'name': 'test_ui2', 'type': 'f5-openconfig-aaa-ldap:LDAP'})
+
+
 class TestVlansModuleManager(unittest.TestCase):
     def setUp(self):
         self.spec = ArgumentSpec()
