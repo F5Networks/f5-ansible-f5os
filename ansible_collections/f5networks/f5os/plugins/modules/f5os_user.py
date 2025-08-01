@@ -252,15 +252,41 @@ class ModuleManager(object):
     def update(self):
         self.have = self.read_current_from_device()
         if not self.should_update():
+            # Even if no changes, we need to set return values for idempotent calls
+            self._set_changed_options()
             return False
         if self.module.check_mode:  # pragma: no cover
+            # For check mode, set the options to show what would change
+            self._set_changed_options()
             return True
+        # Set changed options to include username in return values
+        changed = {}
+        for key in Parameters.returnables:
+            if getattr(self.want, key) is not None:
+                changed[key] = getattr(self.want, key)
+        # Update with the new changes
+        diff = Difference(self.want, self.have)
+        updatables = Parameters.updatables
+        for k in updatables:
+            change = diff.compare(k)
+            if change is None:
+                continue
+            else:
+                if isinstance(change, dict):  # pragma: no cover
+                    changed.update(change)
+                else:
+                    changed[k] = change
+        if changed:
+            self.changes = UsableChanges(params=changed)
         self.update_on_device()
         return True
 
     def remove(self):
         if self.module.check_mode:  # pragma: no cover
+            self._set_changed_options()
             return True
+        # Set changed options before removing so we can return the deleted user info
+        self._set_changed_options()
         self.remove_from_device()
         if self.exists():
             raise F5ModuleError("Failed to delete the resource.")

@@ -1,0 +1,24 @@
+{
+    "f5-system-aaa:user": [
+        {
+            "username": "testuser",
+            "config": {
+                "username": "testuser",
+                "last-change": 20222,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "operator",
+                "expiry-status": "enabled"
+            },
+            "state": {
+                "authorized-keys": "-",
+                "username": "testuser",
+                "last-change": 20222,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "operator",
+                "expiry-status": "enabled"
+            }
+        }
+    ]
+}
