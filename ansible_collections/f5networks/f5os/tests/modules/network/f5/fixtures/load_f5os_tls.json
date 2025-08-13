@@ -1,0 +1,12 @@
+{
+    "f5-openconfig-aaa-tls:tls": {
+        "config": {
+            "verify-client": false,
+            "verify-client-depth": 1
+        },
+        "state": {
+            "verify-client": false,
+            "verify-client-depth": 1
+        }
+    }
+}

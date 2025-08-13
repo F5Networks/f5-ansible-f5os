@@ -101,18 +101,18 @@ If a support case cannot be opened with Red Hat and the collection has been obta
 
 ## Release Notes and Roadmap
 
-- [Changelog](https://github.com/F5Networks/f5-ansible-f5os/releases)
-
+- [Changelog](https://clouddocs.f5.com/products/orchestration/ansible/devel/f5os/CHANGELOG.html)
 
 ## Related Information
 
 - [F5OS Ansible Documentation](https://clouddocs.f5.com/products/orchestration/ansible/devel/f5os/F5OS-index.html)
-- [Execution Environments](https://docs.ansible.com/automation-controller/latest/html/userguide/execution_environments.html)
+- [Execution Environments](https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/creating_and_using_execution_environments/index)
 
 ## License Information
 
 Published under [GPL V3](https://www.gnu.org/licenses/gpl-3.0.txt). See the LICENSE file included in the collection for details.
 
+## Copyright
 Copyright 2025 F5 Networks Inc.
 
 [execenv]: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/creating_and_using_execution_environments/index

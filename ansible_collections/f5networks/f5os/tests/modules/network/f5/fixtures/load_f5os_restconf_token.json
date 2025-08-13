@@ -1,0 +1,5 @@
+{
+    "f5-aaa-confd-restconf-token:config": {
+        "lifetime": 15
+    }
+}

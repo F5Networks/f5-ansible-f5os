@@ -1,0 +1,6 @@
+---
+major_changes:
+  - f5os_import_tls_cert_key - Added a new module to import TLS certificates and keys onto F5OS devices.
+minor_changes:
+  - fixed issues for ansible automation hub
+  - improved testing for f5os_user module
