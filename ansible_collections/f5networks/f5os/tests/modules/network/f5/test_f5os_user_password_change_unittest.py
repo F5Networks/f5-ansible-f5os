@@ -136,3 +136,11 @@ class TestManager(TestCase):
         with self.assertRaises(F5ModuleError) as error:
             mm.exec_module()
         self.assertEqual(str(error.exception), 'Invalid password')
+
+
+# Note: Acceptance and Integration tests have been moved to:
+# test_f5os_user_password_change_integration.py
+#
+# This keeps unit tests separate from integration tests for better organization.
+# To run acceptance tests, use:
+# python -m pytest test_f5os_user_password_change_integration.py::TestAcceptanceF5OSUserPasswordChange -v

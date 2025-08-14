@@ -37,6 +37,12 @@ options:
       - snmp-info
       - qos-info
       - system-info
+      - server-groups
+      - users
+      - fdb
+      - tls
+      - restconf-token
+      - allowed-ips
       - "!all"
       - "!interfaces"
       - "!lag-interfaces"
@@ -49,6 +55,12 @@ options:
       - "!snmp-info"
       - "!qos-info"
       - "!system-info"
+      - "!server-groups"
+      - "!users"
+      - "!fdb"
+      - "!tls"
+      - "!restconf-token"
+      - "!allowed-ips"
     aliases: ['include']
 author:
   - Ravinder Reddy (@chinthalapalli)
@@ -354,6 +366,143 @@ vlans:
       type: int
       sample: 444
   sample: hash/dictionary of values
+server_groups:
+  description: Information about Server Groups on the platform.
+  returned: When C(server-groups) is specified in C(gather_subset).
+  type: complex
+  contains:
+    name:
+      description:
+        - Name of the Server Group.
+      returned: queried
+      type: str
+      sample: test-server-group
+    type:
+      description:
+        - Type of the Server Group.
+      returned: queried
+      type: str
+      sample: openconfig-aaa:RADIUS
+  sample: hash/dictionary of values
+users:
+  description: Information about users on the platform.
+  returned: When C(users) is specified in C(gather_subset).
+  type: complex
+  contains:
+    username:
+      description:
+        - Name of the user.
+      returned: queried
+      type: str
+      sample: test-user
+    role:
+      description:
+        - Role of the user.
+      returned: queried
+      type: str
+      sample: user
+    expiry_status:
+      description:
+        - Expiry status of the user.
+      returned: queried
+      type: str
+      sample: enabled
+    last_change:
+      description:
+        - Date and time when the user was last changed.
+      returned: queried
+      type: str
+      sample: "2024-08-06"
+fdb:
+  description: Information about the Forwarding Database (FDB) on the platform.
+  returned: When C(fdb) is specified in C(gather_subset).
+  type: complex
+  contains:
+    mac_address:
+      description:
+        - MAC address of the device.
+      returned: queried
+      type: str
+      sample: 00:94:a1:69:4f:02
+    tag_type:
+      description:
+        - Tag type of the device.
+      returned: queried
+      type: str
+      sample: tag_type_vid
+    vlan:
+      description:
+        - VLAN associated with the device.
+      returned: queried
+      type: int
+      sample: 100
+tls:
+  description: Information about TLS configuration on the platform.
+  returned: When C(tls) is specified in C(gather_subset).
+  type: complex
+  contains:
+    certificate:
+      description:
+        - The TLS certificate used for secure communication.
+      returned: queried
+      type: str
+    key:
+      description:
+        - The TLS key used for secure communication.
+      returned: queried
+      type: str
+    verify_client:
+      description:
+        - Indicates if client verification is enabled.
+      returned: queried
+      type: bool
+      sample: true
+    verify_client_depth:
+      description:
+        - Indicates the depth of client certificate verification.
+      returned: queried
+      type: int
+      sample: 2
+restconf_token:
+  description: Information about the RESTCONF token used for authentication.
+  returned: When C(restconf-token) is specified in C(gather_subset).
+  type: complex
+  contains:
+    lifetime:
+      description:
+        - The lifetime of the RESTCONF token used for authentication.
+      returned: queried
+      type: int
+      sample: 15
+allowed_ips:
+  description: Information about allowed IPs on the platform.
+  returned: When C(allowed-ips) is specified in C(gather_subset).
+  type: complex
+  contains:
+    name:
+      description:
+        - Name of the allowed IP address.
+      returned: queried
+      type: str
+      sample: allowed-ip-1
+    type:
+      description:
+        - The type of the allowed IP address.
+      returned: queried
+      type: str
+      sample: ipv4
+    address:
+      description:
+        - The allowed IPv4 address.
+      returned: queried
+      type: str
+      sample: 192.168.1.1
+    prefix_length:
+      description:
+        - The prefix length of the allowed IPv4 address.
+      returned: queried
+      type: int
+      sample: 24
 velos_controller_images:
   description: Information about F5OS controller ISO images uploaded on the VELOS controller.
   returned: When C(controller-images) is specified in C(gather_subset).
@@ -695,6 +844,390 @@ class VlansParameters(BaseParameters):
     @property
     def name(self):
         return self._values['config'].get('name')
+
+
+class FdbParameters(BaseParameters):
+    api_map = {
+        'mac-address': 'mac_address',
+        'tag-type': 'tag_type',
+        'vlan': 'vlan'
+    }
+
+    returnables = [
+        'mac_address',
+        'tag_type',
+        'vlan'
+    ]
+
+    @property
+    def mac_address(self):
+        return self._values['config'].get('mac-address')
+
+    @property
+    def tag_type(self):
+        return self._values['config'].get('tag-type')
+
+    @property
+    def vlan(self):
+        return self._values['config'].get('vlan')
+
+
+class FdbFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(FdbFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(fdb=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        return results
+
+    def read_facts(self):
+        results = []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = FdbParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/f5-l2fdb:fdb/mac-table/entries/entry/"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-l2fdb:entry']
+
+
+class UsersParameters(BaseParameters):
+    api_map = {
+        'username': 'username',
+        'role': 'role',
+        'expiry-status': 'expiry_status',
+        'last-change': 'last_change'
+    }
+
+    returnables = [
+        'username',
+        'role',
+        'expiry_status',
+        'last_change'
+    ]
+
+    @property
+    def username(self):
+        return self._values['config'].get('username')
+
+    @property
+    def role(self):
+        return self._values['config'].get('role')
+
+    @property
+    def expiry_status(self):
+        return self._values['config'].get('expiry-status')
+
+    @property
+    def last_change(self):
+        return self._values['config'].get('last-change')
+
+
+class UserFactManager(BaseParameters):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(UserFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(users=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        results = sorted(results, key=lambda k: k['username'])
+        return results
+
+    def read_facts(self):
+        results = []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = UsersParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/aaa/authentication/f5-system-aaa:users/user"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-system-aaa:user']
+
+
+class ServerGroupsParameters(BaseParameters):
+    api_map = {
+        'server-group': 'server_group',
+    }
+
+    returnables = [
+        'name',
+        'type'
+    ]
+
+    @property
+    def name(self):
+        return self._values['config'].get('name')
+
+    @property
+    def type(self):
+        return self._values['config'].get('type')
+
+
+class ServerGroupsFactManager(BaseParameters):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(ServerGroupsFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(server_groups=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        results = sorted(results, key=lambda k: k['name'])
+        return results
+
+    def read_facts(self):
+        results = []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = ServerGroupsParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/aaa/server-groups/"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['openconfig-system:server-groups']['server-group']
+
+
+class TLSParameters(BaseParameters):
+    api_map = {
+        'verify-client': 'verify_client',
+        'verify-client-depth': 'verify_client_depth',
+        'certificate': 'certificate',
+        'key': 'key'
+    }
+
+    returnables = [
+        'certificate',
+        'key',
+        'verify_client',
+        'verify_client_depth'
+    ]
+
+    @property
+    def certificate(self):
+        return self._values['config'].get('certificate', None)
+
+    @property
+    def key(self):
+        return self._values['config'].get('key', None)
+
+    @property
+    def verify_client(self):
+        return self._values['config'].get('verify-client', False)
+
+    @property
+    def verify_client_depth(self):
+        return self._values['config'].get('verify-client-depth', 0)
+
+
+class TLSGroupsManager(BaseParameters):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(TLSGroupsManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(tls=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        return results
+
+    def read_facts(self):
+        results = []
+
+        collection = self.read_collection_from_device()
+        params = TLSParameters(params=collection)
+        results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/aaa/f5-openconfig-aaa-tls:tls"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-openconfig-aaa-tls:tls']
+
+
+class RestconfTokenParameters(BaseParameters):
+    api_map = {
+        'lifetime': 'lifetime'
+    }
+
+    returnables = [
+        'lifetime'
+    ]
+
+    @property
+    def lifetime(self):
+        return self._values.get('lifetime')
+
+
+class RestconfTokenFactManager(BaseParameters):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(RestconfTokenFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(restconf_token=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        return results
+
+    def read_facts(self):
+        results = []
+
+        collection = self.read_collection_from_device()
+        params = RestconfTokenParameters(params=collection)
+        results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/aaa/f5-aaa-confd-restconf-token:restconf-token/config/"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-aaa-confd-restconf-token:config']
+
+
+class AllowedIPsParameters(BaseParameters):
+    api_map = {
+        'name': 'name',
+        'type': 'type',
+        'address': 'address',
+        'prefix-length': 'prefix_length',
+    }
+
+    returnables = [
+        'name',
+        'type',
+        'address',
+        'prefix_length'
+    ]
+
+    @property
+    def name(self):
+        return self._values.get('name')
+
+    @property
+    def type(self):
+        if 'ipv4' in self._values['config']:
+            return 'ipv4'
+        elif 'ipv6' in self._values['config']:
+            return 'ipv6'
+        return None
+
+    @property
+    def address(self):
+        return (
+            self._values['config']['ipv4'].get('address')
+            if 'ipv4' in self._values['config']
+            else self._values['config']['ipv6'].get('address')
+            if 'ipv6' in self._values['config']
+            else None
+        )
+
+    @property
+    def prefix_length(self):
+        return (
+            self._values['config']['ipv4'].get('prefix-length')
+            if 'ipv4' in self._values['config']
+            else self._values['config']['ipv6'].get('prefix-length')
+            if 'ipv6' in self._values['config']
+            else None
+        )
+
+
+class AllowedIPsFactManager(BaseParameters):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(AllowedIPsFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(allowed_ips=facts)
+        return result
+
+    def _exec_module(self):
+        results = []
+        facts = self.read_facts()
+        for item in facts:
+            attrs = item.to_return()
+            results.append(attrs)
+        results = sorted(results, key=lambda k: k['name'])
+        return results
+
+    def read_facts(self):
+        results = []
+        collection = self.read_collection_from_device()
+        for resource in collection:
+            params = AllowedIPsParameters(params=resource)
+            results.append(params)
+        return results
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/f5-allowed-ips:allowed-ips"
+        response = self.client.get(uri)
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']['f5-allowed-ips:allowed-ips']['allowed-ip']
 
 
 class VlansFactManager(BaseManager):
@@ -1102,7 +1635,9 @@ class InterfacesParameters(BaseParameters):
         'operational_status',
         'port_speed',
         'mac_address',
+        'native_vlan',
         'l2_counters',
+        'trunk_vlans',
     ]
 
     @property
@@ -1113,6 +1648,24 @@ class InterfacesParameters(BaseParameters):
     def loopback_mode(self):
         if 'loopback-mode' in self._values['state']:
             return flatten_boolean(self._values['state']['loopback-mode'])
+
+    @property
+    def native_vlan(self):
+        return (
+            self._values['openconfig-if-ethernet:ethernet']
+            .get('openconfig-vlan:switched-vlan', {})
+            .get('config', {})
+            .get('native-vlan')
+        )
+
+    @property
+    def trunk_vlans(self):
+        return (
+            self._values['openconfig-if-ethernet:ethernet']
+            .get('openconfig-vlan:switched-vlan', {})
+            .get('config', {})
+            .get('trunk-vlans')
+        )
 
     @property
     def admin_status(self):
@@ -1677,6 +2230,12 @@ class ModuleManager(object):
             'interfaces': InterfacesFactManager,
             'lag-interfaces': LagInterfaceFactManager,
             'vlans': VlansFactManager,
+            'server-groups': ServerGroupsFactManager,
+            'users': UserFactManager,
+            'fdb': FdbFactManager,
+            'restconf-token': RestconfTokenFactManager,
+            'allowed-ips': AllowedIPsFactManager,
+            'tls': TLSGroupsManager,
             'controller-images': ControllerImagesFactManager,
             'partition-images': PartitionImagesFactManager,
             'partitions-info': PartitionsFactManager,
@@ -1780,7 +2339,12 @@ class ArgumentSpec(object):
                     'snmp-info',
                     'qos-info',
                     'system-info',
-
+                    'server-groups',
+                    'users',
+                    'fdb',
+                    'restconf-token',
+                    'allowed-ips',
+                    'tls',
                     # Negations of meta choices
                     '!all',
 
@@ -1796,6 +2360,12 @@ class ArgumentSpec(object):
                     '!snmp-info',
                     '!qos-info',
                     '!system-info',
+                    '!server-groups',
+                    '!users',
+                    '!fdb',
+                    '!restconf-token',
+                    '!allowed-ips',
+                    '!tls',
                 ]
             ),
         )

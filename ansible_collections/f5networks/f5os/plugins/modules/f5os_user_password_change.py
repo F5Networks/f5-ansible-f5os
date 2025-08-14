@@ -179,6 +179,9 @@ class ModuleManager(object):
 
     def execute(self):
         self._set_changed_options()
+        if self.module.check_mode:
+            # In check mode, don't make actual changes - just return that we would change
+            return True
         result = self.change_password_on_device()
         return result
 

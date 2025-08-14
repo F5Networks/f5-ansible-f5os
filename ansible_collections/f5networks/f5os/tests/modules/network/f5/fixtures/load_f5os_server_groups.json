@@ -1,0 +1,145 @@
+{
+    "openconfig-system:server-groups": {
+        "server-group": [
+            {
+                "name": "CM",
+                "config": {
+                    "name": "CM",
+                    "type": "openconfig-aaa:RADIUS"
+                },
+                "state": {
+                    "name": "CM",
+                    "type": "openconfig-aaa:RADIUS"
+                }
+            },
+            {
+                "name": "sg01",
+                "config": {
+                    "name": "sg01",
+                    "type": "openconfig-aaa:RADIUS"
+                },
+                "state": {
+                    "name": "sg01",
+                    "type": "openconfig-aaa:RADIUS"
+                }
+            },
+            {
+                "name": "test",
+                "config": {
+                    "name": "test",
+                    "type": "f5-openconfig-aaa-ocsp:OCSP"
+                },
+                "state": {
+                    "name": "test",
+                    "type": "f5-openconfig-aaa-ocsp:OCSP"
+                }
+            },
+            {
+                "name": "test_server",
+                "config": {
+                    "name": "test_server",
+                    "type": "openconfig-aaa:RADIUS"
+                },
+                "state": {
+                    "name": "test_server",
+                    "type": "openconfig-aaa:RADIUS"
+                },
+                "servers": {
+                    "server": [
+                        {
+                            "address": "1.1.1.1",
+                            "config": {
+                                "address": "1.1.1.1"
+                            },
+                            "radius": {
+                                "config": {
+                                    "auth-port": 1000,
+                                    "secret-key": "$8$ZQcuBcsTO2mXvC2fu+UYcA06z0GtL9RAcaENl5zc894=",
+                                    "f5-openconfig-aaa-radius:timeout": 5
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "test_tacacs",
+                "config": {
+                    "name": "test_tacacs",
+                    "type": "openconfig-aaa:TACACS"
+                },
+                "state": {
+                    "name": "test_tacacs",
+                    "type": "openconfig-aaa:TACACS"
+                },
+                "servers": {
+                    "server": [
+                        {
+                            "address": "2.2.2.2",
+                            "config": {
+                                "address": "2.2.2.2"
+                            },
+                            "tacacs": {
+                                "config": {
+                                    "port": 49,
+                                    "secret-key": "$8$cBhdxsEpsuOiwZ33AupKTWCoQTpnRY1Hgxo5E1gae5I="
+                                }
+                            }
+                        },
+                        {
+                            "address": "3.3.3.3",
+                            "config": {
+                                "address": "3.3.3.3"
+                            },
+                            "tacacs": {
+                                "config": {
+                                    "port": 49,
+                                    "secret-key": "$8$b43h8jpcOWfmIx34K7+c365PkhqEVS5YrhxT0zzceNM="
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "test_ui2",
+                "config": {
+                    "name": "test_ui2",
+                    "type": "f5-openconfig-aaa-ldap:LDAP"
+                },
+                "state": {
+                    "name": "test_ui2",
+                    "type": "f5-openconfig-aaa-ldap:LDAP"
+                },
+                "servers": {
+                    "server": [
+                        {
+                            "address": "1.1.1.1",
+                            "config": {
+                                "address": "1.1.1.1"
+                            },
+                            "f5-openconfig-aaa-ldap:ldap": {
+                                "config": {
+                                    "auth-port": 636,
+                                    "type": "f5-openconfig-aaa-ldap:ldaps"
+                                }
+                            }
+                        },
+                        {
+                            "address": "4.4.4.4",
+                            "config": {
+                                "address": "4.4.4.4"
+                            },
+                            "f5-openconfig-aaa-ldap:ldap": {
+                                "config": {
+                                    "auth-port": 636,
+                                    "type": "f5-openconfig-aaa-ldap:ldap"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

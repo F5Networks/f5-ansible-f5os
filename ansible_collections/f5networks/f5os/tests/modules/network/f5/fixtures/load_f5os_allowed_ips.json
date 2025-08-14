@@ -1,0 +1,24 @@
+{
+    "f5-allowed-ips:allowed-ips": {
+        "allowed-ip": [
+            {
+                "name": "all_allow",
+                "config": {
+                    "ipv4": {
+                        "address": "0.0.0.0",
+                        "prefix-length": 0
+                    }
+                }
+            },
+            {
+                "name": "all_ipv6",
+                "config": {
+                    "ipv6": {
+                        "address": "::",
+                        "prefix-length": 0
+                    }
+                }
+            }
+        ]
+    }
+}

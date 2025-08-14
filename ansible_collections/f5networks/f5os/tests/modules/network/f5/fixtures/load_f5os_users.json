@@ -1,0 +1,103 @@
+{
+    "f5-system-aaa:user": [
+        {
+            "username": "admin",
+            "config": {
+                "username": "admin",
+                "last-change": 20222,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "admin",
+                "expiry-status": "enabled"
+            },
+            "state": {
+                "authorized-keys": "-",
+                "username": "admin",
+                "last-change": 20222,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "admin",
+                "expiry-status": "enabled"
+            }
+        },
+        {
+            "username": "ansible-tenant01",
+            "config": {
+                "username": "ansible-tenant01",
+                "last-change": 0,
+                "tally-count": 0,
+                "expiry-date": "1",
+                "role": "tenant-console",
+                "expiry-status": "locked"
+            },
+            "state": {
+                "authorized-keys": "-",
+                "username": "ansible-tenant01",
+                "last-change": 0,
+                "tally-count": 0,
+                "expiry-date": "1",
+                "role": "tenant-console",
+                "expiry-status": "locked"
+            }
+        },
+        {
+            "username": "ravibigip",
+            "config": {
+                "username": "ravibigip",
+                "last-change": 0,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "tenant-console",
+                "expiry-status": "enabled"
+            },
+            "state": {
+                "authorized-keys": "-",
+                "username": "ravibigip",
+                "last-change": 0,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "tenant-console",
+                "expiry-status": "enabled"
+            }
+        },
+        {
+            "username": "root",
+            "config": {
+                "username": "root",
+                "last-change": 0,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "root",
+                "expiry-status": "enabled"
+            },
+            "state": {
+                "username": "root",
+                "last-change": 0,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "root",
+                "expiry-status": "enabled"
+            }
+        },
+        {
+            "username": "testuser",
+            "config": {
+                "username": "testuser",
+                "last-change": 0,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "operator",
+                "expiry-status": "enabled"
+            },
+            "state": {
+                "authorized-keys": "-",
+                "username": "testuser",
+                "last-change": 0,
+                "tally-count": 0,
+                "expiry-date": "-1",
+                "role": "operator",
+                "expiry-status": "enabled"
+            }
+        }
+    ]
+}

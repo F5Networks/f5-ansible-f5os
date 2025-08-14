@@ -1,44 +1,72 @@
 # F5OS Collection for Ansible
 
-A collection focusing on managing F5 OS devices through an API. The collection includes key imperative modules for 
-managing Velos chassis and rSeries platform lifecycles as well as F5OS tenant and partition management.
+## Description
+
+The F5OS Ansible Collection enables automation and lifecycle management of F5OS devices, including Velos chassis and rSeries platforms. It provides resources for managing tenants, partitions, users, and device configurations via the F5OS OpenAPI. This collection is ideal for network engineers, DevOps teams, and IT administrators seeking to automate F5OS device operations, streamline deployments, and ensure consistent configuration management.
+
+**Key Benefits:**
+- Automate F5OS device onboarding, configuration, and lifecycle tasks
+- Integrate with Ansible Automation Platform and Execution Environments
+- Support for Velos and rSeries platforms with F5OS API access
 
 ## Requirements
 
- - ansible >= 2.16
+- **Ansible:** >= 2.16
+- **Python:** >= 3.9
+- **Dependencies:**
+  - [ansible.netcommon](https://galaxy.ansible.com/ansible/netcommon)
+  - F5OS device with API access
+- Additional prerequisites may include network connectivity and authentication credentials for F5OS devices.
 
-## Python Version
-This collection is supported on Python 3.9 and above.
+## Installation
 
-## Collections Daily Build
+Install the collection from Ansible Galaxy:
 
-We offer a daily build of our most recent collection [dailybuild]. Use this Collection to test the most
-recent Ansible module updates between releases. 
-You can also install the development build directly from GitHub into your environment, see [repoinstall].
-
-### Install from GitHub
-```bash
-
-ansible-galaxy collection install git+https://github.com/F5Networks/f5-ansible-f5os#ansible_collections/f5networks/f5os
+```
+ansible-galaxy collection install f5networks.f5os
 ```
 
-### Install from the daily build file
-```bash
+To install the collection in a custom path (e.g., `./collections`), use the `-p` option:
 
-    ansible-galaxy collection install <collection name> -p ./collections
-    e.g.
-    ansible-galaxy collection install f5networks-f5os-devel.tar.gz -p ./collections
+```
+ansible-galaxy collection install f5networks.f5os -p ./collections
 ```
 
-> **_NOTE:_**  `-p` is the location in which the collection will be installed. This location should be defined in the path for
-    Ansible to search for collections. An example of this would be adding ``collections_paths = ./collections``
-    to your **ansible.cfg**
+Or via a `requirements.yml` file:
 
-### Running latest devel in EE
-We also offer a new method of running the collection inside Ansible's Execution Environment container. 
-The advantage of such approach is that any required package dependencies and minimum supported Python versions are 
-installed in an isolated container which minimizes any environment related issues during runtime. More information on EE
-can be found here [execenv]. Use the below requirements.yml file when building EE container:
+```yaml
+collections:
+  - name: f5networks.f5os
+```
+
+To upgrade to the latest version:
+
+```
+ansible-galaxy collection install f5networks.f5os --upgrade
+```
+
+To install a specific version (e.g., 1.0.0):
+
+```
+ansible-galaxy collection install f5networks.f5os:==1.0.0
+```
+
+See [using Ansible collections](https://docs.ansible.com/ansible/devel/user_guide/collections_using.html) for more details.
+
+**Authentication:**
+- Ensure you have valid credentials and API access to your F5OS device.
+- See [f5execenv](https://clouddocs.f5.com/products/orchestration/ansible/devel/usage/exec-env.html) for Execution Environment setup.
+
+## Example Usage
+
+To use a module from this collection, please refer [f5os-guide](https://clouddocs.f5.com/products/orchestration/ansible/devel/f5os/f5os.html#using-the-f5os-collection)
+
+
+## Running the Collection in an Execution Environment (EE)
+
+You can run this collection inside an Ansible Execution Environment (EE) container. This approach ensures all required package dependencies and minimum supported Python versions are installed in an isolated container, minimizing environment-related issues during runtime.
+
+To use the collection in an EE, add it to your `requirements.yml` file. For example:
 
 ```yaml
 ---
@@ -46,70 +74,45 @@ collections:
   - name: ansible.netcommon
     version: ">=2.0.0"
   - name: f5networks.f5os
-    source: https://github.com/F5Networks/f5-ansible-f5os#ansible_collections/f5networks/f5os
-    type: git
-    version: devel
 ```
 
-Please see [f5execenv] documentation for further instructions how to use and build EE container with our devel branch.
+When building your EE container, include this requirements file. For more information on building and using EEs, see the [execenv]
 
-## Tips
+## Use Cases
 
-* You can leverage both this declarative collection and the previous imperative collection at the same time.
-* If you are migrating from the imperative collection, you can leave the provider variables and reference them from 
-  the new httpapi connection variables:
+1. **User and Role Management:** Automate creation, update, and deletion of users and roles on F5OS devices.
+2. **Device Onboarding:** Provision new Velos or rSeries devices with initial configuration and tenant setup.
+3. **Partition and Tenant Operations:** Create, update, and remove partitions and tenants declaratively.
 
-```yaml
-   ansible_host: "{{ provider.server }}"
-   ansible_user: "{{ provider.user }}"
-   ansible_httpapi_password: "{{ provider.password }}"
-   ansible_httpapi_port: "{{ provider.server_port }}"
-   ansible_network_os: f5networks.f5os.f5os
-   ansible_httpapi_use_ssl: yes
-   ansible_httpapi_validate_certs: "{{ provider.validate_certs }}"
-```
+## Testing
 
-## Bugs, Issues
-   
-Please file any bugs, questions, or enhancement requests by using [ansible_issues]. For details, see [ansiblehelp].
+- The collection is tested on Python 3.9+ and Ansible 2.16+.
+- Functional and unit tests are run against Velos and rSeries platforms.
 
-## Your ideas
+## Contributing
 
-What types of modules do you want created? If you have a use case and can sufficiently describe the behavior 
-you want to see, open an issue and we will hammer out the details.
+Contributions are welcome! Please review the [F5 Contributor License Agreement](https://clouddocs.f5.com/products/orchestration/ansible/devel/usage/contributor.html) and submit it to Ansible_CLA@f5.com before submitting code. For guidelines, see [repoinstall](https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html#installing-a-collection-from-a-git-repository).
 
-If you've got the time, consider sending an email that introduces yourself and what you do. 
-We love hearing about how you're using the F5OS collection for Ansible.
 
-**_NOTE:_** **This repository is a mirror, only issues submissions are accepted.**
+## Support
 
-- F5 Ansible Module Development Team
+As Red Hat Ansible Certified Content, this collection is entitled to support through the Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner.
+If a support case cannot be opened with Red Hat and the collection has been obtained either from Galaxy or GitHub, you can also file issues on [ansible_issues](https://github.com/F5Networks/f5-ansible-f5os/issues).
+
+## Release Notes and Roadmap
+
+- [Changelog](https://clouddocs.f5.com/products/orchestration/ansible/devel/f5os/CHANGELOG.html)
+
+## Related Information
+
+- [F5OS Ansible Documentation](https://clouddocs.f5.com/products/orchestration/ansible/devel/f5os/F5OS-index.html)
+- [Execution Environments](https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/creating_and_using_execution_environments/index)
+
+## License Information
+
+Published under [GPL V3](https://www.gnu.org/licenses/gpl-3.0.txt). See the LICENSE file included in the collection for details.
 
 ## Copyright
-
 Copyright 2025 F5 Networks Inc.
 
-
-## License
-
-### GPL V3
-
-This License does not grant permission to use the trade names, trademarks, service marks, or product names of the 
-Licensor, except as required for reasonable and customary use in describing the origin of the Work.
-
-See [License].
-
-### Contributor License Agreement
-Individuals or business entities who contribute to this project must complete and submit the 
-[F5 Contributor License Agreement] to ***Ansible_CLA@f5.com*** prior to their code submission 
-being included in this project.
-
-
-[repoinstall]: https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html#installing-a-collection-from-a-git-repository
-[dailybuild]: https://f5-ansible.s3.amazonaws.com/collections/f5networks-f5os-devel.tar.gz
-[ansible_issues]: https://github.com/F5Networks/f5-ansible-f5os/issues
-[License]: https://www.gnu.org/licenses/gpl-3.0.txt
-[ansiblehelp]: https://clouddocs.f5.com/products/orchestration/ansible/devel/
-[execenv]: https://docs.ansible.com/automation-controller/latest/html/userguide/execution_environments.html
-[f5execenv]: https://clouddocs.f5.com/products/orchestration/ansible/devel/usage/exec-env.html
-[F5 Contributor License Agreement]: https://clouddocs.f5.com/products/orchestration/ansible/devel/usage/contributor.html
+[execenv]: https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.5/html/creating_and_using_execution_environments/index

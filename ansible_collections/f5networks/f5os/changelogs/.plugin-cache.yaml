@@ -25,6 +25,11 @@ plugins:
       name: f5os_auth
       namespace: ''
       version_added: 1.10.0
+    f5os_auth_ldap:
+      description: Manage LDAP common configuration.
+      name: f5os_auth_ldap
+      namespace: ''
+      version_added: 1.15.0
     f5os_auth_server:
       description: Manage Auth Server Groups and Server inside it.
       name: f5os_auth_server
@@ -50,6 +55,11 @@ plugins:
       name: f5os_fdb
       namespace: ''
       version_added: 1.15.0
+    f5os_import_tls_cert_key:
+      description: Import TLS certificate and key onto F5OS devices.
+      name: f5os_import_tls_cert_key
+      namespace: ''
+      version_added: 1.12.0
     f5os_interface:
       description: Manage network interfaces on F5OS based systems
       name: f5os_interface
@@ -213,4 +223,4 @@ plugins:
   strategy: {}
   test: {}
   vars: {}
-version: 1.19.0
+version: 1.20.0
