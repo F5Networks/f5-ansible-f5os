@@ -12,9 +12,8 @@ import pytest
 
 from ansible.module_utils.basic import AnsibleModule
 
-from ansible_collections.f5networks.f5os.plugins.modules import f5os_user
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_user import (
-    ArgumentSpec, ModuleManager, ApiParameters, ModuleParameters, 
+    ArgumentSpec, ModuleManager, ApiParameters, ModuleParameters,
     UsableChanges, ReportableChanges, Difference
 )
 
@@ -22,11 +21,7 @@ from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5Mo
 
 from ansible_collections.f5networks.f5os.tests.compat import unittest
 from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
-from ansible_collections.f5networks.f5os.tests.modules.utils import (
-    set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
-)
-
-from ansible_collections.f5networks.f5os.plugins.module_utils.client import F5Client
+from ansible_collections.f5networks.f5os.tests.modules.utils import set_module_args
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
 fixture_data = {}
@@ -130,7 +125,6 @@ class TestParameters(unittest.TestCase):
 
 
 class TestManager(unittest.TestCase):
-
     def setUp(self):
         self.spec = ArgumentSpec()
         self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_user.send_teem')
@@ -380,20 +374,16 @@ class TestManagerDeviceMethods(unittest.TestCase):
             username='testuser',
             role='operator'
         ))
-
         module = AnsibleModule(
             argument_spec=self.spec.argument_spec,
             supports_check_mode=self.spec.supports_check_mode,
         )
-
         mm = ModuleManager(module=module)
         mm.client = Mock()
         mm.client.post.return_value = {'code': 201}
         mm._set_changed_options()
-
         result = mm.create_on_device()
         assert result is True
-
         # Verify the payload structure
         call_args = mm.client.post.call_args
         expected_uri = "/openconfig-system:system/aaa/authentication/f5-system-aaa:users"
@@ -406,7 +396,6 @@ class TestManagerDeviceMethods(unittest.TestCase):
                 }
             }
         }
-        
         assert call_args[0][0] == expected_uri
         assert call_args[1]['data'] == expected_payload
 
@@ -480,7 +469,6 @@ class TestManagerDeviceMethods(unittest.TestCase):
         # Verify the correct URI and payload
         call_args = mm.client.patch.call_args
         expected_uri = "/openconfig-system:system/aaa/authentication/f5-system-aaa:users/user=testuser"
-        
         assert call_args[0][0] == expected_uri
 
     def test_update_on_device_error(self):
@@ -525,7 +513,6 @@ class TestManagerDeviceMethods(unittest.TestCase):
         # Verify the correct URI
         call_args = mm.client.delete.call_args
         expected_uri = "/openconfig-system:system/aaa/authentication/f5-system-aaa:users/user=testuser"
-        
         assert call_args[0][0] == expected_uri
 
     def test_remove_from_device_error(self):
@@ -692,37 +679,32 @@ class TestDifferenceClass(unittest.TestCase):
     def test_compare_role_different(self):
         want = ModuleParameters(params={'username': 'test', 'role': 'admin'})
         have = ApiParameters(params={
-            'username': 'test', 
+            'username': 'test',
             'config': {'role': 'operator', 'expiry-status': 'enabled'}
         })
-        
         diff = Difference(want, have)
         result = diff.compare('role')
-        
         assert result == 'admin'
 
     def test_compare_role_same(self):
         want = ModuleParameters(params={'username': 'test', 'role': 'operator'})
         have = ApiParameters(params={
-            'username': 'test', 
+            'username': 'test',
             'config': {'role': 'operator', 'expiry-status': 'enabled'}
         })
-        
+
         diff = Difference(want, have)
         result = diff.compare('role')
-        
         assert result is None
 
     def test_compare_nonexistent_param(self):
         want = ModuleParameters(params={'username': 'test', 'role': 'admin'})
         have = ApiParameters(params={
-            'username': 'test', 
+            'username': 'test',
             'config': {'role': 'operator', 'expiry-status': 'enabled'}
         })
-        
         diff = Difference(want, have)
         result = diff.compare('nonexistent')
-        
         assert result is None
 
 
@@ -731,7 +713,6 @@ class TestChangesClass(unittest.TestCase):
     def test_usable_changes_to_return(self):
         changes = UsableChanges(params={'username': 'test', 'role': 'admin'})
         result = changes.to_return()
-        
         assert 'username' in result
         assert 'role' in result
         assert result['username'] == 'test'
@@ -740,7 +721,6 @@ class TestChangesClass(unittest.TestCase):
     def test_reportable_changes_to_return(self):
         changes = ReportableChanges(params={'username': 'test', 'role': 'admin'})
         result = changes.to_return()
-        
         assert 'username' in result
         assert 'role' in result
         assert result['username'] == 'test'
@@ -751,7 +731,6 @@ class TestArgumentSpec(unittest.TestCase):
 
     def test_argument_spec_required_args(self):
         spec = ArgumentSpec()
-        
         assert 'username' in spec.argument_spec
         assert 'role' in spec.argument_spec
         assert spec.argument_spec['username']['required'] is True
@@ -759,7 +738,6 @@ class TestArgumentSpec(unittest.TestCase):
 
     def test_argument_spec_optional_args(self):
         spec = ArgumentSpec()
-        
         assert 'expiry_status' in spec.argument_spec
         assert 'state' in spec.argument_spec
         assert spec.argument_spec['state']['default'] == 'present'

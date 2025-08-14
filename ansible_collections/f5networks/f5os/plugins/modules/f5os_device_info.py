@@ -1635,7 +1635,9 @@ class InterfacesParameters(BaseParameters):
         'operational_status',
         'port_speed',
         'mac_address',
+        'native_vlan',
         'l2_counters',
+        'trunk_vlans',
     ]
 
     @property
@@ -1646,6 +1648,24 @@ class InterfacesParameters(BaseParameters):
     def loopback_mode(self):
         if 'loopback-mode' in self._values['state']:
             return flatten_boolean(self._values['state']['loopback-mode'])
+
+    @property
+    def native_vlan(self):
+        return (
+            self._values['openconfig-if-ethernet:ethernet']
+            .get('openconfig-vlan:switched-vlan', {})
+            .get('config', {})
+            .get('native-vlan')
+        )
+
+    @property
+    def trunk_vlans(self):
+        return (
+            self._values['openconfig-if-ethernet:ethernet']
+            .get('openconfig-vlan:switched-vlan', {})
+            .get('config', {})
+            .get('trunk-vlans')
+        )
 
     @property
     def admin_status(self):
