@@ -1,3 +1,0 @@
----
-major_changes:
-  - f5os_auth_ldap - Added support for LDAP configuration management in F5OS.

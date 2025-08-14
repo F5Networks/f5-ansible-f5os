@@ -7,6 +7,23 @@ F5Networks.F5OS Release Notes
 v1.37.0
 =======
 
+v1.20.0
+=======
+
+Major Changes
+-------------
+
+- f5os_auth_ldap - Added support for LDAP configuration management in F5OS.
+- f5os_import_tls_cert_key - Added a new module to import TLS certificates and keys onto F5OS devices.
+
+Minor Changes
+-------------
+
+- f5os_device_info - Added Allowed Ips, Rest config token and TLS information for F5OS devices.
+- f5os_device_info - Added server-groups, users and fdb information collection for F5OS devices.
+- fixed issues for ansible automation hub
+- improved testing for f5os_user module
+
 v1.19.0
 =======
 
