@@ -246,11 +246,9 @@ class ModuleManager(object):
                     return True
                 return False
         else:
-            if self.install_status_complete():
-                pass
-            # try:
-            #     result = self.install_status_complete()
-            #     return True
+
+            if self.want.state == "present":
+                return self.install_status_complete()
             uri = "/openconfig-system:system/f5-system-image:image/state/install"
             response = self.client.get(uri)
             if response['code'] == 404 and self.client.platform == 'Velos Controller':
@@ -275,14 +273,7 @@ class ModuleManager(object):
                         response['contents']['f5-system-image:install']['install-status'] == 'success':
                     return True
             if response['code'] not in [200, 201, 202]:
-                raise F5ModuleError(response['contents'])
-                # {
-                #     "f5-system-image:install": {
-                #         "install-os-version": "1.8.0-13819",
-                #         "install-service-version": "1.8.0-13819",
-                #         "install-status": "success"
-                #     }
-                # }
+                return False
             return False
 
     def check_partition(self):
@@ -399,11 +390,22 @@ class ModuleManager(object):
                                         raise F5ModuleError('Installation Failed with status' + partition['state']['install-status'])
 
             else:
-                uri = "api"
-                response = self.client.get(uri, scope="/")
-                if response['code'] not in [200, 201, 202]:
-                    raise F5ModuleError(response['contents'])
-                return False
+                if self.client.platform == 'rSeries Platform':
+                    uri = "/openconfig-system:system/f5-system-image:image/state/install"
+                    response = self.client.get(uri)
+                    if response['code'] not in [200, 201, 202]:
+                        raise F5ModuleError(response['contents'])
+                    install_status = response['contents'].get('f5-system-image:install', {}).get('install-status', '')
+                    return install_status != 'success'
+                elif self.client.platform == 'Velos Controller':
+                    uri = "/openconfig-system:system/f5-system-controller-image:image"
+                    response = self.client.get(uri)
+                    if response['code'] not in [200, 201, 202]:
+                        raise F5ModuleError(response['contents'])
+                    for ctrl in response['contents'].get('f5-system-controller-image:image', {}).get('state', {}).get('controllers', {}).get('controller', []):
+                        if ctrl.get('os-version') == self.want.image_version:
+                            return ctrl.get('install-status') != 'success'
+                    return True
         except Exception as e:
             if e.__class__.__name__ == 'ConnectionError':
                 return True
