@@ -81,6 +81,10 @@ options:
             - Specifies whether to use Unix attributes for the LDAP search
             - Unix attributes does not apply to Velos Partition.
         type: bool
+    tls_ca_certificate:
+        description:
+            - Specifies the TLS certificate from a CA which signed the certificate of the LDAP server
+            - Applies only when C(tls) is set to C(start_tls) or C(on).
     tls_certificate:
         description:
             - Specifies the TLS certificate to be used for the LDAP search
@@ -173,6 +177,10 @@ unix_attributes:
   description: Whether to use Unix attributes for the LDAP search.
   returned: changed
   type: bool
+tls_ca_certificate:
+  description: TLS certificate from a CA which signed the certificate of the LDAP server.
+  returned: changed
+  type: str
 tls_certificate:
   description: TLS certificate to be used for the LDAP search.
   returned: changed
@@ -213,6 +221,7 @@ class Parameters(AnsibleF5Parameters):
         'tls_ciphers',
         'active_directory',
         'unix_attributes',
+        'tls_ca_certificate',
         'tls_certificate',
         'tls_key'
     ]
@@ -234,6 +243,7 @@ class Parameters(AnsibleF5Parameters):
         'tls_ciphers',
         'active_directory',
         'unix_attributes',
+        'tls_ca_certificate',
         'tls_certificate',
         'tls_key'
     ]
@@ -317,6 +327,12 @@ class ApiParameters(Parameters):
     def unix_attributes(self):
         if 'unix_attributes' in self._values:
             return self._values['unix_attributes']
+        return None
+
+    @property
+    def tls_ca_certificate(self):
+        if 'tls_cacert' in self._values:
+            return self._values['tls_cacert']
         return None
 
     @property
@@ -485,6 +501,7 @@ class ModuleManager(object):
                 "tls_ciphers": params.get("tls_ciphers") if params.get("tls_ciphers") is not None else self.have.tls_ciphers,
                 "active_directory": params.get("active_directory") if params.get("active_directory") is not None else self.have.active_directory,
                 "unix_attributes": params.get("unix_attributes") if params.get("unix_attributes") is not None else self.have.unix_attributes,
+                "tls_cacert": params.get("tls_ca_certificate") if params.get("tls_ca_certificate") is not None else self.have.tls_ca_certificate,
                 "tls_cert": params.get("tls_certificate") if params.get("tls_certificate") is not None else self.have.tls_certificate,
                 "tls_key": params.get("tls_key") if params.get("tls_key") is not None else self.have.tls_key,
             }
@@ -535,6 +552,7 @@ class ArgumentSpec(object):
             tls_ciphers=dict(type='str'),
             active_directory=dict(type='bool'),
             unix_attributes=dict(type='bool'),
+            tls_ca_certificate=dict(type='str'),
             tls_certificate=dict(type='str'),
             tls_key=dict(type='str', no_log=True),
         )
