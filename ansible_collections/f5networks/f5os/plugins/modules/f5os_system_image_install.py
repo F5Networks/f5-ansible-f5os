@@ -417,6 +417,10 @@ class ModuleManager(object):
                         f"Version '{self.want.image_version}' not found in controller install status. "
                         f"Available: {available_versions}"
                     )
+                else:
+                    raise F5ModuleError(
+                        f"Unsupported platform for install status check: {self.client.platform}"
+                    )
         except Exception as e:
             if e.__class__.__name__ == 'ConnectionError':
                 return True
