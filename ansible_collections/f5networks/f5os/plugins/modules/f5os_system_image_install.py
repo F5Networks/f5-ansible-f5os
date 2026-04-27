@@ -272,8 +272,12 @@ class ModuleManager(object):
                 if response['contents']['f5-system-image:install']['install-os-version'] == self.want.image_version and \
                         response['contents']['f5-system-image:install']['install-status'] == 'success':
                     return True
-            if response['code'] not in [200, 201, 202]:
+            if response['code'] == 404:
                 return False
+            if response['code'] not in [200, 201, 202]:
+                raise F5ModuleError(
+                    f"Unexpected {response['code']} response from install status check: {response['contents']}"
+                )
             return False
 
     def check_partition(self):
