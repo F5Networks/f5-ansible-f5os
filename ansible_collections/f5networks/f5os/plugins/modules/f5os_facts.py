@@ -86,8 +86,8 @@ class ModuleManager(object):
             version = self.client.software_version
             if version:
                 facts['version'] = version
-        except Exception:
-            pass
+        except (AttributeError, KeyError):
+            self.module.warn('Unable to retrieve software version from device')
 
         ansible_facts = {}
         for key, value in facts.items():
