@@ -402,10 +402,17 @@ class ModuleManager(object):
                     response = self.client.get(uri)
                     if response['code'] not in [200, 201, 202]:
                         raise F5ModuleError(response['contents'])
-                    for ctrl in response['contents'].get('f5-system-controller-image:image', {}).get('state', {}).get('controllers', {}).get('controller', []):
+                    controllers = response['contents'].get(
+                        'f5-system-controller-image:image', {}
+                    ).get('state', {}).get('controllers', {}).get('controller', [])
+                    for ctrl in controllers:
                         if ctrl.get('os-version') == self.want.image_version:
                             return ctrl.get('install-status') != 'success'
-                    return True
+                    available_versions = [c.get('os-version') for c in controllers]
+                    raise F5ModuleError(
+                        f"Version '{self.want.image_version}' not found in controller install status. "
+                        f"Available: {available_versions}"
+                    )
         except Exception as e:
             if e.__class__.__name__ == 'ConnectionError':
                 return True
