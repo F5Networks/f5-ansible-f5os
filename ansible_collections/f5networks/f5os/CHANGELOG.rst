@@ -126,6 +126,7 @@ Bugfixes
 New Modules
 -----------
 
+- f5networks.f5os.f5os_auth_ldap - Manage LDAP common configuration on F5OS systems.
 - f5networks.f5os.f5os_auth_server - Manage Auth Server Groups and Server inside it.
 - f5networks.f5os.f5os_fdb - Manage Layer 2 forwarding database (FDB) entry in the system
 - f5networks.f5os.f5os_qos_traffic_priority - Manage QoS Traffic Priorities on F5OS
