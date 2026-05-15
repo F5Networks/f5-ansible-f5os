@@ -27,6 +27,7 @@ Bugfixes
 - f5os_system_image_install - Raise error for unsupported platform in install status check instead of silently returning None.
 - f5os_device_info - Handle empty API errors for unsupported subsets when using gather_subset all.
 - f5os_facts - Narrow exception handling for software version retrieval and emit warning instead of silently swallowing errors.
+- f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added update_password parameter (always/on_create) to control bind password update behavior.
 
 New Modules
 -----------
