@@ -135,7 +135,7 @@ class Parameters(AnsibleF5Parameters):
 
     updatables = [
         'registration_key',
-        'addon_keys',
+        'addon_keys'
     ]
 
 
