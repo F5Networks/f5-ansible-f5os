@@ -17,6 +17,7 @@ Minor Changes
 -------------
 
 - f5os httpapi plugin - Added get_capabilities support and software version detection during login.
+- f5os_license - Added ``proxy_server`` parameter to support license activation through an HTTP proxy (F5OS-A 1.8.0+).
 
 Bugfixes
 --------
