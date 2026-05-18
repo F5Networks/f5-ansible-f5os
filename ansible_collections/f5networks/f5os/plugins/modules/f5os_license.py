@@ -161,6 +161,18 @@ class ModuleParameters(Parameters):
         return result
 
     @property
+    def proxy_server(self):
+        result = self._values.get('proxy_server')
+        if result is None:
+            return None
+        if not result.startswith(('http://', 'https://')):
+            raise F5ModuleError(
+                "The proxy_server value must be a full URL starting with "
+                "'http://' or 'https://', got: {0}".format(result)
+            )
+        return result
+
+    @property
     def license_options(self):
         result = dict(
             eula=self.eula or '',
