@@ -140,7 +140,7 @@ class TestManager(unittest.TestCase):
         """Test license activation with proxy_server only."""
         set_module_args(dict(
             registration_key='XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
-            proxy_server='http://vz-proxy.pncint.net:443',
+            proxy_server='http://proxy.example.com:8080',
             state='present',
         ))
 
@@ -159,19 +159,19 @@ class TestManager(unittest.TestCase):
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
-        self.assertEqual(results['proxy_server'], 'http://vz-proxy.pncint.net:443')
+        self.assertEqual(results['proxy_server'], 'http://proxy.example.com:8080')
 
         # Verify get_eula call payload contains proxy-server
         eula_payload = mm.client.post.call_args_list[0][0][1]
         self.assertEqual(
             eula_payload['f5-system-licensing-install:proxy-server'],
-            'http://vz-proxy.pncint.net:443'
+            'http://proxy.example.com:8080'
         )
         # Verify install call payload contains proxy-server
         install_payload = mm.client.post.call_args_list[1][0][1]
         self.assertEqual(
             install_payload['f5-system-licensing-install:proxy-server'],
-            'http://vz-proxy.pncint.net:443'
+            'http://proxy.example.com:8080'
         )
 
     def test_license_activate_with_addon_and_proxy(self, *args):
@@ -179,7 +179,7 @@ class TestManager(unittest.TestCase):
         set_module_args(dict(
             registration_key='XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
             addon_keys=['YYYYY-YYYYYYY'],
-            proxy_server='http://vz-proxy.pncint.net:443',
+            proxy_server='http://proxy.example.com:8080',
             state='present',
         ))
 
@@ -198,7 +198,7 @@ class TestManager(unittest.TestCase):
         results = mm.exec_module()
 
         self.assertTrue(results['changed'])
-        self.assertEqual(results['proxy_server'], 'http://vz-proxy.pncint.net:443')
+        self.assertEqual(results['proxy_server'], 'http://proxy.example.com:8080')
         self.assertListEqual(results['addon_keys'], ['YYYYY-YYYYYYY'])
 
         # Verify get_eula call payload contains all expected keys
@@ -213,7 +213,7 @@ class TestManager(unittest.TestCase):
         )
         self.assertEqual(
             eula_payload['f5-system-licensing-install:proxy-server'],
-            'http://vz-proxy.pncint.net:443'
+            'http://proxy.example.com:8080'
         )
         # Verify install call payload contains all expected keys
         install_payload = mm.client.post.call_args_list[1][0][1]
@@ -227,7 +227,7 @@ class TestManager(unittest.TestCase):
         )
         self.assertEqual(
             install_payload['f5-system-licensing-install:proxy-server'],
-            'http://vz-proxy.pncint.net:443'
+            'http://proxy.example.com:8080'
         )
 
     def test_license_activate_with_addon_no_proxy(self, *args):
@@ -268,7 +268,7 @@ class TestManager(unittest.TestCase):
         """Test license activation fails with server error."""
         set_module_args(dict(
             registration_key='XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
-            proxy_server='http://vz-proxy.pncint.net:443',
+            proxy_server='http://proxy.example.com:8080',
             state='present',
         ))
 
