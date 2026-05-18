@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# t -*- coding: utf-8 -*-
 #
 # Copyright: (c) 2024, F5 Networks Inc.
 # GNU General Public License v3.0 (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
@@ -73,6 +73,19 @@ class TestParameters(unittest.TestCase):
         self.assertEqual(p.registration_key, 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX')
         self.assertListEqual(p.addon_keys, ['YYYYY-YYYYYYY'])
         self.assertIsNone(p.proxy_server)
+
+    def test_module_parameters_invalid_proxy_server(self):
+        args = dict(
+            registration_key='XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
+            proxy_server='proxy.example.com:443',
+        )
+
+        p = ModuleParameters(params=args)
+
+        with self.assertRaises(F5ModuleError) as err:
+            p.proxy_server
+
+        self.assertIn('must be a full URL', err.exception.args[0])
 
 
 class TestManager(unittest.TestCase):
