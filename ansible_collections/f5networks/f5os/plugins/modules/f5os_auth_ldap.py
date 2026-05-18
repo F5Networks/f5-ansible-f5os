@@ -106,8 +106,8 @@ notes:
     - The parameters not specified in the module will not be updated and will remain unchanged.
     - The F5OS API returns the bind password as an encrypted ciphertext that changes on every request, making direct comparison impossible.
     - When C(update_password) is set to C(always) (the default), the bind password will be sent on
-    every run, reporting a change each time. Set C(update_password) to C(on_create) to only set
-    the password when no password is currently configured.
+      every run, reporting a change each time. Set C(update_password) to C(on_create) to only set
+      the password when no password is currently configured.
 author:
     - Prateek Ramani (@ramani)
 '''
