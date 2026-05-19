@@ -170,6 +170,18 @@ class ModuleParameters(Parameters):
                 "The proxy_server value must be a full URL starting with "
                 "'http://' or 'https://', got: {0}".format(result)
             )
+        try:
+            from ansible.module_utils.six.moves.urllib.parse import urlparse
+            parsed = urlparse(result)
+            if not parsed.hostname:
+                raise F5ModuleError(
+                    "The proxy_server value must contain a valid hostname, "
+                    "got: {0}".format(result)
+                )
+        except F5ModuleError:
+            raise
+        except Exception:
+            pass
         return result
 
     @property
@@ -428,7 +440,12 @@ class ModuleManager(object):
 
     def create_on_device(self):
         '''Install the license on the device'''
-        self.get_eula()
+        eula_accepted = self.get_eula()
+        if not eula_accepted:
+            raise F5ModuleError(
+                "EULA was not accepted by the license server. "
+                "License installation cannot proceed."
+            )
         uri = "/openconfig-system:system/f5-system-licensing:licensing/f5-system-licensing-install:install"
         license_payload = {
             "f5-system-licensing-install:registration-key": self.want.registration_key,
@@ -477,6 +494,7 @@ class ArgumentSpec(object):
             ),
             proxy_server=dict(
                 type='str',
+                no_log=True,
             ),
             license_server=dict(
                 default='activate.f5.com'

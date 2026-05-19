@@ -1,4 +1,4 @@
-# t -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 # Copyright: (c) 2024, F5 Networks Inc.
 # GNU General Public License v3.0 (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
@@ -86,6 +86,19 @@ class TestParameters(unittest.TestCase):
             p.proxy_server
 
         self.assertIn('must be a full URL', err.exception.args[0])
+
+    def test_module_parameters_proxy_server_missing_hostname(self):
+        args = dict(
+            registration_key='XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
+            proxy_server='http://',
+        )
+
+        p = ModuleParameters(params=args)
+
+        with self.assertRaises(F5ModuleError) as err:
+            p.proxy_server
+
+        self.assertIn('must contain a valid hostname', err.exception.args[0])
 
 
 class TestManager(unittest.TestCase):
@@ -263,6 +276,29 @@ class TestManager(unittest.TestCase):
         install_payload = mm.client.post.call_args_list[1][0][1]
         self.assertIn('f5-system-licensing-install:add-on-keys', install_payload)
         self.assertNotIn('f5-system-licensing-install:proxy-server', install_payload)
+
+    def test_license_activate_eula_not_accepted(self, *args):
+        """Test license activation fails when EULA is not accepted."""
+        set_module_args(dict(
+            registration_key='XXXXX-XXXXX-XXXXX-XXXXX-XXXXX',
+            state='present',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(side_effect=[
+            dict(code=200, contents={'f5-system-licensing-install:output': {'status': 'eula-not-accepted'}}),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('EULA was not accepted', err.exception.args[0])
 
     def test_license_install_fails(self, *args):
         """Test license activation fails with server error."""
