@@ -5,6 +5,19 @@ F5Networks.F5OS Release Notes
 .. contents:: Topics
 
 
+v1.22.0
+=======
+
+Minor Changes
+-------------
+
+- f5os_license - Added ``proxy_server`` parameter to support license activation through an HTTP proxy (F5OS-A 1.8.0+).
+
+Bugfixes
+--------
+
+- f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added update_password parameter (always/on_create) to control bind password update behavior.
+
 v1.21.0
 =======
 
@@ -17,7 +30,6 @@ Minor Changes
 -------------
 
 - f5os httpapi plugin - Added get_capabilities support and software version detection during login.
-- f5os_license - Added ``proxy_server`` parameter to support license activation through an HTTP proxy (F5OS-A 1.8.0+).
 
 Bugfixes
 --------
@@ -28,7 +40,6 @@ Bugfixes
 - f5os_system_image_install - Raise error for unsupported platform in install status check instead of silently returning None.
 - f5os_device_info - Handle empty API errors for unsupported subsets when using gather_subset all.
 - f5os_facts - Narrow exception handling for software version retrieval and emit warning instead of silently swallowing errors.
-- f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added update_password parameter (always/on_create) to control bind password update behavior.
 
 New Modules
 -----------
