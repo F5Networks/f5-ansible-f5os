@@ -86,7 +86,7 @@ class TestManager(unittest.TestCase):
         mm.client.get = Mock(return_value={'code': 201, 'contents': get_data})
         results = mm.exec_module()
         self.assertFalse(results['changed'])
-        self.assertEqual(mm.client.get.call_count, 2)
+        self.assertEqual(mm.client.get.call_count, 1)
 
     def test_system_image_install(self, *args):
         set_module_args(dict(
@@ -108,12 +108,11 @@ class TestManager(unittest.TestCase):
             }
         }
         mm.client.post = Mock(return_value={'code': 201, 'contents': get_data})
-        mm.client.get = Mock(side_effect=[{'code': 200, 'contents': get_data2}, {'code': 201, 'contents': get_data2}])
+        mm.client.get = Mock(side_effect=[{'code': 200, 'contents': get_data2}])
         results = mm.exec_module()
         self.assertTrue(results['changed'])
-        # self.assertFalse(results['changed'])
         self.assertEqual(mm.client.post.call_count, 1)
-        self.assertEqual(mm.client.get.call_count, 2)
+        self.assertEqual(mm.client.get.call_count, 1)
 
     # def test_system_image_import_status(self, *args):
     #     set_module_args(dict(

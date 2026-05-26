@@ -28,6 +28,15 @@ options:
         description:
             - Specifies the bind password for the LDAP search
         type: str
+    update_password:
+        description:
+            - C(always) will always update the C(bind_password) when it is specified.
+            - C(on_create) will only set the C(bind_password) when no bind password is currently configured on the device.
+        type: str
+        choices:
+            - always
+            - on_create
+        default: always
     bind_timeout:
         description:
             - Specifies the bind timeout for the LDAP search
@@ -93,9 +102,12 @@ options:
         type: str
 
 notes:
-    - This Module makes a PUT request to the F5OS system to update the LDAP common configuration.
+    - This module makes a PUT request to the F5OS system to update the LDAP common configuration.
     - The parameters not specified in the module will not be updated and will remain unchanged.
-    - Changes on Bind Password will not be detected by the module.
+    - The F5OS API returns the bind password as an encrypted ciphertext that changes on every request, making direct comparison impossible.
+    - When C(update_password) is set to C(always) (the default), the bind password will be sent on
+      every run, reporting a change each time. Set C(update_password) to C(on_create) to only set
+      the password when no password is currently configured.
 author:
     - Prateek Ramani (@ramani)
 '''
@@ -118,6 +130,12 @@ EXAMPLES = r'''
     active_directory: true
     unix_attributes: false
 
+- name: Set LDAP bind password only if not already configured
+  f5os_auth_ldap:
+    bind_dn: "cn=admin,dc=example,dc=com"
+    bind_password: "password"
+    update_password: on_create
+
 '''
 
 RETURN = r'''
@@ -130,7 +148,7 @@ bind_dn:
   returned: changed
   type: str
 bind_password:
-  description: Bind password for the LDAP search.
+  description: Bind password for the LDAP search. Always returns C(None) for security purposes.
   returned: changed
   type: str
 bind_timeout:
@@ -223,7 +241,7 @@ class Parameters(AnsibleF5Parameters):
     updatables = [
         'base_dn',
         'bind_dn',
-        # 'bind_password',
+        'bind_password',
         'bind_timeout',
         'read_timeout',
         'idle_timeout',
@@ -353,7 +371,9 @@ class UsableChanges(Changes):
 
 
 class ReportableChanges(Changes):
-    pass
+    @property
+    def bind_password(self):
+        return None
 
 
 class Difference(object):  # pragma: no cover
@@ -375,6 +395,17 @@ class Difference(object):  # pragma: no cover
             return None
         if tls == 'start_tls' or tls == 'on':
             return self.__default(param)
+        return None
+
+    @property
+    def bind_password(self):
+        if self.want.bind_password is None:
+            return None
+        if self.want.update_password == 'always':
+            return self.want.bind_password
+        if self.want.update_password == 'on_create':
+            if self.have.bind_password is None:
+                return self.want.bind_password
         return None
 
     def __default(self, param):
@@ -409,9 +440,7 @@ class ModuleManager(object):
         updatables = Parameters.updatables
         changed = dict()
         for k in updatables:
-
             change = diff.compare(k)
-
             if change is None:
                 continue
             else:
@@ -436,7 +465,9 @@ class ModuleManager(object):
         start = datetime.datetime.now().isoformat()
         changed = False
         result = dict()
+
         changed = self.present()
+
         reportable = ReportableChanges(params=self.changes.to_return())
         changes = reportable.to_return()
         result.update(**changes)
@@ -468,29 +499,43 @@ class ModuleManager(object):
     def update_on_device(self):
         '''API communication to actually update the objects on the F5OS system'''
         params = self.changes.api_params()
+
         base_uri = "/openconfig-system:system/aaa/authentication/f5-openconfig-aaa-ldap:ldap"
         payload = {
             "f5-openconfig-aaa-ldap:ldap": {
                 "base": [params.get("base_dn") if params.get("base_dn") is not None else self.have.base_dn],
                 "binddn": params.get("bind_dn") if params.get("bind_dn") is not None else self.have.bind_dn,
-                "bindpw": params.get("bind_password") if params.get("bind_password") is not None else self.have.bind_password,
-                "bind_timelimit": params.get("bind_timeout") if params.get("bind_timeout") is not None else self.have.bind_timeout,
-                "timelimit": params.get("read_timeout") if params.get("read_timeout") is not None else self.have.read_timeout,
-                "idle_timelimit": params.get("idle_timeout") if params.get("idle_timeout") is not None else self.have.idle_timeout,
-                "ldap_version": params.get("ldap_version") if params.get("ldap_version") is not None else self.have.ldap_version,
-                "chase-referrals": params.get("chase_referrals") if params.get("chase_referrals") is not None else self.have.chase_referrals,
+                "bindpw": params.get("bind_password") if params.get("bind_password") is not None
+                else self.have.bind_password,
+                "bind_timelimit": params.get("bind_timeout") if params.get("bind_timeout") is not None
+                else self.have.bind_timeout,
+                "timelimit": params.get("read_timeout") if params.get("read_timeout") is not None
+                else self.have.read_timeout,
+                "idle_timelimit": params.get("idle_timeout") if params.get("idle_timeout") is not None
+                else self.have.idle_timeout,
+                "ldap_version": params.get("ldap_version") if params.get("ldap_version") is not None
+                else self.have.ldap_version,
+                "chase-referrals": params.get("chase_referrals") if params.get("chase_referrals") is not None
+                else self.have.chase_referrals,
                 "ssl": params.get("tls") if params.get("tls") is not None else self.have.tls,
-                "tls_reqcert": params.get("tls_certificate_validation") if params.get("tls_certificate_validation")
-                is not None else self.have.tls_certificate_validation,
-                "tls_ciphers": params.get("tls_ciphers") if params.get("tls_ciphers") is not None else self.have.tls_ciphers,
-                "active_directory": params.get("active_directory") if params.get("active_directory") is not None else self.have.active_directory,
-                "unix_attributes": params.get("unix_attributes") if params.get("unix_attributes") is not None else self.have.unix_attributes,
-                "tls_cert": params.get("tls_certificate") if params.get("tls_certificate") is not None else self.have.tls_certificate,
-                "tls_key": params.get("tls_key") if params.get("tls_key") is not None else self.have.tls_key,
+                "tls_reqcert": params.get("tls_certificate_validation")
+                if params.get("tls_certificate_validation") is not None
+                else self.have.tls_certificate_validation,
+                "tls_ciphers": params.get("tls_ciphers") if params.get("tls_ciphers") is not None
+                else self.have.tls_ciphers,
+                "active_directory": params.get("active_directory") if params.get("active_directory") is not None
+                else self.have.active_directory,
+                "unix_attributes": params.get("unix_attributes") if params.get("unix_attributes") is not None
+                else self.have.unix_attributes,
+                "tls_cert": params.get("tls_certificate") if params.get("tls_certificate") is not None
+                else self.have.tls_certificate,
+                "tls_key": params.get("tls_key") if params.get("tls_key") is not None
+                else self.have.tls_key,
             }
         }
 
-        keys_to_remove = [k for k, v in payload["f5-openconfig-aaa-ldap:ldap"].items() if v is None or (isinstance(v, list) and (len(v) == 0 or v[0] is None))]
+        keys_to_remove = [k for k, v in payload["f5-openconfig-aaa-ldap:ldap"].items()
+                          if v is None or (isinstance(v, list) and (len(v) == 0 or v[0] is None))]
         for k in keys_to_remove:
             payload["f5-openconfig-aaa-ldap:ldap"].pop(k)
 
@@ -504,6 +549,7 @@ class ModuleManager(object):
         uri = "/openconfig-system:system/aaa/authentication/f5-openconfig-aaa-ldap:ldap/"
 
         response = self.client.get(uri)
+
         if 'f5-openconfig-aaa-ldap:ldap' in response['contents']:
             return_object = response['contents']['f5-openconfig-aaa-ldap:ldap']
         else:
@@ -511,6 +557,7 @@ class ModuleManager(object):
 
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])  # pragma: no cover
+
         return ApiParameters(params=return_object)
 
 
@@ -521,6 +568,11 @@ class ArgumentSpec(object):
             base_dn=dict(type='str'),
             bind_dn=dict(type='str'),
             bind_password=dict(type='str', no_log=True),
+            update_password=dict(
+                default='always',
+                choices=['always', 'on_create'],
+                no_log=False
+            ),
             bind_timeout=dict(type='int'),
             read_timeout=dict(type='int'),
             idle_timeout=dict(type='int'),

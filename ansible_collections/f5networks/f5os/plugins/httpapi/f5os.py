@@ -198,6 +198,17 @@ class HttpApi(HttpApiBase):
     def get_software_version(self):
         return self.software_version
 
+    def get_capabilities(self):
+        capabilities = {
+            'network_api_capabilities': {
+                'supported_modules': ['f5networks.f5os.f5os_facts'],
+            },
+            'network_os': 'f5networks.f5os.f5os',
+            'platform': self.platform_type or '',
+            'software_version': self.software_version or '',
+        }
+        return json.dumps(capabilities)
+
 
 def _check_seek_raising(error):
     # small helper function to catch seek unsupported operation
