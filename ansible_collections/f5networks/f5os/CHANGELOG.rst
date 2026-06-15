@@ -4,8 +4,47 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
-v1.37.0
+
+v1.22.0
 =======
+
+Minor Changes
+-------------
+
+- f5os_license - Added ``proxy_server`` parameter to support license activation through an HTTP proxy (F5OS-A 1.8.0+).
+
+Bugfixes
+--------
+
+- f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added update_password parameter (always/on_create) to control bind password update behavior.
+
+v1.21.0
+=======
+
+Major Changes
+-------------
+
+- f5os_facts - Added new module for collecting basic platform and version facts from F5OS devices.
+
+Minor Changes
+-------------
+
+- f5os httpapi plugin - Added get_capabilities support and software version detection during login.
+
+Bugfixes
+--------
+
+- f5os_system_image_install - Fixed install status URI and spurious polling on rSeries.
+- f5os_system_image_install - Raise error when Velos Controller image version not found instead of looping until timeout.
+- f5os_system_image_install - Restore error on server errors (4xx/5xx) in exists check instead of silently returning False.
+- f5os_system_image_install - Raise error for unsupported platform in install status check instead of silently returning None.
+- f5os_device_info - Handle empty API errors for unsupported subsets when using gather_subset all.
+- f5os_facts - Narrow exception handling for software version retrieval and emit warning instead of silently swallowing errors.
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_facts - Collect facts from F5OS devices
 
 v1.20.0
 =======
@@ -100,6 +139,7 @@ Bugfixes
 New Modules
 -----------
 
+- f5networks.f5os.f5os_auth_ldap - Manage LDAP common configuration on F5OS systems.
 - f5networks.f5os.f5os_auth_server - Manage Auth Server Groups and Server inside it.
 - f5networks.f5os.f5os_fdb - Manage Layer 2 forwarding database (FDB) entry in the system
 - f5networks.f5os.f5os_qos_traffic_priority - Manage QoS Traffic Priorities on F5OS

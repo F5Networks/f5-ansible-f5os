@@ -2297,8 +2297,19 @@ class ModuleManager(object):
     def execute_managers(self, managers):
         results = dict()
         for manager in managers:
-            result = manager.exec_module()
-            results.update(result)
+            try:
+                result = manager.exec_module()
+                results.update(result)
+            except F5ModuleError as ex:
+                error_str = str(ex)
+                # empty API responses on unsupported platform/subset combos
+                # should not kill the entire facts collection
+                if not error_str or error_str == '{}':
+                    self.module.warn(
+                        f"{manager.__class__.__name__}: subset not available on this platform"
+                    )
+                else:
+                    raise
         return results
 
     def get_manager(self, which):

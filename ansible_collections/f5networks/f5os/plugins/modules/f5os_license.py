@@ -28,6 +28,13 @@ options:
       - This parameter is optional when activating a device license.
     type: list
     elements: str
+  proxy_server:
+    description:
+      - Specifies a proxy server URL to use when the device does not have direct internet access.
+      - This is used during license activation to reach the F5 licensing server through the specified proxy.
+      - "The format should be a full URL, for example: C(http://proxy.example.com:443)."
+      - This option is supported on F5OS-A 1.8.0 and later.
+    type: str
   license_server:
     description:
       - Specifies the license server URL.
@@ -64,6 +71,19 @@ EXAMPLES = r'''
     addon_keys:
       - xxxxx-1xxx5
       - xxxxx-2xxx5
+
+- name: License activation with registration key through a proxy server
+  f5os_license:
+    registration_key: xxxxx-1xxx5-3xxx4-0xxx8-4xxxxx7
+    proxy_server: "http://proxy.example.com:443"
+
+- name: License activation with registration key, addon keys, and proxy server
+  f5os_license:
+    registration_key: xxxxx-1xxx5-3xxx4-0xxx8-4xxxxx7
+    addon_keys:
+      - xxxxx-1xxx5
+      - xxxxx-2xxx5
+    proxy_server: "http://proxy.example.com:443"
 '''
 
 RETURN = r'''
@@ -77,6 +97,11 @@ addon_keys:
   returned: changed
   type: list
   sample: ["xxxxx-1xxx5", "xxxxx-1xxx5"]
+proxy_server:
+  description: The proxy server URL used during license activation.
+  returned: changed
+  type: str
+  sample: "http://proxy.example.com:443"
 '''
 
 import datetime
@@ -98,12 +123,14 @@ class Parameters(AnsibleF5Parameters):
 
     api_attributes = [
         'registration_key',
-        'addon_keys'
+        'addon_keys',
+        'proxy_server',
     ]
 
     returnables = [
         'registration_key',
-        'addon_keys'
+        'addon_keys',
+        'proxy_server',
     ]
 
     updatables = [
@@ -131,6 +158,30 @@ class ModuleParameters(Parameters):
         if self._values['addon_keys'] is None or len(self._values['addon_keys']) == 0:
             return None
         result = self._values['addon_keys']
+        return result
+
+    @property
+    def proxy_server(self):
+        result = self._values.get('proxy_server')
+        if result is None:
+            return None
+        if not result.startswith(('http://', 'https://')):
+            raise F5ModuleError(
+                "The proxy_server value must be a full URL starting with "
+                "'http://' or 'https://', got: {0}".format(result)
+            )
+        try:
+            from ansible.module_utils.six.moves.urllib.parse import urlparse
+            parsed = urlparse(result)
+            if not parsed.hostname:
+                raise F5ModuleError(
+                    "The proxy_server value must contain a valid hostname, "
+                    "got: {0}".format(result)
+                )
+        except F5ModuleError:
+            raise
+        except Exception:
+            pass
         return result
 
     @property
@@ -378,6 +429,8 @@ class ModuleManager(object):
         }
         if self.want.addon_keys is not None:
             license_payload["f5-system-licensing-install:add-on-keys"] = self.want.addon_keys
+        if self.want.proxy_server is not None:
+            license_payload["f5-system-licensing-install:proxy-server"] = self.want.proxy_server
         response = self.client.post(uri, license_payload)
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
@@ -387,13 +440,20 @@ class ModuleManager(object):
 
     def create_on_device(self):
         '''Install the license on the device'''
-        self.get_eula()
+        eula_accepted = self.get_eula()
+        if not eula_accepted:
+            raise F5ModuleError(
+                "EULA was not accepted by the license server. "
+                "License installation cannot proceed."
+            )
         uri = "/openconfig-system:system/f5-system-licensing:licensing/f5-system-licensing-install:install"
         license_payload = {
             "f5-system-licensing-install:registration-key": self.want.registration_key,
         }
         if self.want.addon_keys is not None:
             license_payload["f5-system-licensing-install:add-on-keys"] = self.want.addon_keys
+        if self.want.proxy_server is not None:
+            license_payload["f5-system-licensing-install:proxy-server"] = self.want.proxy_server
         response = self.client.post(uri, license_payload)
         if response['code'] not in [200, 201, 202]:
             raise F5ModuleError(response['contents'])
@@ -431,6 +491,10 @@ class ArgumentSpec(object):
                 type='list',
                 elements='str',
                 no_log=True
+            ),
+            proxy_server=dict(
+                type='str',
+                no_log=True,
             ),
             license_server=dict(
                 default='activate.f5.com'

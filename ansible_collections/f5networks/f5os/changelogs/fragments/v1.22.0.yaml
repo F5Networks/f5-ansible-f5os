@@ -1,0 +1,4 @@
+minor_changes:
+  - f5os_license - Added ``proxy_server`` parameter to support license activation through an HTTP proxy (F5OS-A 1.8.0+).
+bugfixes:
+  - f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added update_password parameter (always/on_create) to control bind password update behavior.
