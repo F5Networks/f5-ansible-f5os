@@ -11,17 +11,12 @@ import os
 from unittest.mock import Mock, patch
 from unittest import TestCase
 
-from ansible.playbook.play_context import PlayContext
-from ansible.plugins.loader import connection_loader
-
 from ansible_collections.f5networks.f5os.plugins.module_utils.constants import (
     BASE_HEADERS, ROOT
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
     F5Client, send_teem
 )
-
-from ansible_collections.f5networks.f5os.tests.utils.common import connection_response
 
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -48,196 +43,126 @@ def load_fixture(name):
 
 class TestF5osClient(TestCase):
     def setUp(self):
-        self.pc = PlayContext()
-        self.pc.network_os = "f5networks.f5os.f5os"
-        self.connection = connection_loader.get("ansible.netcommon.httpapi", self.pc, "/dev/null")
         self.mock_send = Mock()
+        self.connection = Mock()
         self.connection.send = self.mock_send
+        self.connection.httpapi = Mock()
+        self.connection.httpapi.send_request = self.mock_send
+        self.connection.httpapi.get_platform_type = Mock(return_value='rSeries Platform')
+        self.connection.httpapi.get_software_version = Mock(return_value='1.5.0')
+        self.connection.httpapi.telemetry = Mock(return_value=False)
         self.client = F5Client(client=self.connection.httpapi)
 
     def test_GET_header_update_with_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         self.client.get('/testlink', headers={'CUSTOM': 'HEADER'})
         expected_header = {'CUSTOM': 'HEADER', 'Content-Type': 'application/yang-data+json'}
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', None, method='GET', headers=expected_header
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', method='GET', headers=expected_header
         )
 
     def test_GET_header_update_without_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         self.client.get('/testlink')
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', None, method='GET', headers=BASE_HEADERS
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', method='GET', headers=BASE_HEADERS
         )
 
     def test_POST_header_update_with_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         payload = {'Test': 'Payload'}
 
         self.client.post('/testlink', data=payload, headers={'CUSTOM': 'HEADER'})
         expected_header = {'CUSTOM': 'HEADER', 'Content-Type': 'application/yang-data+json'}
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', '{"Test": "Payload"}', headers=expected_header, method='POST'
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', payload=payload, method='POST', headers=expected_header
         )
 
     def test_POST_header_update_without_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         payload = {'Test': 'Payload'}
 
         self.client.post('/testlink', data=payload)
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', '{"Test": "Payload"}', headers=BASE_HEADERS, method='POST'
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', payload=payload, method='POST', headers=BASE_HEADERS
         )
 
     def test_PUT_header_update_with_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         payload = {'Test': 'Payload'}
 
         self.client.put('/testlink', data=payload, headers={'CUSTOM': 'HEADER'})
         expected_header = {'CUSTOM': 'HEADER', 'Content-Type': 'application/yang-data+json'}
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', '{"Test": "Payload"}', headers=expected_header, method='PUT'
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', payload=payload, method='PUT', headers=expected_header
         )
 
     def test_PUT_header_update_without_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         payload = {'Test': 'Payload'}
 
         self.client.put('/testlink', data=payload)
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', '{"Test": "Payload"}', headers=BASE_HEADERS, method='PUT'
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', payload=payload, method='PUT', headers=BASE_HEADERS
         )
 
     def test_PATCH_header_update_with_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         payload = {'Test': 'Payload'}
 
         self.client.patch('/testlink', data=payload, headers={'CUSTOM': 'HEADER'})
         expected_header = {'CUSTOM': 'HEADER', 'Content-Type': 'application/yang-data+json'}
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', '{"Test": "Payload"}', headers=expected_header, method='PATCH'
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', payload=payload, method='PATCH', headers=expected_header
         )
 
     def test_PATCH_header_update_without_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         payload = {'Test': 'Payload'}
 
         self.client.patch('/testlink', data=payload)
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', '{"Test": "Payload"}', headers=BASE_HEADERS, method='PATCH'
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', payload=payload, method='PATCH', headers=BASE_HEADERS
         )
 
     def test_DELETE_header_update_with_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         self.client.delete('/testlink', headers={'CUSTOM': 'HEADER'})
         expected_header = {'CUSTOM': 'HEADER', 'Content-Type': 'application/yang-data+json'}
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', None, method='DELETE', headers=expected_header
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', method='DELETE', headers=expected_header
         )
 
     def test_DELETE_header_update_without_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         self.client.delete('/testlink')
-        self.connection.send.assert_called_once_with(
-            ROOT + '/testlink', None, method='DELETE', headers=BASE_HEADERS
+        self.mock_send.assert_called_once_with(
+            path=ROOT + '/testlink', method='DELETE', headers=BASE_HEADERS
         )
 
     def test_different_scope_without_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
-        self.client.get('/testlink', headers={'CUSTOM': 'HEADER'}, scope='openconfig/different/scope')
-        expected_header = {'CUSTOM': 'HEADER', 'Content-Type': 'application/yang-data+json'}
-        self.connection.send.assert_called_once_with(
-            'openconfig/different/scope/testlink', None, method='GET', headers=expected_header
+        self.client.get('/testlink', scope='openconfig/different/scope')
+        self.mock_send.assert_called_once_with(
+            path='openconfig/different/scope/testlink', method='GET', headers=BASE_HEADERS
         )
 
     def test_different_scope_with_additional_headers(self):
-        self.connection.send.return_value = connection_response(
-            {'FOO': 'BAR', 'BAZ': 'FOO'}
-        )
-
         self.client.get('/testlink', headers={'CUSTOM': 'HEADER'}, scope='openconfig/different/scope')
         expected_header = {'CUSTOM': 'HEADER', 'Content-Type': 'application/yang-data+json'}
-        self.connection.send.assert_called_once_with(
-            'openconfig/different/scope/testlink', None, method='GET', headers=expected_header
+        self.mock_send.assert_called_once_with(
+            path='openconfig/different/scope/testlink', method='GET', headers=expected_header
         )
 
     def test_get_platform_rseries(self):
-        xheader = {'X-Auth-Token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'}
-        xheader.update(BASE_HEADERS)
-        self.connection.send.side_effect = [
-            connection_response(load_fixture('f5os_auth.json'), 200, xheader),
-            connection_response(load_fixture('f5os_platform_response.json'), 200, xheader),
-            connection_response(load_fixture('rseries_software_version.json'), 200, xheader),
-        ]
-        self.connection.httpapi.login('foo', 'bar')
+        self.connection.httpapi.get_platform_type.return_value = 'rSeries Platform'
         platform = self.client.platform
 
         assert platform == 'rSeries Platform'
 
     def test_get_platform_velos_controller(self):
-        xheader = {'X-Auth-Token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'}
-        xheader.update(BASE_HEADERS)
-        self.connection.send.side_effect = [
-            connection_response(load_fixture('f5os_auth.json'), 200, xheader),
-            connection_response(dict(), 404, xheader),
-            connection_response(load_fixture('f5os_controller_response.json'), 404, xheader)
-        ]
-        self.connection.httpapi.login('foo', 'bar')
+        self.connection.httpapi.get_platform_type.return_value = 'Velos Controller'
         platform = self.client.platform
 
         assert platform == 'Velos Controller'
 
     def test_get_platform_velos_partition(self):
-        xheader = {'X-Auth-Token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'}
-        xheader.update(BASE_HEADERS)
-        self.connection.send.side_effect = [
-            connection_response(load_fixture('f5os_auth.json'), 200, xheader),
-            connection_response(dict(), 404, xheader),
-            connection_response(dict(), 200, xheader),
-            connection_response(load_fixture('velos_partition_version.json'), 200, xheader),
-        ]
-        self.connection.httpapi.login('foo', 'bar')
+        self.connection.httpapi.get_platform_type.return_value = 'Velos Partition'
         platform = self.client.platform
 
         assert platform == 'Velos Partition'
 
     def test_send_teem(self):
-        mock_response = Mock()
-        self.connection.httpapi.get_option = mock_response
-        self.connection.httpapi.get_option.side_effect = [True, False]
+        self.connection.httpapi.telemetry.side_effect = [True, False]
 
         with patch('ansible_collections.f5networks.f5os.plugins.module_utils.client.TeemClient') as patched:
             send_teem(self.client, 12345)
@@ -255,3 +180,7 @@ class TestF5osClient(TestCase):
 
         assert f5_client.module_name == 'fake_module'
         assert f5_client.ansible_version == '3.10'
+
+    def test_software_version(self):
+        self.connection.httpapi.get_software_version.return_value = '1.5.0'
+        assert self.client.software_version == '1.5.0'

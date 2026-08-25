@@ -13,7 +13,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_vlan
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_vlan import (
-    ModuleParameters, ArgumentSpec, ModuleManager
+    ModuleParameters, ArgumentSpec, ModuleManager, UsableChanges, Difference
 )
 from ansible_collections.f5networks.f5os.tests.compat import unittest
 from ansible_collections.f5networks.f5os.tests.compat.mock import (
@@ -390,3 +390,117 @@ class TestManager(unittest.TestCase):
         mm._update_changed_options = Mock(return_value=False)
         mm.read_current_from_device = Mock(return_value=dict())
         self.assertFalse(mm.update())
+
+    def test_changes_to_return(self):
+        uc = UsableChanges(params=dict(vlan_id=100, name='test'))
+        result = uc.to_return()
+        self.assertEqual(result['vlan_id'], 100)
+        self.assertEqual(result['name'], 'test')
+
+    def test_difference_default_attr_error(self):
+        want = Mock()
+        want.name = 'new_name'
+        have = Mock(spec=[])
+
+        diff = Difference(want=want, have=have)
+        result = diff.compare('name')
+        self.assertEqual(result, 'new_name')
+
+    def test_update_changed_options_dict_change(self):
+        set_module_args(dict(
+            vlan_id=3333,
+            name="foobar",
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.have = Mock()
+        mm.have.name = 'foobar'
+        mm.have.vlan_id = 3333
+
+        with patch.object(Difference, 'compare', return_value={'name': 'changed'}):
+            result = mm._update_changed_options()
+            self.assertTrue(result)
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(
+            vlan_id=3333,
+            name="foobar",
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.module = Mock()
+        result = {'__warnings': [{'msg': 'test deprecation', 'version': '2.0'}]}
+        mm._announce_deprecations(result)
+        mm.client.module.deprecate.assert_called_once_with(msg='test deprecation', version='2.0')
+
+    def test_create_check_mode(self):
+        set_module_args(dict(
+            vlan_id=3333,
+            name="foobar",
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        module.check_mode = True
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=False)
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_update_check_mode(self):
+        set_module_args(dict(
+            vlan_id=3333,
+            name="new_name",
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        module.check_mode = True
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture("load_velos_vlan_config.json")))
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_remove_check_mode(self):
+        set_module_args(dict(
+            vlan_id=3333,
+            state='absent'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        module.check_mode = True
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=True)
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])

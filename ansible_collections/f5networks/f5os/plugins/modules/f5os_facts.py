@@ -27,7 +27,7 @@ options:
     default:
       - default
 author:
-  - F5 Networks Inc.
+  - F5 Networks (@f5networks)
 notes:
   - Tested against F5OS-A and F5OS-C.
 '''
@@ -128,4 +128,3 @@ def main():
 
 if __name__ == '__main__':  # pragma: no cover
     main()
-

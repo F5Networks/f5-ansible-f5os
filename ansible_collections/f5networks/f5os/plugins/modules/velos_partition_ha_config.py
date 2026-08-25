@@ -225,7 +225,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):  # pragma: no cover
+    def _announce_deprecations(self, result):
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(

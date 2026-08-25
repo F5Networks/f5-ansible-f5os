@@ -207,14 +207,14 @@ class ModuleParameters(Parameters):
         return f"configs/{self._values['name']}"
 
 
-class Changes(Parameters):  # pragma: no cover
+class Changes(Parameters):
     def to_return(self):
         result = {}
         try:
             for returnable in self.returnables:
                 result[returnable] = getattr(self, returnable)
             result = self._filter_params(result)
-        except Exception:
+        except Exception:  # pragma: no cover
             raise
         return result
 
@@ -245,7 +245,7 @@ class ModuleManager(object):
         if changed:
             self.changes = UsableChanges(params=changed)
 
-    def _announce_deprecations(self, result):  # pragma: no cover
+    def _announce_deprecations(self, result):
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -284,7 +284,7 @@ class ModuleManager(object):
         return False
 
     def remove(self):
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.remove_from_device()
         if self.exists():
@@ -293,7 +293,7 @@ class ModuleManager(object):
 
     def create(self):
         self._set_changed_options()
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.create_backup()
         self.export_file()

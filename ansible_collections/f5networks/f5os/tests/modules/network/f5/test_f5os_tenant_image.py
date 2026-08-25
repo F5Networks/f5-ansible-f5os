@@ -498,3 +498,32 @@ class TestManager(unittest.TestCase):
         with self.assertRaises(F5ModuleError) as err4:
             mm.remove()
         self.assertIn('Failed to delete the resource.', err4.exception.args[0])
+
+    def test_import_image_no_credentials(self, *args):
+        set_module_args(dict(
+            image_name='BIGIP-test.qcow2.zip',
+            remote_host='fake.imageserver.foo.bar.com',
+            remote_user='',
+            remote_password='',
+            local_path='images',
+            remote_path='/test/',
+            state='import',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(return_value=dict(code=200, contents=dict(load_fixture('start_image_import.json'))))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        payload = mm.client.post.call_args[1]['data']
+        self.assertNotIn('username', payload['input'][0])
+        self.assertNotIn('password', payload['input'][0])

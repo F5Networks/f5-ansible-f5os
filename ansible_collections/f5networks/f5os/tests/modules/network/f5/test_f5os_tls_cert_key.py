@@ -54,9 +54,6 @@ class TestParameters(unittest.TestCase):
     def tearDown(self) -> None:
         self.p1.stop()
 
-    def test_module_parameters(self):
-        pass
-
     def test_api_parameters(self):
         args = dict()
         p = ApiParameters(args)
@@ -81,6 +78,24 @@ class TestParameters(unittest.TestCase):
         p1 = ModuleParameters(params=args1)
 
         self.assertEqual(p1.subject_alternative_name, "DNS:www.example.com")
+
+    def test_module_parameters_san_required_rseries(self):
+        args = dict(subject_alternative_name=None)
+        p = ModuleParameters(params=args)
+        p.client = Mock()
+        p.client.platform = 'rSeries Platform'
+
+        with self.assertRaises(F5ModuleError) as err:
+            p.subject_alternative_name
+        self.assertIn("subject_alternative_name", err.exception.args[0])
+
+    def test_module_parameters_san_rseries_success(self):
+        args = dict(subject_alternative_name='DNS:www.test.com')
+        p = ModuleParameters(params=args)
+        p.client = Mock()
+        p.client.platform = 'rSeries Platform'
+
+        self.assertEqual(p.subject_alternative_name, 'DNS:www.test.com')
 
 
 class TestManager(unittest.TestCase):
@@ -320,3 +335,214 @@ class TestManager(unittest.TestCase):
         mm.should_update = Mock(return_value=False)
         res8 = mm.update()
         self.assertFalse(res8)
+
+    def test_subject_alternative_name_required_rseries(self):
+        set_module_args(dict(
+            name="test_cert",
+            key_size=2048,
+            key_type="rsa",
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if,
+            mutually_exclusive=self.spec.mutually_exclusive,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=False)
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn("subject_alternative_name", err.exception.args[0])
+
+    def test_create_on_device_post_failure(self):
+        set_module_args(dict(
+            name="test_cert",
+            email="name@org.com",
+            city="Vegas",
+            province="NV",
+            country="US",
+            organization="FZ",
+            unit="IT",
+            version=1,
+            days_valid=365,
+            key_size=2048,
+            key_type="rsa",
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if,
+            mutually_exclusive=self.spec.mutually_exclusive,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(return_value=dict(code=400, contents='cert creation failed'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('cert creation failed', err.exception.args[0])
+
+    def test_add_defaults_ecdsa_key_curve(self):
+        set_module_args(dict(
+            name="test_cert",
+            email="name@org.com",
+            city="Vegas",
+            province="NV",
+            country="US",
+            organization="FZ",
+            unit="IT",
+            version=1,
+            days_valid=365,
+            key_type="ecdsa",
+            key_curve="prime256v1",
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if,
+            mutually_exclusive=self.spec.mutually_exclusive,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(return_value=dict(code=200, contents={}))
+
+        result = mm.exec_module()
+        self.assertTrue(result['changed'])
+        payload = mm.client.post.call_args[1]['data']
+        self.assertEqual(payload['f5-openconfig-aaa-tls:curve-name'], 'prime256v1')
+
+    def test_add_defaults_fills_missing_fields(self):
+        set_module_args(dict(
+            name="test_cert",
+            days_valid=730,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if,
+            mutually_exclusive=self.spec.mutually_exclusive,
+        )
+
+        existing_cert = load_fixture('f5os_get_tls_cert.json')
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=existing_cert))
+        mm.client.post = Mock(return_value=dict(code=200, contents={}))
+
+        result = mm.exec_module()
+        self.assertTrue(result['changed'])
+        payload = mm.client.post.call_args[1]['data']
+        self.assertEqual(payload['f5-openconfig-aaa-tls:city'], 'Vegas')
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(
+            name="test_cert",
+            state='present',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if,
+            mutually_exclusive=self.spec.mutually_exclusive,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.module = Mock()
+        result = {'__warnings': [{'msg': 'test deprecation', 'version': '2.0'}]}
+        mm._announce_deprecations(result)
+        mm.client.module.deprecate.assert_called_once_with(msg='test deprecation', version='2.0')
+
+    def test_create_check_mode(self):
+        set_module_args(dict(
+            name="test_cert",
+            key_size=2048,
+            key_type="rsa",
+            state='present',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if,
+            mutually_exclusive=self.spec.mutually_exclusive,
+        )
+        module.check_mode = True
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=False)
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_update_check_mode(self):
+        set_module_args(dict(
+            name="test_cert",
+            city="Seattle",
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if,
+            mutually_exclusive=self.spec.mutually_exclusive,
+        )
+        module.check_mode = True
+
+        existing_cert = load_fixture('f5os_get_tls_cert.json')
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=existing_cert))
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_remove_check_mode(self):
+        set_module_args(dict(
+            name="test_cert",
+            state='absent',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if,
+            mutually_exclusive=self.spec.mutually_exclusive,
+        )
+        module.check_mode = True
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=True)
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    @patch.object(f5os_tls_cert_key, 'CRYPTOGRAPHY_INSTALLED', False)
+    @patch.object(f5os_tls_cert_key, 'Connection')
+    def test_main_no_cryptography(self, *args):
+        set_module_args(dict(
+            name='foobar',
+            state='present',
+        ))
+
+        with self.assertRaises(AnsibleFailJson) as result:
+            f5os_tls_cert_key.main()
+
+        self.assertTrue(result.exception.args[0]['failed'])

@@ -1,0 +1,15 @@
+{
+    "f5-platform-port:portgroup": [
+        {
+            "config": {
+                "mode": "MODE_1x100G",
+                "name": "1/2"
+            },
+            "state": {
+                "mode": "MODE_1x100G",
+                "name": "1/2",
+                "port-speed": "SPEED_100GB"
+            }
+        }
+    ]
+}

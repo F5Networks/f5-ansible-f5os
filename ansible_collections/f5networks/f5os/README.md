@@ -96,8 +96,11 @@ Contributions are welcome! Please review the [F5 Contributor License Agreement](
 
 ## Support
 
-As Red Hat Ansible Certified Content, this collection is entitled to support through the Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner.
-If a support case cannot be opened with Red Hat and the collection has been obtained either from Galaxy or GitHub, you can also file issues on [ansible_issues](https://github.com/F5Networks/f5-ansible-f5os/issues).
+If you encounter a bug or other issue while using the Ansible Provider, use [F5 Technical Support](https://www.f5.com/support#how-f5-helps) to submit it to our team.
+
+Important: As of July 2026, GitHub issues are no longer being monitored by F5 support staff.
+
+Be sure to see the [Ansible documentation](https://clouddocs.f5.com/products/orchestration/ansible/devel/) for more details and supported versions of the Ansible Provider.
 
 ## Release Notes and Roadmap
 

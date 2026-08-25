@@ -57,6 +57,18 @@ class TestParameters(unittest.TestCase):
         self.assertEqual(p.qos_status, "QoS-disabled")
         self.assertEqual(p.default_qos, "mapping-8021p")
 
+    def test_module_parameters_qos_status_none(self):
+        p = ModuleParameters(params=dict())
+        self.assertIsNone(p.qos_status)
+
+    def test_module_parameters_qos_status_8021p(self):
+        p = ModuleParameters(params=dict(qos_status="802.1p"))
+        self.assertEqual(p.qos_status, "8021P-enabled")
+
+    def test_module_parameters_default_qos_dscp(self):
+        p = ModuleParameters(params=dict(default_qos="dscp"))
+        self.assertEqual(p.default_qos, "mapping-DSCP")
+
 
 class TestManager(unittest.TestCase):
     def setUp(self):
@@ -150,9 +162,6 @@ class TestManager(unittest.TestCase):
         self.assertTrue(results["changed"])
         self.assertEqual(mm.client.delete.call_count, 1)
 
-    def test_delete_traffic_priority(self):
-        pass
-
     @patch.object(f5os_qos_traffic_priority, 'Connection')
     @patch.object(f5os_qos_traffic_priority.ModuleManager, 'exec_module', Mock(return_value={'changed': False}))
     def test_main_function_success(self, *args):
@@ -219,3 +228,209 @@ class TestManager(unittest.TestCase):
         with self.assertRaises(F5ModuleError) as err1:
             mm.remove()
         self.assertIn("Failed to delete the resource.", err1.exception.args[0])
+
+    def test_update_no_changes(self):
+        set_module_args(dict(
+            name="test_tp",
+            default_qos="802.1p",
+            qos_status="802.1p",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {"code": 200, "contents": {"f5-qos:default-traffic-priority": "test_tp"}},
+            {"code": 200, "contents": {"f5-qos:status": "8021P-enabled"}},
+        ])
+        results = mm.exec_module()
+        self.assertFalse(results['changed'])
+
+    def test_update_no_changes_dscp_match(self):
+        set_module_args(dict(
+            name="test_tp",
+            default_qos="dscp",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {"code": 200, "contents": {"f5-qos:default-traffic-priority": "other"}},
+            {"code": 200, "contents": {"f5-qos:default-traffic-priority": "test_tp"}},
+        ])
+        results = mm.exec_module()
+        self.assertFalse(results['changed'])
+
+    def test_create_with_default_qos(self):
+        set_module_args(dict(
+            name="test_tp",
+            default_qos="802.1p",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=404))
+        mm.client.post = Mock(return_value=dict(code=200))
+        mm.client.patch = Mock(return_value=dict(code=204))
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+        self.assertEqual(mm.client.patch.call_count, 1)
+
+    def test_create_traffic_priority_post_error(self):
+        set_module_args(dict(
+            name="test_tp",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=404))
+        mm.client.post = Mock(return_value=dict(code=400, contents="post error"))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn("post error", str(err.exception))
+
+    def test_make_default_qos_patch_error(self):
+        set_module_args(dict(
+            name="test_tp",
+            default_qos="802.1p",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=404))
+        mm.client.post = Mock(return_value=dict(code=200))
+        mm.client.patch = Mock(return_value=dict(code=400, contents="patch error"))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn("patch error", str(err.exception))
+
+    def test_change_qos_status_put_error(self):
+        set_module_args(dict(
+            name="test_tp",
+            qos_status="disable",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=404))
+        mm.client.post = Mock(return_value=dict(code=200))
+        mm.client.put = Mock(return_value=dict(code=400, contents="put error"))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn("put error", str(err.exception))
+
+    def test_remove_from_device_error(self):
+        set_module_args(dict(
+            name="test_tp",
+            state="absent"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=200))
+        mm.client.delete = Mock(return_value=dict(code=400, contents="delete error"))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn("delete error", str(err.exception))
+
+    def test_read_current_traffic_priority_8021p_error(self):
+        set_module_args(dict(
+            name="test_tp",
+            default_qos="802.1p",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=500, contents="read error"))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn("read error", str(err.exception))
+
+    def test_read_current_traffic_priority_dscp_error(self):
+        set_module_args(dict(
+            name="test_tp",
+            default_qos="dscp",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {"code": 200, "contents": {"f5-qos:default-traffic-priority": "other"}},
+            {"code": 500, "contents": "dscp read error"},
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn("dscp read error", str(err.exception))
+
+    def test_read_current_qos_status_error(self):
+        set_module_args(dict(
+            name="test_tp",
+            qos_status="dscp",
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=500, contents="status error"))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn("status error", str(err.exception))

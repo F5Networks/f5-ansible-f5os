@@ -13,7 +13,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_dns
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_dns import (
-    ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager
+    ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager, UsableChanges
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
@@ -303,3 +303,118 @@ class TestManager(unittest.TestCase):
         mm._update_changed_options = Mock(return_value=False)
 
         self.assertFalse(mm.update())
+
+    def test_module_parameters_fallback_return(self):
+        args = dict(dns_servers=12345, dns_domains=67890)
+        p = ModuleParameters(params=args)
+
+        self.assertEqual(p.dns_servers, 12345)
+        self.assertEqual(p.dns_domains, 67890)
+
+    def test_usable_changes_dns_config_none(self):
+        uc = UsableChanges(params=dict(dns_servers=None))
+        self.assertIsNone(uc.dns_config)
+
+    def test_dns_update(self, *args):
+        set_module_args(dict(
+            dns_servers=["10.10.10.10"],
+            dns_domains=["new-domain.com"],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm._update_changed_options = Mock(return_value=True)
+        mm.update_on_device = Mock(return_value=True)
+
+        self.assertTrue(mm.should_update())
+        self.assertTrue(mm.update())
+
+    def test_exists_both_none(self, *args):
+        set_module_args(dict(
+            dns_servers=["10.10.10.10"],
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.want = ModuleParameters(params=dict(dns_servers=None, dns_domains=None))
+
+        self.assertFalse(mm.exists())
+
+    def test_exists_with_domains(self, *args):
+        set_module_args(dict(
+            dns_servers=["10.10.10.10"],
+            dns_domains=["test.com"],
+            state="present"
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(side_effect=[
+            dict(code=200),
+            dict(code=200),
+        ])
+
+        self.assertTrue(mm.exists())
+
+        mm.client.get = Mock(side_effect=[
+            dict(code=200),
+            dict(code=404),
+        ])
+
+        self.assertFalse(mm.exists())
+
+        mm.client.get = Mock(side_effect=[
+            dict(code=200),
+            dict(code=400, contents='domain error'),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exists()
+        self.assertIn('domain error', err.exception.args[0])
+
+    def test_remove_from_device_404_and_error(self, *args):
+        set_module_args(dict(
+            dns_servers=["10.10.10.10"],
+            dns_domains=["test.com"],
+            state='absent'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+
+        mm.client.delete = Mock(return_value=dict(code=404))
+        self.assertFalse(mm.remove_from_device())
+
+        mm.client.delete = Mock(side_effect=[
+            dict(code=204),
+            dict(code=404),
+        ])
+        self.assertFalse(mm.remove_from_device())
+
+        mm.client.delete = Mock(side_effect=[
+            dict(code=204),
+            dict(code=500, contents='domain delete error'),
+        ])
+        with self.assertRaises(F5ModuleError) as err:
+            mm.remove_from_device()
+        self.assertIn('domain delete error', err.exception.args[0])

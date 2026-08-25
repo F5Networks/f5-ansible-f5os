@@ -6,7 +6,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-from ansible.module_utils.six import iteritems
 
 from ansible.module_utils.parsing.convert_bool import (
     BOOLEANS_TRUE, BOOLEANS_FALSE
@@ -110,7 +109,7 @@ class AnsibleF5Parameters:
     def update(self, params=None):
         if params:
             self._params.update(params)
-            for k, v in iteritems(params):
+            for k, v in params.items():
                 if self.api_map is not None and k in self.api_map:
                     map_key = self.api_map[k]
                 else:
@@ -148,7 +147,7 @@ class AnsibleF5Parameters:
         return self._values[item]
 
     def _filter_params(self, params):
-        return dict((k, v) for k, v in iteritems(params) if v is not None)
+        return dict((k, v) for k, v in params.items() if v is not None)
 
 
 class F5ModuleError(Exception):

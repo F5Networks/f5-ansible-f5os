@@ -9,12 +9,16 @@ __metaclass__ = type
 import json
 import os
 import paramiko
+import datetime
+# Ensure tests can refer to datetime.UTC as expected by the code under test
+if not hasattr(datetime, 'UTC'):
+    datetime.UTC = datetime.timezone.utc
 
 from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import velos_partition_wait
 from ansible_collections.f5networks.f5os.plugins.modules.velos_partition_wait import (
-    Parameters, ArgumentSpec, ModuleManager
+    Parameters, ArgumentSpec, ModuleManager, hard_timeout
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
@@ -383,3 +387,46 @@ class TestModuleManager(unittest.TestCase):
             mm.read_partition_from_device()
 
         self.assertIn('server error', err2.exception.args[0])
+
+    def test_hard_timeout(self):
+        import datetime
+        module = Mock()
+        want = Mock()
+        want.msg = 'Custom timeout message'
+        start = datetime.datetime.now(datetime.UTC)
+
+        hard_timeout(module, want, start)
+        module.fail_json.assert_called_once()
+        call_kwargs = module.fail_json.call_args[1]
+        self.assertEqual(call_kwargs['msg'], 'Custom timeout message')
+
+    def test_hard_timeout_default_msg(self):
+        import datetime
+        module = Mock()
+        want = Mock()
+        want.msg = None
+        start = datetime.datetime.now(datetime.UTC)
+
+        hard_timeout(module, want, start)
+        call_kwargs = module.fail_json.call_args[1]
+        self.assertEqual(call_kwargs['msg'], 'Timeout when waiting for Velos Partition')
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(
+            name='foobar',
+            state='running',
+            timeout=600,
+            delay=0,
+            sleep=1,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.module = Mock()
+        result = {'__warnings': [{'msg': 'deprecated feature', 'version': '3.0'}]}
+        mm._announce_deprecations(result)
+        mm.client.module.deprecate.assert_called_once_with(msg='deprecated feature', version='3.0')

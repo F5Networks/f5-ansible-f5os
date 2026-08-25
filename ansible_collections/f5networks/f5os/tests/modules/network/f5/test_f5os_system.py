@@ -322,3 +322,625 @@ class TestManager(unittest.TestCase):
         with self.assertRaises(F5ModuleError) as err1:
             mm.remove()
         self.assertIn('Failed to delete the resource.', err1.exception.args[0])
+
+    def test_api_parameters_token_lifetime_key_error(self):
+        p = ApiParameters(params={'token_lifetime': 'invalid'})
+        self.assertIsNone(p.token_lifetime)
+
+    def test_api_parameters_httpd_ciphersuite(self):
+        args = {
+            'ciphers': [
+                {'name': 'httpd', 'config': {'ssl-ciphersuite': 'AES256-SHA'}},
+            ]
+        }
+        p = ApiParameters(params=args)
+        self.assertEqual(p.httpd_ciphersuite, 'AES256-SHA')
+
+    def test_api_parameters_ciphers_key_error(self):
+        args = {'ciphers': [{'name': 'sshd', 'config': {}}, {'name': 'httpd', 'config': {}}]}
+        p = ApiParameters(params=args)
+        self.assertEqual(p.sshd_ciphers, [])
+        self.assertEqual(p.sshd_kex_alg, [])
+        self.assertEqual(p.sshd_mac_alg, [])
+        self.assertEqual(p.sshd_hkey_alg, [])
+        self.assertEqual(p.httpd_ciphersuite, [])
+
+    def test_api_parameters_gui_advisory(self):
+        args = {
+            'settings': {
+                'f5-gui-advisory:gui': {
+                    'advisory': {
+                        'config': {'color': 'red', 'text': 'Warning'}
+                    }
+                }
+            }
+        }
+        p = ApiParameters(params=args)
+        self.assertEqual(p.gui_advisory, {'color': 'red', 'text': 'Warning'})
+
+    def test_update_no_changes(self):
+        set_module_args(dict(
+            state='present',
+            login_banner='pmlab-r5600',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': {'f5-aaa-confd-restconf-token:lifetime': 3600}},
+        ])
+        result = mm.exec_module()
+        self.assertFalse(result['changed'])
+
+    def test_update_with_token_lifetime_and_gui_advisory(self):
+        set_module_args(dict(
+            state='present',
+            token_lifetime=7200,
+            gui_advisory=dict(color='blue', text='Test'),
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': {'f5-aaa-confd-restconf-token:lifetime': 3600}},
+        ])
+        mm.client.patch = Mock(return_value=dict(code=200))
+        result = mm.exec_module()
+        self.assertTrue(result['changed'])
+
+    def test_update_with_httpd_ciphersuite(self):
+        set_module_args(dict(
+            state='present',
+            httpd_ciphersuite='AES256-GCM-SHA384',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': {'f5-aaa-confd-restconf-token:lifetime': 3600}},
+        ])
+        mm.client.patch = Mock(return_value=dict(code=200))
+        mm.client.put = Mock(return_value=dict(code=200))
+        result = mm.exec_module()
+        self.assertTrue(result['changed'])
+
+    def test_exists_token_lifetime_found(self):
+        set_module_args(dict(
+            state='present',
+            token_lifetime=3600,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=200, contents={}))
+        result = mm.any_exists()
+        self.assertTrue(result)
+
+    def test_exists_token_lifetime_error(self):
+        set_module_args(dict(
+            state='present',
+            token_lifetime=3600,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=500, contents='error'))
+        with self.assertRaises(F5ModuleError):
+            mm.all_exist()
+
+    def test_exists_clock_found(self):
+        set_module_args(dict(
+            state='present',
+            timezone='UTC',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=200, contents={}))
+        result = mm.any_exists()
+        self.assertTrue(result)
+
+    def test_exists_clock_still_returns_false(self):
+        set_module_args(dict(
+            state='absent',
+            timezone='UTC',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=200, contents={}))
+        result = mm.still_exists()
+        self.assertFalse(result)
+
+    def test_exists_clock_error(self):
+        set_module_args(dict(
+            state='present',
+            timezone='UTC',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=500, contents='error'))
+        with self.assertRaises(F5ModuleError):
+            mm.all_exist()
+
+    def test_exists_settings_found(self):
+        set_module_args(dict(
+            state='present',
+            cli_timeout=300,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=200, contents={}))
+        result = mm.any_exists()
+        self.assertTrue(result)
+
+    def test_exists_settings_error(self):
+        set_module_args(dict(
+            state='present',
+            cli_timeout=300,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=500, contents='error'))
+        with self.assertRaises(F5ModuleError):
+            mm.all_exist()
+
+    def test_exists_httpd_cipher_found(self):
+        set_module_args(dict(
+            state='present',
+            httpd_ciphersuite='AES256',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=200, contents={}))
+        result = mm.any_exists()
+        self.assertTrue(result)
+
+    def test_exists_httpd_cipher_error(self):
+        set_module_args(dict(
+            state='present',
+            httpd_ciphersuite='AES256',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=500, contents='error'))
+        with self.assertRaises(F5ModuleError):
+            mm.all_exist()
+
+    def test_exists_sshd_cipher_found(self):
+        set_module_args(dict(
+            state='present',
+            sshd_ciphers=['aes256-ctr'],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=200, contents={}))
+        result = mm.any_exists()
+        self.assertTrue(result)
+
+    def test_exists_sshd_cipher_error(self):
+        set_module_args(dict(
+            state='present',
+            sshd_ciphers=['aes256-ctr'],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=500, contents='error'))
+        with self.assertRaises(F5ModuleError):
+            mm.all_exist()
+
+    def test_exists_conf_attr_error(self):
+        set_module_args(dict(
+            state='present',
+            hostname='test',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=500, contents='error'))
+        with self.assertRaises(F5ModuleError):
+            mm.all_exist()
+
+    def test_exists_returns_false_any(self):
+        set_module_args(dict(
+            state='present',
+            hostname='test',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=404))
+        result = mm.any_exists()
+        self.assertFalse(result)
+
+    def test_remove_token_lifetime_error(self):
+        set_module_args(dict(
+            state='absent',
+            token_lifetime=3600,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.any_exists = Mock(return_value=True)
+        mm.still_exists = Mock(return_value=False)
+        mm.client.delete = Mock(return_value=dict(code=500, contents='delete error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_remove_settings_error(self):
+        set_module_args(dict(
+            state='absent',
+            cli_timeout=300,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.any_exists = Mock(return_value=True)
+        mm.client.delete = Mock(return_value=dict(code=500, contents='delete error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_remove_httpd_cipher_error(self):
+        set_module_args(dict(
+            state='absent',
+            httpd_ciphersuite='AES256',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.any_exists = Mock(return_value=True)
+        mm.client.delete = Mock(return_value=dict(code=500, contents='delete error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_remove_sshd_cipher_error(self):
+        set_module_args(dict(
+            state='absent',
+            sshd_ciphers=['aes256-ctr'],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.any_exists = Mock(return_value=True)
+        mm.client.delete = Mock(return_value=dict(code=500, contents='delete error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_remove_all_with_404(self):
+        set_module_args(dict(
+            state='absent',
+            hostname='foobar',
+            token_lifetime=3600,
+            cli_timeout=300,
+            sshd_idle_timeout='1800',
+            httpd_ciphersuite='AES256',
+            sshd_ciphers=['aes256-ctr'],
+            sshd_kex_alg=['ecdh-sha2-nistp384'],
+            sshd_mac_alg=['hmac-sha1'],
+            sshd_hkey_alg=['ssh-rsa'],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.any_exists = Mock(return_value=True)
+        mm.still_exists = Mock(return_value=False)
+        mm.client.delete = Mock(return_value=dict(code=404))
+        result = mm.exec_module()
+        self.assertTrue(result['changed'])
+
+    def test_remove_all_with_204(self):
+        set_module_args(dict(
+            state='absent',
+            token_lifetime=3600,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.any_exists = Mock(return_value=True)
+        mm.still_exists = Mock(return_value=False)
+        mm.client.delete = Mock(return_value=dict(code=204))
+        result = mm.exec_module()
+        self.assertTrue(result['changed'])
+
+    def test_remove_conf_attr_error(self):
+        set_module_args(dict(
+            state='absent',
+            hostname='foobar',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.any_exists = Mock(return_value=True)
+        mm.client.delete = Mock(return_value=dict(code=500, contents='conf error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_read_current_from_device_errors(self):
+        set_module_args(dict(
+            state='present',
+            hostname='test',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+
+        mm.client.get = Mock(return_value=dict(
+            code=500,
+            contents={'openconfig-system:config': 'error'}
+        ))
+        with self.assertRaises(F5ModuleError):
+            mm.read_current_from_device()
+
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:config': {}}),
+            dict(code=500, contents={'openconfig-system:clock': 'error'}),
+        ])
+        with self.assertRaises(F5ModuleError):
+            mm.read_current_from_device()
+
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:config': {}}),
+            dict(code=200, contents={'openconfig-system:clock': {}}),
+            dict(code=500, contents={'f5-security-ciphers:service': 'error'}),
+        ])
+        with self.assertRaises(F5ModuleError):
+            mm.read_current_from_device()
+
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:config': {}}),
+            dict(code=200, contents={'openconfig-system:clock': {}}),
+            dict(code=200, contents={'f5-security-ciphers:service': []}),
+            dict(code=500, contents={'f5-system-settings:settings': 'error'}),
+        ])
+        with self.assertRaises(F5ModuleError):
+            mm.read_current_from_device()
+
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:config': {}}),
+            dict(code=200, contents={'openconfig-system:clock': {}}),
+            dict(code=200, contents={'f5-security-ciphers:service': []}),
+            dict(code=200, contents={'f5-system-settings:settings': {}}),
+            dict(code=500, contents={'f5-aaa-confd-restconf-token:lifetime': 'error'}),
+        ])
+        with self.assertRaises(F5ModuleError):
+            mm.read_current_from_device()
+
+    def test_update_on_device_token_lifetime_error(self):
+        set_module_args(dict(
+            state='present',
+            token_lifetime=7200,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': {'f5-aaa-confd-restconf-token:lifetime': 3600}},
+        ])
+        mm.client.patch = Mock(return_value=dict(code=500, contents='patch error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_update_on_device_settings_error(self):
+        set_module_args(dict(
+            state='present',
+            cli_timeout=600,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': {'f5-aaa-confd-restconf-token:lifetime': 3600}},
+        ])
+        mm.client.patch = Mock(return_value=dict(code=500, contents='settings error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_update_on_device_httpd_error(self):
+        set_module_args(dict(
+            state='present',
+            httpd_ciphersuite='AES256',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': {'f5-aaa-confd-restconf-token:lifetime': 3600}},
+        ])
+        mm.client.put = Mock(return_value=dict(code=500, contents='httpd error'))
+        mm.client.patch = Mock(return_value=dict(code=200))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_update_on_device_sshd_error(self):
+        set_module_args(dict(
+            state='present',
+            sshd_ciphers=['aes256-ctr'],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': {'f5-aaa-confd-restconf-token:lifetime': 3600}},
+        ])
+        mm.client.put = Mock(return_value=dict(code=500, contents='sshd error'))
+        mm.client.patch = Mock(return_value=dict(code=200))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_update_on_device_final_patch_error(self):
+        set_module_args(dict(
+            state='present',
+            hostname='newhost',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': load_fixture('system_settings_hostname.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_clock.json')},
+            {'code': 200, 'contents': load_fixture('system_settings_ciphers.json')},
+            {'code': 200, 'contents': load_fixture('system_settings.json')},
+            {'code': 200, 'contents': {'f5-aaa-confd-restconf-token:lifetime': 3600}},
+        ])
+        mm.client.patch = Mock(return_value=dict(code=500, contents='patch error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()

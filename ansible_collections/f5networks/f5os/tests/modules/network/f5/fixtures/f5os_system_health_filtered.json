@@ -1,0 +1,1 @@
+{"f5-system-health:health":{"components":{"component":[{"name":"appliance","hardware":[{"key":"appliance/hardware/cpu","state":{"name":"CPU","health":"ok","severity":"info"},"attributes":{"attribute":[{"name":"cpu:core:temperature","description":"CPU core temperature (C)","health":"ok","severity":"info","value":"42","updatedAt":"2024-01-15T10:00:00Z"}]}}]}]}}}

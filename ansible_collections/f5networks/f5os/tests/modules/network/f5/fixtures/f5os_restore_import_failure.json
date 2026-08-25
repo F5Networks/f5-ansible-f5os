@@ -1,0 +1,1 @@
+{"f5-utils-file-transfer:transfer-operation":[{"local-file-path":"configs/my-backup","remote-host":"10.1.1.100","remote-file-path":"/backups/my-backup","operation":"Import file","protocol":"SCP     ","operation-id":"IMPORT-abc12345","status":"Couldn't connect to server","timestamp":"Mon Jan 15 10:00:30 2024"}]}

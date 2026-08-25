@@ -17,6 +17,8 @@ def set_module_args(args):
     """Prepare arguments so that they will be picked up during module creation"""
     args = json.dumps({'ANSIBLE_MODULE_ARGS': args})
     basic._ANSIBLE_ARGS = to_bytes(args)
+    if hasattr(basic, '_ANSIBLE_PROFILE'):
+        basic._ANSIBLE_PROFILE = 'legacy'
 
 
 class TestParameters(TestCase):

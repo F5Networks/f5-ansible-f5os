@@ -505,3 +505,67 @@ class TestManager(unittest.TestCase):
         with self.assertRaises(F5ModuleError) as err5:
             mm.remove()
         self.assertIn('Failed to delete the resource.', err5.exception.args[0])
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(
+            name='test_backup',
+            remote_host='10.0.0.1',
+            remote_path='/backups/',
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.module = Mock()
+        result = {'__warnings': [{'msg': 'deprecated feature', 'version': '3.0'}]}
+        mm._announce_deprecations(result)
+        mm.client.module.deprecate.assert_called_once_with(msg='deprecated feature', version='3.0')
+
+    def test_remove_check_mode(self):
+        set_module_args(dict(
+            name='test_backup',
+            remote_host='10.0.0.1',
+            remote_path='/backups/',
+            state='absent'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if
+        )
+        module.check_mode = True
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=True)
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_create_check_mode(self):
+        set_module_args(dict(
+            name='test_backup',
+            remote_host='10.0.0.1',
+            remote_path='/backups/',
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+            required_if=self.spec.required_if
+        )
+        module.check_mode = True
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=False)
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])

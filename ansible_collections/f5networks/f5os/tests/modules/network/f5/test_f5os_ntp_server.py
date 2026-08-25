@@ -14,7 +14,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_ntp_server
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_ntp_server import (
-    ArgumentSpec, ModuleManager, ApiParameters
+    ArgumentSpec, ModuleManager, ApiParameters, _parse_version
 )
 
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
@@ -50,6 +50,17 @@ def load_fixture(name):
     return data
 
 
+class TestParseVersion(unittest.TestCase):
+    def test_parse_version_valid(self):
+        self.assertEqual(_parse_version('2.0.0'), (2, 0, 0))
+        self.assertEqual(_parse_version('2.0.0-9817'), (2, 0, 0))
+        self.assertEqual(_parse_version('1.8.3'), (1, 8, 3))
+
+    def test_parse_version_invalid_returns_zero(self):
+        self.assertEqual(_parse_version('not-a-version'), (0, 0, 0))
+        self.assertEqual(_parse_version(''), (0, 0, 0))
+
+
 class TestParameters(unittest.TestCase):
     def test_api_parameters(self):
         args = load_fixture('ntp_server_get.json')
@@ -57,6 +68,22 @@ class TestParameters(unittest.TestCase):
         p = ApiParameters(params=args['openconfig-system:server'][0])
         self.assertEqual(p.server, '10.218.33.44')
         self.assertEqual(p.key_id, 12)
+
+    def test_api_parameters_v2_fields(self):
+        args = load_fixture('ntp_server_get_v2.json')
+
+        p = ApiParameters(params=args['openconfig-system:server'][0])
+        self.assertEqual(p.association_type, 'SERVER')
+        self.assertEqual(p.version, 4)
+        self.assertEqual(p.port, 123)
+
+    def test_api_parameters_v2_fields_absent(self):
+        args = {'address': '1.2.3.4', 'config': {'address': '1.2.3.4'}}
+
+        p = ApiParameters(params=args)
+        self.assertIsNone(p.association_type)
+        self.assertIsNone(p.version)
+        self.assertIsNone(p.port)
 
 
 class TestManager(unittest.TestCase):
@@ -153,6 +180,254 @@ class TestManager(unittest.TestCase):
         self.assertEqual(mm.client.patch.call_count, 0)
         self.assertEqual(mm.client.post.call_count, 0)
 
+    def test_create_v2_fields(self, *args):
+        set_module_args(dict(
+            server='10.218.33.44',
+            association_type='SERVER',
+            version=4,
+            port=123,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0'
+        mm.client.get = Mock(return_value={'code': 404})
+        mm.client.post = Mock(return_value={'code': 201})
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        post_payload = mm.client.post.call_args[1]['data']
+        server_config = post_payload['server'][0]['config']
+        self.assertEqual(server_config['association-type'], 'SERVER')
+        self.assertEqual(server_config['version'], 4)
+        self.assertEqual(server_config['port'], 123)
+
+    def test_create_with_prefer_iburst_ntp_service_ntp_auth(self, *args):
+        set_module_args(dict(
+            server='10.218.33.44',
+            prefer=True,
+            iburst=True,
+            ntp_service=True,
+            ntp_authentication=True,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '1.8.3'
+        mm.client.get = Mock(return_value={'code': 404})
+        mm.client.post = Mock(return_value={'code': 201})
+        mm.client.patch = Mock(return_value={'code': 204})
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        post_payload = mm.client.post.call_args[1]['data']
+        server_config = post_payload['server'][0]['config']
+        self.assertTrue(server_config['prefer'])
+        self.assertTrue(server_config['iburst'])
+        # ntp_service and ntp_authentication trigger a separate patch to /ntp/config
+        patch_payload = mm.client.patch.call_args[1]['data']
+        self.assertTrue(patch_payload['config']['enabled'])
+        self.assertTrue(patch_payload['config']['enable-ntp-auth'])
+
+    def test_create_pre_v2_omits_new_fields(self, *args):
+        set_module_args(dict(
+            server='10.218.33.44',
+            association_type='SERVER',
+            version=4,
+            port=123,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '1.8.3'
+        mm.client.get = Mock(return_value={'code': 404})
+        mm.client.post = Mock(return_value={'code': 201})
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        post_payload = mm.client.post.call_args[1]['data']
+        server_config = post_payload['server'][0]['config']
+        self.assertNotIn('association-type', server_config)
+        self.assertNotIn('version', server_config)
+        self.assertNotIn('port', server_config)
+
+    def test_update_v2_fields(self, *args):
+        set_module_args(dict(
+            server='10.218.33.44',
+            association_type='PEER',
+            version=3,
+            port=1123,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        current_ntp = load_fixture('ntp_server_get_v2.json')
+        current_ntp_config = load_fixture('ntp_config.json')
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': current_ntp},
+            {'code': 200, 'contents': current_ntp_config},
+        ])
+        mm.client.patch = Mock(return_value={'code': 204})
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        patch_payload = mm.client.patch.call_args[1]['data']
+        server_config = patch_payload['server'][0]['config']
+        self.assertEqual(server_config['association-type'], 'PEER')
+        self.assertEqual(server_config['version'], 3)
+        self.assertEqual(server_config['port'], 1123)
+
+    def test_update_v2_no_change(self, *args):
+        set_module_args(dict(
+            server='10.218.33.44',
+            association_type='SERVER',
+            version=4,
+            port=123,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        current_ntp = load_fixture('ntp_server_get_v2.json')
+        current_ntp_config = load_fixture('ntp_config.json')
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': current_ntp},
+            {'code': 200, 'contents': current_ntp_config},
+        ])
+        mm.client.patch = Mock(return_value={'code': 204})
+
+        results = mm.exec_module()
+
+        self.assertFalse(results['changed'])
+        self.assertEqual(mm.client.patch.call_count, 0)
+
+    def test_update_pre_v2_omits_new_fields(self, *args):
+        set_module_args(dict(
+            server='10.218.33.44',
+            key_id=99,
+            association_type='PEER',
+            version=3,
+            port=1123,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        current_ntp = load_fixture('ntp_server_get.json')
+        current_ntp_config = load_fixture('ntp_config.json')
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '1.8.3'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': current_ntp},
+            {'code': 200, 'contents': current_ntp_config},
+        ])
+        mm.client.patch = Mock(return_value={'code': 204})
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        patch_payload = mm.client.patch.call_args[1]['data']
+        server_config = patch_payload['server'][0]['config']
+        self.assertNotIn('association-type', server_config)
+        self.assertNotIn('version', server_config)
+        self.assertNotIn('port', server_config)
+
+    def test_pre_v2_new_fields_no_error(self, *args):
+        """Pre-v2: specifying new fields raises no error and reports no change."""
+        set_module_args(dict(
+            server='10.218.33.44',
+            association_type='SERVER',
+            version=4,
+            port=123,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        current_ntp = load_fixture('ntp_server_get.json')
+        current_ntp_config = load_fixture('ntp_config.json')
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '1.5.0'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': current_ntp},
+            {'code': 200, 'contents': current_ntp_config},
+        ])
+        mm.client.patch = Mock(return_value={'code': 204})
+
+        results = mm.exec_module()
+
+        self.assertFalse(results['changed'])
+        self.assertEqual(mm.client.patch.call_count, 0)
+
+    def test_version_suffix_treated_as_v2(self, *args):
+        """Version string '2.0.0-9817' must be treated as >= 2.0.0."""
+        set_module_args(dict(
+            server='10.218.33.44',
+            association_type='SERVER',
+            version=4,
+            port=123,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0-9817'
+        mm.client.get = Mock(return_value={'code': 404})
+        mm.client.post = Mock(return_value={'code': 201})
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        post_payload = mm.client.post.call_args[1]['data']
+        server_config = post_payload['server'][0]['config']
+        self.assertIn('association-type', server_config)
+        self.assertIn('version', server_config)
+        self.assertIn('port', server_config)
+
     def test_delete(self, *args):
         set_module_args(dict(
             server='10.218.33.44',
@@ -202,6 +477,32 @@ class TestManager(unittest.TestCase):
 
         self.assertTrue(result.exception.args[0]['failed'])
         self.assertIn('This module has failed', result.exception.args[0]['msg'])
+
+    def test_read_current_ntp_config_api_failure(self, *args):
+        set_module_args(dict(
+            server='10.218.33.44',
+            key_id=32,
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        current_ntp = load_fixture('ntp_server_get.json')
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200, 'contents': current_ntp},
+            {'code': 503, 'contents': 'service not available'},
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('service not available', err.exception.args[0])
 
     def test_device_call_functions(self, *args):
         set_module_args(dict(
@@ -265,9 +566,52 @@ class DummyClient(F5Client):
         self._responses = responses or {}
         self._calls = []
 
+    def post(self, url, data=None, **kwargs):
+        self._calls.append(('post', url, data))
+        return self._responses.get(url, {'code': 201, 'contents': {}})
+
     def patch(self, url, data=None, **kwargs):
         self._calls.append(('patch', url, data))
         return self._responses.get(url, {'code': 200, 'contents': {}})
+
+
+def test_create_on_device_ntp_patch_error():
+    """create_on_device raises F5ModuleError when the ntp/config PATCH fails."""
+    params = {
+        'server': '1.2.3.4',
+        'ntp_service': True,
+        'ntp_authentication': True,
+    }
+    responses = {
+        "/openconfig-system:system/ntp/openconfig-system:servers": {'code': 201, 'contents': {}},
+        '/openconfig-system:system/ntp/config': {'code': 500, 'contents': {'error': 'fail'}},
+    }
+
+    class DummyModule:
+        def __init__(self, p):
+            self.params = p
+
+    mgr = ModuleManager(module=DummyModule(params))
+    mgr.client = DummyClient(responses)
+    mgr.changes = UsableChanges(params=params)
+    with pytest.raises(F5ModuleError):
+        mgr.create_on_device()
+
+
+def test_version_is_v2_or_later_exception_returns_false():
+    """When client.software_version raises, _version_is_v2_or_later returns False."""
+    class BrokenClient:
+        @property
+        def software_version(self):
+            raise AttributeError('no plugin')
+
+    class DummyModule:
+        def __init__(self):
+            self.params = {'server': '1.2.3.4'}
+
+    mgr = ModuleManager(module=DummyModule())
+    mgr.client = BrokenClient()
+    assert mgr._version_is_v2_or_later() is False
 
 
 def test_update_on_device_full_coverage():

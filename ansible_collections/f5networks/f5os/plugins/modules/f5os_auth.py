@@ -18,6 +18,8 @@ description:
   - Remote Roles
   - Authentication order
   - Password Policy
+    - The C(auth_order) endpoint availability can vary by platform build.
+    - If unavailable, configuration attempts fail with a clear error and delete/read handle missing endpoint responses gracefully.
   - Please Note This playbook is NOT IDEMPOTENT for API flaws, such as radius
   - and tacacs secrets are only reported encrypted and password policy always reports
   - as present. For these items, a change is always reported.
@@ -91,6 +93,8 @@ options:
         description:
             - Specifies the order in which the authentication providers are applied to login attempts
             - Options are [local, radius, tacacs, ldap]
+            - This list is optional only when using C(state=absent) to remove auth_order by itself.
+            - If the auth_order endpoint is unavailable on the target, set/update operations fail with a clear error.
         type: list
         elements: str
     password_policy:
@@ -126,6 +130,14 @@ options:
                 description:
                     - Specifies the maximum repetition of a character sequence
                 type: int
+            min_days:
+                description:
+                    - Specifies the minimum number of days between password changes
+                    - Requires F5OS 2.0.0 or later. If the device does not report its software_version
+                      and this field is supplied, the module will raise an error to avoid silently dropping
+                      the configuration.
+                type: int
+                version_added: 2.1.0
             min_differences:
                 description:
                     - Specifies the number of characters that must be altered between updated passwords
@@ -154,6 +166,14 @@ options:
                 description:
                     - Specifies whether the system rejects passwords that contain the username
                 type: bool
+            remember:
+                description:
+                    - Specifies the number of previous passwords to remember
+                    - Requires F5OS 2.0.0 or later. If the device does not report its software_version
+                      and this field is supplied, the module will raise an error to avoid silently dropping
+                      the configuration.
+                type: int
+                version_added: 2.1.0
             root_lockout:
                 description:
                     - Specifies whether the root user can be locked out
@@ -166,6 +186,14 @@ options:
                 description:
                     - Specifies the unlock the time
                 type: int
+            warn_age:
+                description:
+                    - Specifies the number of days before password expiration to warn users
+                    - Requires F5OS 2.0.0 or later. If the device does not report its software_version
+                      and this field is supplied, the module will raise an error to avoid silently dropping
+                      the configuration.
+                type: int
+                version_added: 2.1.0
     state:
         description:
             - If C(present), creates/updates the specified setting if necessary.
@@ -341,21 +369,28 @@ EXAMPLES = r'''
 
 RETURN = r'''
 servergroups:
-  description: Specifies the servergroups
+  description: Specifies the server groups configured or operated on by this module.
   returned: changed
-  type: str
+  type: list
+  elements: dict
+  sample: [{ 'name': 'radius_servers', 'protocol': 'radius', 'servers': [{ 'address': '10.2.3.4', 'port': 1812 }] }]
 remote_roles:
-  description: Specifies the remote roles
+  description: Specifies the remote role mappings.
   returned: changed
-  type: str
+  type: list
+  elements: dict
+  sample: [{ 'rolename': 'admin', 'remote_gid': 10, 'ldap_group': 'admins' }]
 auth_order:
-  description: Specifies the auth order
+  description: Specifies the authentication order applied to login attempts.
   returned: changed
-  type: str
+  type: list
+  elements: str
+  sample: ['radius', 'tacacs', 'ldap', 'local']
 password_policy:
-  description: Specifies the password policy
+  description: Specifies the local password policy.
   returned: changed
-  type: str
+  type: dict
+  sample: { 'min_length': 16, 'max_age': 90 }
 '''
 
 import datetime
@@ -369,6 +404,18 @@ from ..module_utils.client import (
 from ..module_utils.common import (
     F5ModuleError, AnsibleF5Parameters,
 )
+import re
+
+
+def _parse_version(version_str):
+    """Parse a version string like '2.0.0' or '2.0.0-9817' into a (major, minor, patch) tuple."""
+    m = re.match(r"(\d+)\.(\d+)(?:\.(\d+))?", str(version_str or ''))
+    if m:
+        major = int(m.group(1))
+        minor = int(m.group(2))
+        patch = int(m.group(3)) if m.group(3) is not None else 0
+        return (major, minor, patch)
+    return (0, 0, 0)
 
 
 class Parameters(AnsibleF5Parameters):
@@ -470,16 +517,19 @@ class ApiParameters(Parameters):
             return_value['max_login_failures'] = api.get('max-login-failures')
             return_value['max_retries'] = api.get('retries')
             return_value['max_sequence_repeat'] = api.get('max-sequence-repeat')
+            return_value['min_days'] = api.get('min-days')
             return_value['min_differences'] = api.get('required-differences')
             return_value['min_length'] = api.get('min-length')
             return_value['min_lower'] = api.get('required-lowercase')
             return_value['min_number'] = api.get('required-numeric')
             return_value['min_special'] = api.get('required-special')
             return_value['min_upper'] = api.get('required-uppercase')
+            return_value['remember'] = api.get('remember')
             return_value['reject_username'] = api.get('reject-username')
             return_value['root_lockout'] = api.get('root-lockout')
             return_value['root_unlock_time'] = api.get('root-unlock-time')
             return_value['unlock_time'] = api.get('unlock-time')
+            return_value['warn_age'] = api.get('warn-age')
             return return_value
         except (TypeError, ValueError):
             return None
@@ -660,6 +710,33 @@ class ModuleManager(object):
             'root_unlock_time': 'root-unlock-time',
             'unlock_time': 'unlock-time',
         }
+
+        # Version-gated fields (F5OS 2.0.0+)
+        version_str = ''
+        try:
+            version_str = self.client.software_version or ''
+        except Exception:
+            version_str = ''
+
+        gated_map = {
+            'min_days': 'min-days',
+            'remember': 'remember',
+            'warn_age': 'warn-age',
+        }
+
+        # If device reports v2.0.0 or later, include gated fields in the conf_map
+        if _parse_version(version_str) >= (2, 0, 0):
+            conf_map.update(gated_map)
+        else:
+            # If software_version is unavailable, but user provided gated fields, raise an error
+            if not version_str:
+                for gk in gated_map:
+                    if gk in values and values[gk] is not None:
+                        raise F5ModuleError(
+                            'password_policy fields {0} require F5OS 2.0.0 or later, but the device\'s '
+                            'software_version could not be determined.'.format(','.join(gated_map.keys()))
+                        )
+
         for attr in conf_map:
             if attr in values and values[attr] is not None:
                 config[conf_map[attr]] = values[attr]
@@ -688,6 +765,8 @@ class ModuleManager(object):
             config.append(conf_map[item])
 
         response = self.client.put(uri, data=payload)
+        if self._auth_order_not_configured(response):
+            raise F5ModuleError('Unable to set auth_order because authentication-method endpoint is not available on this target device.')
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
 
@@ -755,6 +834,26 @@ class ModuleManager(object):
                 msg=warning['msg'],
                 version=warning['version']
             )
+
+    def _manage_auth_order(self):
+        if hasattr(self.want, 'auth_order') and self.want.auth_order is not None:
+            return True
+
+        return False
+
+    @staticmethod
+    def _auth_order_not_configured(response):
+        if response.get('code') == 404:
+            return True
+
+        try:
+            message = response['contents']['ietf-restconf:errors']['error'][0]['error-message']
+            if 'keypath not found' in message.lower():
+                return True
+        except (AttributeError, KeyError, TypeError, IndexError):
+            pass
+
+        return False
 
     def exec_module(self):
         start = datetime.datetime.now().isoformat()
@@ -850,7 +949,7 @@ class ModuleManager(object):
                     # Password Policy always exists
                     raise F5ModuleError(response['contents'])
 
-        if hasattr(self.want, 'auth_order') and self.want.auth_order is not None:
+        if self._manage_auth_order():
             uri = '/openconfig-system:system/aaa/authentication/config/authentication-method'
             response = self.client.get(uri)
 
@@ -858,7 +957,7 @@ class ModuleManager(object):
                 if query in ['any', 'still']:
                     return True
 
-            if response['code'] == 404:
+            if self._auth_order_not_configured(response):
                 if query == 'all':
                     return False
 
@@ -1090,10 +1189,10 @@ class ModuleManager(object):
             if response['code'] not in [200, 201, 202, 204]:
                 raise F5ModuleError(response['contents'])
 
-        if hasattr(self.want, 'auth_order') and self.want.auth_order is not None:
+        if self._manage_auth_order():
             uri = '/openconfig-system:system/aaa/authentication/config/authentication-method'
             response = self.client.delete(uri)
-            if response['code'] not in [200, 201, 202, 204]:
+            if not self._auth_order_not_configured(response) and response['code'] not in [200, 201, 202, 204, 404]:
                 raise F5ModuleError(response['contents'])
 
         if hasattr(self.want, 'remote_roles') and self.want.remote_roles is not None:
@@ -1138,10 +1237,15 @@ class ModuleManager(object):
         if hasattr(self.want, 'auth_order') and self.want.auth_order is not None:
             uri = '/openconfig-system:system/aaa/authentication/config/authentication-method'
             auth_order_response = self.client.get(uri)
-            if auth_order_response['code'] not in [200, 201, 202]:
-                raise F5ModuleError(auth_order_response['contents']['openconfig-system:authentication-method'])
-
-            params['auth_order'] = auth_order_response['contents']['openconfig-system:authentication-method']
+            if self._auth_order_not_configured(auth_order_response):
+                params['auth_order'] = []
+            elif auth_order_response['code'] not in [200, 201, 202]:
+                try:
+                    raise F5ModuleError(auth_order_response['contents']['openconfig-system:authentication-method'])
+                except (KeyError, TypeError):
+                    raise F5ModuleError(auth_order_response['contents'])
+            else:
+                params['auth_order'] = auth_order_response['contents'].get('openconfig-system:authentication-method', [])
 
         # Remote Roles
         if hasattr(self.want, 'remote_roles') and self.want.remote_roles is not None:
@@ -1190,16 +1294,19 @@ class ArgumentSpec(object):
                     max_login_failures=dict(type='int'),
                     max_retries=dict(type='int'),
                     max_sequence_repeat=dict(type='int'),
+                    min_days=dict(type='int'),
                     min_differences=dict(type='int'),
                     min_length=dict(type='int'),
                     min_lower=dict(type='int'),
                     min_number=dict(type='int'),
                     min_special=dict(type='int'),
                     min_upper=dict(type='int'),
+                    remember=dict(type='int'),
                     reject_username=dict(type='bool'),
                     root_lockout=dict(type='bool'),
                     root_unlock_time=dict(type='int'),
-                    unlock_time=dict(type='int')
+                    unlock_time=dict(type='int'),
+                    warn_age=dict(type='int')
                 )
             ),
             auth_order=dict(
@@ -1222,7 +1329,7 @@ class ArgumentSpec(object):
         )
         self.argument_spec = {}
         self.argument_spec.update(argument_spec)
-        self.required_one_of = [('servergroups', 'password_policy', 'auth_config', 'remote_roles')]
+        self.required_one_of = [('servergroups', 'password_policy', 'auth_order', 'remote_roles')]
 
 
 def main():
@@ -1231,6 +1338,7 @@ def main():
     module = AnsibleModule(
         argument_spec=spec.argument_spec,
         supports_check_mode=spec.supports_check_mode,
+        required_one_of=spec.required_one_of,
     )
 
     try:

@@ -51,6 +51,13 @@ options:
     description:
       - Tenant management gateway.
     type: str
+  mgmt_vlan:
+    description:
+      - Tenant management VLAN.
+      - On VELOS Partition targets this setting is always applied.
+      - On rSeries targets this setting is only applied on F5OS 2.0.0 and later.
+    type: int
+    version_added: "1.23.0"
   vlans:
     description:
       - The existing VLAN IDs in the chassis partition added to the tenant.
@@ -109,6 +116,13 @@ options:
         or C(provisioned) state.
     type: str
     version_added: "1.13.0"
+  max_nodes:
+    description:
+      - Maximum number of nodes the tenant is allowed to use.
+      - Only supported on F5OS 2.0.0 and later. On earlier versions this parameter
+        is silently ignored and omitted from the API payload.
+    type: int
+    version_added: "1.23.0"
   mac_block_size:
     description:
       - The MAC block size for the tenant.
@@ -197,6 +211,11 @@ mgmt_gateway:
   returned: changed
   type: str
   sample: 192.168.1.254
+mgmt_vlan:
+  description: Tenant management VLAN.
+  returned: changed
+  type: int
+  sample: 100
 vlans:
   description: Existing VLAN IDs in the chassis partition added to the tenant.
   returned: changed
@@ -222,6 +241,11 @@ running_state:
   returned: changed
   type: str
   sample: provisioned
+max_nodes:
+  description: Maximum number of nodes the tenant is allowed to use.
+  returned: changed
+  type: int
+  sample: 2
 '''
 import datetime
 import re
@@ -239,12 +263,22 @@ from ansible_collections.f5networks.f5os.plugins.module_utils.common import (
 )
 
 
+def _parse_version(version_str):
+    """Parse a version string like '2.0.0' or '2.0.0-9817' into a (major, minor, patch) tuple."""
+    m = re.match(r'(\d+)\.(\d+)\.(\d+)', str(version_str))
+    if m:
+        return tuple(int(x) for x in m.groups())
+    return (0, 0, 0)
+
+
 class Parameters(AnsibleF5Parameters):
     api_map = {
         'image': 'image_name',
         'mgmt-ip': 'mgmt_ip',
         'prefix-length': 'mgmt_prefix',
         'gateway': 'mgmt_gateway',
+        'mgmt-vlan': 'mgmt_vlan',
+        'f5-tenant-mgmt-vlan:mgmt-vlan': 'mgmt_vlan',
         'running-state': 'running_state',
         'vcpu-cores-per-node': 'cpu_cores',
         'cpu-cores': 'cpu_cores',
@@ -253,6 +287,7 @@ class Parameters(AnsibleF5Parameters):
         'type': 'type',
         'dag-ipv6-prefix-length': 'dag_ipv6_prefix_length',
         'deployment-file': 'deployment_file',
+        'max-nodes': 'max_nodes',
     }
 
     api_attributes = [
@@ -261,6 +296,7 @@ class Parameters(AnsibleF5Parameters):
         'mgmt-ip',
         'prefix-length',
         'gateway',
+        'f5-tenant-mgmt-vlan:mgmt-vlan',
         'vlans',
         'vcpu-cores-per-node',
         'memory',
@@ -271,6 +307,7 @@ class Parameters(AnsibleF5Parameters):
         'dag-ipv6-prefix-length',
         'type',
         'deployment-file',
+        'max-nodes',
     ]
 
     returnables = [
@@ -279,6 +316,7 @@ class Parameters(AnsibleF5Parameters):
         'mgmt_ip',
         'mgmt_prefix',
         'mgmt_gateway',
+        'mgmt_vlan',
         'vlans',
         'cpu_cores',
         'memory',
@@ -289,6 +327,7 @@ class Parameters(AnsibleF5Parameters):
         'dag_ipv6_prefix_length',
         'type',
         'deployment_file',
+        'max_nodes',
     ]
 
     updatables = [
@@ -297,6 +336,7 @@ class Parameters(AnsibleF5Parameters):
         'mgmt_ip',
         'mgmt_prefix',
         'mgmt_gateway',
+        'mgmt_vlan',
         'vlans',
         'cpu_cores',
         'memory',
@@ -307,6 +347,7 @@ class Parameters(AnsibleF5Parameters):
         'dag_ipv6_prefix_length',
         'type',
         'deployment_file',
+        'max_nodes',
     ]
 
 
@@ -330,14 +371,14 @@ class ApiParameters(Parameters):
     def virtual_disk_size(self):
         try:
             return self._values.get('virtual_disk_size')
-        except (TypeError, ValueError):
+        except (TypeError, ValueError):  # pragma: no cover
             return None
 
     @property
     def mac_block_size(self):
         try:
             return self._values.get('mac_block_size')
-        except (TypeError, ValueError):
+        except (TypeError, ValueError):  # pragma: no cover
             return None
 
 
@@ -398,6 +439,18 @@ class ModuleParameters(Parameters):
             )
 
     @property
+    def mgmt_vlan(self):
+        if self._values['mgmt_vlan'] is None:
+            return None
+        try:
+            value = int(self._values['mgmt_vlan'])
+        except (TypeError, ValueError):
+            raise F5ModuleError("The specified 'mgmt_vlan' must be an integer.")
+        if value < 0 or value > 4095:
+            raise F5ModuleError("Valid 'mgmt_vlan' id must be in range 0 - 4095.")
+        return value
+
+    @property
     def memory(self):
         if self._values['memory'] is None:
             return None
@@ -452,7 +505,7 @@ class ReportableChanges(Changes):
     pass
 
 
-class Difference(object):  # pragma: no cover
+class Difference(object):
     def __init__(self, want, have=None):
         self.want = want
         self.have = have
@@ -470,7 +523,7 @@ class Difference(object):  # pragma: no cover
             attr2 = getattr(self.have, param)
             if attr1 != attr2:
                 return attr1
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             return attr1
 
     @property
@@ -533,7 +586,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):  # pragma: no cover
+    def _announce_deprecations(self, result):
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -583,13 +636,13 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.update_on_device()
         return True
 
     def remove(self):
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.remove_from_device()
         if self.exists():
@@ -598,7 +651,7 @@ class ModuleManager(object):
 
     def create(self):
         self._set_changed_options()
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.create_on_device()
         return True
@@ -615,8 +668,58 @@ class ModuleManager(object):
 
         return True
 
+    def _version_gte_2(self):
+        try:
+            version = self.client.software_version or ''
+        except Exception:
+            version = ''
+        return _parse_version(version) >= (2, 0, 0)
+
+    def _is_velos_partition(self):
+        return self.client.platform == 'Velos Partition'
+
+    def _mgmt_vlan_supported(self):
+        """mgmt_vlan is supported on VELOS Partition always, and on rSeries only on F5OS >= 2.0.0."""
+        if self._is_velos_partition():
+            return True
+        return self._version_gte_2()
+
+    def _strip_version_gated_params(self, params):
+        """Remove parameters not supported on this target platform/version."""
+        if not self._version_gte_2():
+            params.pop('max-nodes', None)
+        if not self._mgmt_vlan_supported():
+            params.pop('f5-tenant-mgmt-vlan:mgmt-vlan', None)
+        return params
+
+    def _update_changed_options(self):
+        diff = Difference(self.want, self.have)
+        updatables = list(Parameters.updatables)
+        if not self._version_gte_2():
+            # remove params that are only supported on F5OS >= 2.0.0 so they do not
+            # trigger false-positive change detection when they will be omitted from
+            # API payloads on older firmware
+            updatables = [u for u in updatables if u not in ('max_nodes',)]
+        if not self._mgmt_vlan_supported():
+            updatables = [u for u in updatables if u != 'mgmt_vlan']
+        changed = dict()
+        for k in updatables:
+            change = diff.compare(k)
+            if change is None:
+                continue
+            else:
+                if isinstance(change, dict):  # pragma: no cover
+                    changed.update(change)
+                else:
+                    changed[k] = change
+        if changed:
+            self.changes = UsableChanges(params=changed)
+            return True
+        return False
+
     def create_on_device(self):
         params = self.changes.api_params()
+        self._strip_version_gated_params(params)
         payload = dict(tenant=[dict(name=self.want.name, config=params)])
 
         uri = "/f5-tenants:tenants"
@@ -628,6 +731,7 @@ class ModuleManager(object):
 
     def update_on_device(self):
         params = self.changes.api_params()
+        self._strip_version_gated_params(params)
         keys = list(params.keys())
 
         if 'running-state' in keys:
@@ -675,6 +779,7 @@ class ArgumentSpec(object):
             mgmt_ip=dict(),
             mgmt_prefix=dict(type='int'),
             mgmt_gateway=dict(),
+            mgmt_vlan=dict(type='int'),
             vlans=dict(type='list', elements='int'),
             cpu_cores=dict(
                 type='int',
@@ -682,6 +787,7 @@ class ArgumentSpec(object):
             memory=dict(type='int'),
             virtual_disk_size=dict(type='int'),
             dag_ipv6_prefix_length=dict(type='int'),
+            max_nodes=dict(type='int'),
             mac_block_size=dict(type='str'),
             cryptos=dict(
                 choices=['enabled', 'disabled']

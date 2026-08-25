@@ -67,29 +67,6 @@ class TestParameters(unittest.TestCase):
 
         self.assertEqual(p.name, 'test_server')
         self.assertEqual(p.provider_type, 'radius')
-        self.assertEqual(p.server["server_ip"], '1.1.1.1')
-        self.assertEqual(p.server['port'], 1000)
-        self.assertEqual(p.server['secret'], 'test')
-        self.assertEqual(p.server['timeout'], '5')
-        self.assertEqual(p.state, 'present')
-
-    def test_module_parameters(self):
-        args = dict(
-            name='test_server',
-            provider_type='radius',
-            server=dict(
-                server_ip='1.1.1.1',
-                port=1000,
-                secret='test',
-                timeout='5'
-            ),
-            state='present'
-        )
-
-        p = ModuleParameters(params=args)
-
-        self.assertEqual(p.name, 'test_server')
-        self.assertEqual(p.provider_type, 'radius')
         self.assertEqual(p.server[0]["server_ip"], '1.1.1.1')
         self.assertEqual(p.server[0]['port'], 1000)
         self.assertEqual(p.server[0]['secret'], 'test')
@@ -299,3 +276,128 @@ class TestManager(unittest.TestCase):
 
         self.assertTrue(result.exception.args[0]['failed'])
         self.assertIn('This module has failed', result.exception.args[0]['msg'])
+
+    def test_absent_not_exists(self, *args):
+        set_module_args(dict(
+            name='test_server',
+            provider_type='tacacs',
+            state='absent'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=404, contents=dict()))
+        results = mm.exec_module()
+        self.assertFalse(results['changed'])
+
+    def test_update_no_changes(self, *args):
+        set_module_args(dict(
+            name='test_server',
+            provider_type='tacacs',
+            server=[
+                {'server_ip': '2.2.2.2', 'port': 49, 'secret': 'test'},
+                {'server_ip': '3.3.3.3', 'port': 49, 'secret': 'test'}
+            ],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(
+            code=200,
+            contents=load_fixture('f5os_auth_server.json')
+        ))
+        results = mm.exec_module()
+        self.assertFalse(results['changed'])
+
+    def test_exists_returns_false_on_201(self, *args):
+        set_module_args(dict(
+            name='test_server',
+            provider_type='tacacs',
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=201, contents=dict()))
+        mm.client.post = Mock(return_value=dict(code=204, contents=dict()))
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_create_ldap_server_ssl(self, *args):
+        set_module_args(dict(
+            name='test_server',
+            provider_type='ldap',
+            server=[{'server_ip': '1.1.1.1', 'port': 636, 'type': 'ldap over ssl'}],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.put = Mock(return_value=dict(code=204, contents=dict()))
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_update_servers_put_error(self, *args):
+        set_module_args(dict(
+            name='test_server',
+            provider_type='tacacs',
+            server=[{'server_ip': '1.1.1.1', 'port': 1000, 'secret': 'test'}],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(
+            code=200,
+            contents=load_fixture('f5os_auth_server.json')
+        ))
+        mm.client.put = Mock(return_value=dict(code=400, contents='put error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('put error', str(err.exception))
+
+    def test_read_current_no_servers_key(self, *args):
+        set_module_args(dict(
+            name='test_server',
+            provider_type='tacacs',
+            server=[{'server_ip': '1.1.1.1', 'port': 1000, 'secret': 'test'}],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents={}))
+        mm.client.put = Mock(return_value=dict(code=204, contents=dict()))
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])

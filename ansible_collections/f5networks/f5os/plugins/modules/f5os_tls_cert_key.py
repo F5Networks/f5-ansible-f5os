@@ -456,7 +456,7 @@ class ModuleManager(object):
                 continue
             else:
                 if isinstance(change, dict):
-                    changed.update(change)  # pragma: no cover
+                    changed.update(change)
                 else:
                     changed[k] = change
 
@@ -465,7 +465,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):  # pragma: no cover
+    def _announce_deprecations(self, result):
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -513,13 +513,13 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.create_on_device()
         return True
 
     def remove(self):
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.remove_from_device()
         if self.exists():
@@ -528,7 +528,7 @@ class ModuleManager(object):
 
     def create(self):
         self._set_changed_options()
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.create_on_device()
         return True

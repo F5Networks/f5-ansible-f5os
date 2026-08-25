@@ -129,7 +129,7 @@ class ModuleParameters(Parameters):
         return self._values['state']
 
 
-class Changes(Parameters):  # pragma: no cover
+class Changes(Parameters):
     def to_return(self):
         result = {}
         try:
@@ -149,7 +149,7 @@ class ReportableChanges(Changes):
     pass
 
 
-class Difference(object):  # pragma: no cover
+class Difference(object):
     def __init__(self, want, have=None):
         self.want = want
         self.have = have
@@ -189,7 +189,7 @@ class ModuleManager(object):
         if changed:
             self.changes = UsableChanges(params=changed)
 
-    def _update_changed_options(self):  # pragma: no cover
+    def _update_changed_options(self):
         diff = Difference(self.want, self.have)
         updatables = Parameters.updatables
         changed = dict()
@@ -208,7 +208,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):  # pragma: no cover
+    def _announce_deprecations(self, result):
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -325,7 +325,7 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.update_on_device()
         return True

@@ -154,6 +154,18 @@ class TestParameters(unittest.TestCase):
         self.assertIsNone(p.ipv6_mgmt_address)
         self.assertIsNone(p.ipv6_mgmt_gateway)
 
+    def test_api_parameters_volumes(self):
+        args = dict(
+            configuration_volume=50,
+            images_volume=30,
+            shared_volume=20
+        )
+        p = ApiParameters(params=args)
+
+        self.assertEqual(p.configuration_volume, 50)
+        self.assertEqual(p.images_volume, 30)
+        self.assertEqual(p.shared_volume, 20)
+
 
 class TestManager(unittest.TestCase):
     def setUp(self):
@@ -714,3 +726,89 @@ class TestManager(unittest.TestCase):
         mm._update_changed_options = Mock(return_value=False)
         mm.read_current_from_device = Mock(return_value=dict())
         self.assertFalse(mm.update())
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(
+            name='foo',
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+
+        result = {'__warnings': [{'msg': 'deprecated', 'version': '1.0'}]}
+        mm._announce_deprecations(result)
+
+        mm.client.module.deprecate.assert_called_once_with(msg='deprecated', version='1.0')
+        self.assertNotIn('__warnings', result)
+
+    def test_create_check_mode(self):
+        set_module_args(dict(
+            name='foo',
+            ipv4_mgmt_address='192.168.1.1/24',
+            slots=[1],
+            state='present',
+            _ansible_check_mode=True
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=False)
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+
+    def test_update_check_mode(self):
+        set_module_args(dict(
+            name='foo',
+            ipv4_mgmt_address='10.10.10.10/24',
+            state='present',
+            _ansible_check_mode=True
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=True)
+        mm.read_current_from_device = Mock(return_value=ApiParameters(params=dict(
+            mgmt_ip={'ipv4': {'address': '192.168.1.1', 'prefix-length': 24, 'gateway': '192.168.1.254'}}
+        )))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+
+    def test_remove_check_mode(self):
+        set_module_args(dict(
+            name='foo',
+            state='absent',
+            _ansible_check_mode=True
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.platform = 'Velos Partition'
+        mm.exists = Mock(return_value=True)
+        mm.read_current_from_device = Mock(return_value=ApiParameters(params=dict()))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])

@@ -171,8 +171,12 @@ tenant_state:
       type: str
       example: 'Running'
     instances:
-      description: Tenant instance details.
-      returned: always
+      description:
+        - Tenant instance details.
+        - This field is absent on F5OS 2.0.0 and later; when absent, per-instance
+          phase verification is skipped and deployed determination relies solely on
+          C(running-state) and C(status).
+      returned: when present (pre-2.0.0 platforms)
       type: dict
       example: hash/dictionary of values
 '''
@@ -259,6 +263,7 @@ class ModuleManager(object):
         self.want = Parameters(params=self.module.params)
         self.changes = Parameters()
         self.have = None
+        self._instances_warning_emitted = False
 
     def _announce_deprecations(self, result):  # pragma: no cover
         warnings = result.pop('__warnings', [])
@@ -502,6 +507,36 @@ class ModuleManager(object):
         is_provisioned = all([run_state, run_status])
         return is_provisioned
 
+    def _instances_check_available(self, tenant_state):
+        """Return True if per-instance phase data is present in the tenant state.
+
+        On F5OS 2.0.0+ the 'instances' key is absent from the tenant state response.
+        When absent we cannot perform per-instance phase verification. We detect this
+        purely by field presence so that the logic remains correct even when the
+        platform software_version is unavailable (e.g. Velos Partition).
+
+        A warning is emitted the first time per-instance verification is skipped so
+        operators can correlate the behaviour with the platform software version.
+        """
+        if 'instances' not in tenant_state:
+            sw_version = None
+            try:
+                sw_version = self.client.software_version
+            except Exception:
+                pass
+            if not self._instances_warning_emitted:
+                self.module.warn(
+                    "Tenant state does not contain 'instances' (observed on F5OS 2.0.0+; "
+                    "detected platform software version: {0}). "
+                    "Per-instance phase verification will be skipped. "
+                    "Deployed determination relies on running-state and status only.".format(
+                        sw_version or 'unknown'
+                    )
+                )
+                self._instances_warning_emitted = True
+            return False
+        return True
+
     def tenant_is_deployed(self, tenant_state):
         # example tenant_data when tenant is deployed.
         # {
@@ -548,15 +583,25 @@ class ModuleManager(object):
         #     ]
         #   }
         # }
-        run_phase = []
-        for instance in tenant_state.get('instances', {}).get('instance', []):
-            run_phase.append(instance.get('phase', '').lower() == 'running')
-
-        running = all(run_phase)
+        # On F5OS 2.0.0+ 'instances' is absent from the state response.
+        # We gate the per-instance check on field presence so that an empty/missing
+        # list never silently satisfies all([]) == True.
         run_state = tenant_state.get('running-state', '').lower() == 'deployed'
         run_status = tenant_state.get('status', '').lower() == 'running'
-        is_deployed = all([run_state, run_status, running])
-        return is_deployed
+
+        if self._instances_check_available(tenant_state):
+            # Pre-2.0.0: instances present — require at least one instance and
+            # every instance must have phase == 'running'.
+            instance_list = tenant_state['instances'].get('instance', [])
+            if not instance_list:
+                # instances key present but empty — not yet ready.
+                return False
+            run_phase = [instance.get('phase', '').lower() == 'running' for instance in instance_list]
+            instances_running = all(run_phase)
+            return all([run_state, run_status, instances_running])
+
+        # 2.0.0+: instances absent — rely on running-state and status only.
+        return all([run_state, run_status])
 
     def tenant_ssh_ready(self, tenant_data):
         """ Return True if the tenant is ready to accept ssh connections.

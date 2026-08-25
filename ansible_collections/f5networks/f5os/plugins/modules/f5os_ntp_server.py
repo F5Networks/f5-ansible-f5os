@@ -42,6 +42,28 @@ options:
     description:
       - Specifies to enable NTP Authentication if passed True. Specify false to disable it.
     type: bool
+  association_type:
+    description:
+      - Specifies the association type of the NTP server.
+      - Requires F5OS 2.0.0 or later. Silently ignored on older versions.
+    type: str
+    choices:
+      - SERVER
+      - PEER
+      - POOL
+    version_added: "1.23.0"
+  version:
+    description:
+      - Specifies the NTP version to use for the server.
+      - Requires F5OS 2.0.0 or later. Silently ignored on older versions.
+    type: int
+    version_added: "1.23.0"
+  port:
+    description:
+      - Specifies the port number to use for the NTP server.
+      - Requires F5OS 2.0.0 or later. Silently ignored on older versions.
+    type: int
+    version_added: "1.23.0"
   state:
     description:
       - The NTP server state.
@@ -87,9 +109,25 @@ key_id:
   returned: changed
   type: int
   sample: 102
+association_type:
+  description: Specifies the association type of the NTP server.
+  returned: changed
+  type: str
+  sample: "SERVER"
+version:
+  description: Specifies the NTP version used for the server.
+  returned: changed
+  type: int
+  sample: 4
+port:
+  description: Specifies the port number used for the NTP server.
+  returned: changed
+  type: int
+  sample: 123
 '''
 
 import datetime
+import re
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
@@ -102,6 +140,14 @@ from ..module_utils.common import (
 )
 
 
+def _parse_version(version_str):
+    """Parse a version string like '2.0.0' or '2.0.0-9817' into a (major, minor, patch) tuple."""
+    match = re.match(r'(\d+)\.(\d+)\.(\d+)', str(version_str))
+    if match:
+        return tuple(int(x) for x in match.groups())
+    return (0, 0, 0)
+
+
 class Parameters(AnsibleF5Parameters):
     api_map = {
     }
@@ -112,7 +158,10 @@ class Parameters(AnsibleF5Parameters):
         'iburst',
         'prefer',
         'ntp_service',
-        'ntp_authentication'
+        'ntp_authentication',
+        'association_type',
+        'version',
+        'port',
     ]
 
     returnables = [
@@ -121,7 +170,10 @@ class Parameters(AnsibleF5Parameters):
         'iburst',
         'prefer',
         'ntp_service',
-        'ntp_authentication'
+        'ntp_authentication',
+        'association_type',
+        'version',
+        'port',
     ]
 
     updatables = [
@@ -129,7 +181,10 @@ class Parameters(AnsibleF5Parameters):
         'iburst',
         'prefer',
         'ntp_service',
-        'ntp_authentication'
+        'ntp_authentication',
+        'association_type',
+        'version',
+        'port',
     ]
 
 
@@ -159,6 +214,18 @@ class ApiParameters(Parameters):
     def ntp_authentication(self):
         self._values['config'].get('enable-ntp-auth')
         return self._values['config'].get('enable-ntp-auth')
+
+    @property
+    def association_type(self):
+        return self._values['config'].get('association-type')
+
+    @property
+    def version(self):
+        return self._values['config'].get('version')
+
+    @property
+    def port(self):
+        return self._values['config'].get('port')
 
 
 class ModuleParameters(Parameters):
@@ -235,9 +302,30 @@ class ModuleManager(object):
         if changed:
             self.changes = UsableChanges(params=changed)
 
+    def _version_is_v2_or_later(self):
+        """Return True when the device reports F5OS >= 2.0.0."""
+        try:
+            version_str = self.client.software_version or ''
+        except (AttributeError, KeyError):
+            version_str = ''
+        return _parse_version(version_str) >= (2, 0, 0)
+
+    def _warn_if_v2_params_ignored(self):
+        """Emit a warning when v2-only params are supplied on a pre-v2 device."""
+        v2_params = [p for p in ('association_type', 'version', 'port')
+                     if getattr(self.want, p, None) is not None]
+        if v2_params:
+            self.module.warn(
+                'The following parameter(s) require F5OS 2.0.0 or later and will be '
+                'ignored on this device: {0}.'.format(', '.join(v2_params))
+            )
+
     def _update_changed_options(self):
         diff = Difference(self.want, self.have)
-        updatables = Parameters.updatables
+        updatables = list(Parameters.updatables)
+        if not self._version_is_v2_or_later():
+            self._warn_if_v2_params_ignored()
+            updatables = [u for u in updatables if u not in ('association_type', 'version', 'port')]
         changed = dict()
         for k in updatables:
             change = diff.compare(k)
@@ -354,6 +442,14 @@ class ModuleManager(object):
         if 'iburst' in params:
             payload['server'][0]['config']['iburst'] = params['iburst']
 
+        if self._version_is_v2_or_later():
+            if 'association_type' in params:
+                payload['server'][0]['config']['association-type'] = params['association_type']
+            if 'version' in params:
+                payload['server'][0]['config']['version'] = params['version']
+            if 'port' in params:
+                payload['server'][0]['config']['port'] = params['port']
+
         uri = "/openconfig-system:system/ntp/openconfig-system:servers"
         response = self.client.post(uri, data=payload)
 
@@ -397,6 +493,15 @@ class ModuleManager(object):
 
         if 'iburst' in params:
             payload['server'][0]['config']['iburst'] = params['iburst']
+
+        if self._version_is_v2_or_later():
+            if 'association_type' in params:
+                payload['server'][0]['config']['association-type'] = params['association_type']
+            if 'version' in params:
+                payload['server'][0]['config']['version'] = params['version']
+            if 'port' in params:
+                payload['server'][0]['config']['port'] = params['port']
+
         response = self.client.patch(uri, data=payload)
         if response['code'] not in [200, 201, 202, 204]:
             raise F5ModuleError(response['contents'])
@@ -451,6 +556,9 @@ class ArgumentSpec(object):
             iburst=dict(type='bool'),
             ntp_service=dict(type='bool'),
             ntp_authentication=dict(type='bool'),
+            association_type=dict(type='str', choices=['SERVER', 'PEER', 'POOL']),
+            version=dict(type='int'),
+            port=dict(type='int'),
             state=dict(
                 default='present',
                 choices=['present', 'absent']

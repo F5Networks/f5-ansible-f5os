@@ -13,7 +13,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_auth
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_auth import (
-    ArgumentSpec, ModuleManager
+    ArgumentSpec, ModuleManager, ApiParameters
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
@@ -956,6 +956,112 @@ def test_exists_auth_order_error():
         mgr.exists(query='any')
 
 
+def test_manage_auth_order_absent_without_target_property():
+    params = {
+        'servergroups': None,
+        'password_policy': None,
+        'auth_order': None,
+        'remote_roles': None,
+        'state': 'absent',
+    }
+    mgr = make_mgr_with_want_and_client(params, {})
+    assert mgr._manage_auth_order() is False
+
+
+def test_manage_auth_order_absent_with_auth_order_target_property():
+    params = {
+        'servergroups': None,
+        'password_policy': None,
+        'auth_order': ['radius'],
+        'remote_roles': None,
+        'state': 'absent',
+    }
+    mgr = make_mgr_with_want_and_client(params, {})
+    assert mgr._manage_auth_order() is True
+
+
+def test_read_current_auth_order_keypath_not_found_returns_empty_list():
+    params = {
+        'auth_order': ['radius'],
+        'state': 'present',
+    }
+    responses = {
+        '/openconfig-system:system/aaa/authentication/config/authentication-method': {
+            'code': 400,
+            'contents': {
+                'ietf-restconf:errors': {
+                    'error': [
+                        {'error-message': 'uri keypath not found'}
+                    ]
+                }
+            }
+        }
+    }
+    mgr = make_mgr_with_want_and_client(params, responses)
+    result = mgr.read_current_from_device()
+    assert result.auth_order == []
+
+
+def test_read_current_auth_order_exact_restconf_error_payload_returns_empty_list():
+    params = {
+        'auth_order': ['radius'],
+        'state': 'present',
+    }
+    responses = {
+        '/openconfig-system:system/aaa/authentication/config/authentication-method': {
+            'code': 400,
+            'contents': {
+                'ietf-restconf:errors': {
+                    'error': [
+                        {
+                            'error-type': 'application',
+                            'error-tag': 'invalid-value',
+                            'error-message': 'uri keypath not found'
+                        }
+                    ]
+                }
+            }
+        }
+    }
+    mgr = make_mgr_with_want_and_client(params, responses)
+    result = mgr.read_current_from_device()
+    assert result.auth_order == []
+
+
+def test_remove_auth_order_absent_without_target_property_404_is_noop():
+    params = {
+        'servergroups': None,
+        'password_policy': None,
+        'auth_order': None,
+        'remote_roles': None,
+        'state': 'absent',
+    }
+    responses = {
+        '/openconfig-system:system/aaa/authentication/config/authentication-method': {'code': 404, 'contents': {}}
+    }
+    mgr = make_mgr_with_want_and_client(params, responses)
+    mgr.remove_from_device()
+    assert mgr.client._calls == []
+
+
+def test_remove_from_device_auth_order_not_configured_still_removes_remote_roles():
+    params = {
+        'auth_order': ['radius'],
+        'remote_roles': [{'rolename': 'admin'}],
+        'state': 'absent',
+    }
+    responses = {
+        '/openconfig-system:system/aaa/authentication/config/authentication-method': {'code': 404, 'contents': {}},
+        '/openconfig-system:system/aaa/authentication/f5-system-aaa:roles/role="admin"/config/remote-gid': {'code': 204, 'contents': {}},
+        '/openconfig-system:system/aaa/authentication/f5-system-aaa:roles/role="admin"/config/ldap-group': {'code': 204, 'contents': {}},
+    }
+    mgr = make_mgr_with_want_and_client(params, responses)
+    mgr.remove_from_device()
+    assert ('delete', '/openconfig-system:system/aaa/authentication/config/authentication-method') in mgr.client._calls
+    assert ('delete', '/openconfig-system:system/aaa/authentication/f5-system-aaa:roles/role="admin"/config/remote-gid') in mgr.client._calls
+    assert ('delete', '/openconfig-system:system/aaa/authentication/f5-system-aaa:roles/role="admin"/config/ldap-group') in mgr.client._calls
+
+
 class DummyModule:
     def __init__(self, params):
         self.params = params
@@ -1018,3 +1124,533 @@ class TestAuthProcessor(unittest.TestCase):
         processor = AuthProcessor(values)
         result = processor.process_server_groups()
         self.assertEqual(result, [])
+
+
+def test_api_parameters_password_policy_type_error():
+    class BadValue:
+        def get(self, key):
+            raise TypeError("bad type")
+    p = ApiParameters(params={'password_policy': BadValue()})
+    assert p.password_policy is None
+
+
+def test_api_parameters_remote_roles_type_error():
+    p = ApiParameters(params={'remote_roles': 'not_a_list'})
+    assert p.remote_roles is None
+
+
+def test_api_parameters_remote_roles_with_description_and_gid():
+    p = ApiParameters(params={
+        'remote_roles': [{'config': {'rolename': 'admin', 'remote-gid': 100, 'description': 'test', 'gid': 50}}]
+    })
+    result = p.remote_roles
+    assert result == [{'rolename': 'admin', 'remote_gid': 100}]
+
+
+def test_exists_remote_roles_error():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    remote_roles=[dict(rolename='admin', remote_gid=100)],
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.client.get = Mock(return_value=dict(code=500, contents='server error'))
+                with pytest.raises(F5ModuleError) as err:
+                    mgr.exists(query='any')
+                assert 'server error' in str(err.value)
+
+
+def test_exists_any_password_policy_only():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    password_policy=dict(max_age=90),
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.client.get = Mock(return_value=dict(code=200, contents={}))
+                result = mgr.exists(query='any')
+                assert result is True
+
+
+def test_absent_not_exists():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    servergroups=[dict(name='test', protocol='radius')],
+                    state='absent'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.any_exists = Mock(return_value=False)
+                result = mgr.absent()
+                assert result is False
+
+
+def test_update_no_change():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    servergroups=[dict(name='test', protocol='radius')],
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.have = Mock()
+                mgr._update_changed_options = Mock(return_value=False)
+                assert mgr.should_update() is False
+                mgr.read_current_from_device = Mock(return_value=Mock())
+                assert mgr.update() is False
+
+
+def test_remove_still_exists():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    servergroups=[dict(name='test', protocol='radius')],
+                    state='absent'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.remove_from_device = Mock(return_value=True)
+                mgr.still_exists = Mock(return_value=True)
+                with pytest.raises(F5ModuleError) as err:
+                    mgr.remove()
+                assert 'Failed to delete the resource.' in str(err.value)
+
+
+def test_set_password_policy_error():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    password_policy=dict(max_age=90),
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.client.put = Mock(return_value=dict(code=400, contents='policy error'))
+                with pytest.raises(F5ModuleError) as err:
+                    mgr._set_password_policy({'password_policy': {'max_age': 90}})
+                assert 'policy error' in str(err.value)
+
+
+def test_set_auth_order_error():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    auth_order=['local'],
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.client.put = Mock(return_value=dict(code=400, contents='auth order error'))
+                with pytest.raises(F5ModuleError) as err:
+                    mgr._set_auth_order({'auth_order': ['local']})
+                assert 'auth order error' in str(err.value)
+
+
+def test_set_auth_order_endpoint_unavailable_error_message():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    auth_order=['local'],
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.client.put = Mock(return_value=dict(code=404, contents={}))
+                with pytest.raises(F5ModuleError) as err:
+                    mgr._set_auth_order({'auth_order': ['local']})
+                assert 'endpoint is not available' in str(err.value)
+
+
+def test_set_remote_roles_error():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    remote_roles=[dict(rolename='admin', remote_gid=100)],
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.client.patch = Mock(return_value=dict(code=400, contents='role error'))
+                with pytest.raises(F5ModuleError) as err:
+                    mgr._set_remote_roles({'remote_roles': [{'rolename': 'admin', 'remote_gid': 100}]})
+                assert 'role error' in str(err.value)
+
+
+def test_create_on_device_servergroup_error():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    servergroups=[dict(name='test', protocol='radius')],
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.changes = Mock()
+                mgr.changes.api_params = Mock(return_value={
+                    'servergroups': [{'name': 'test', 'protocol': 'radius'}]
+                })
+                mgr.client.post = Mock(return_value=dict(code=400, contents='create error'))
+                with pytest.raises(F5ModuleError) as err:
+                    mgr.create_on_device()
+                assert 'create error' in str(err.value)
+
+
+def test_create_on_device_with_password_policy():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    password_policy=dict(max_age=90),
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.changes = Mock()
+                mgr.changes.api_params = Mock(return_value={
+                    'password_policy': {'max_age': 90}
+                })
+                mgr._set_password_policy = Mock()
+                mgr.create_on_device()
+                mgr._set_password_policy.assert_called_once()
+
+
+def test_update_on_device_servergroup_error():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    servergroups=[dict(name='test', protocol='radius')],
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.changes = Mock()
+                mgr.changes.api_params = Mock(return_value={
+                    'servergroups': [{'name': 'test', 'protocol': 'radius'}]
+                })
+                mgr.client.put = Mock(return_value=dict(code=400, contents='update error'))
+                with pytest.raises(F5ModuleError) as err:
+                    mgr.update_on_device()
+                assert 'update error' in str(err.value)
+
+
+def test_remove_from_device_remote_roles_ldap_error():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    remote_roles=[dict(rolename='admin', remote_gid=100)],
+                    state='absent'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.client.delete = Mock(side_effect=[
+                    dict(code=204),
+                    dict(code=500, contents='ldap delete error'),
+                ])
+                with pytest.raises(F5ModuleError) as err:
+                    mgr.remove_from_device()
+                assert 'ldap delete error' in str(err.value)
+
+
+def test_read_current_servergroup_success():
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    servergroups=[dict(name='test', protocol='radius')],
+                    state='present'
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+                mgr = ModuleManager(module=module)
+                mgr.client.get = Mock(return_value=dict(
+                    code=200,
+                    contents={'openconfig-system:server-group': [{'name': 'test'}]}
+                ))
+                result = mgr.read_current_from_device()
+                assert result.servergroups is not None
+
+
+def test_password_policy_new_fields_read_mapping():
+    """Test that new password policy fields (min_days, remember, warn_age) are read correctly."""
+    api_response = {
+        'max-age': 90,
+        'min-days': 7,
+        'remember': 5,
+        'warn-age': 14,
+    }
+
+    api_params = ApiParameters(params={'password_policy': api_response})
+
+    # Verify read mapping works
+    assert api_params.password_policy['min_days'] == 7
+    assert api_params.password_policy['remember'] == 5
+    assert api_params.password_policy['warn_age'] == 14
+
+
+def test_password_policy_new_fields_write_mapping_2_0_0():
+    """Test that new password policy fields are written on F5OS 2.0.0+."""
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    password_policy=dict(
+                        max_age=90,
+                        min_days=7,
+                        remember=5,
+                        warn_age=14,
+                    )
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+
+                mgr = ModuleManager(module=module)
+                mgr.client.software_version = '2.0.0'
+
+                payload_sent = {}
+
+                def capture_put(uri, data=None):
+                    payload_sent['data'] = data
+                    return {'code': 200}
+
+                mgr.client.put = Mock(side_effect=capture_put)
+
+                # Call _set_password_policy
+                mgr._set_password_policy({
+                    'password_policy': {
+                        'max_age': 90,
+                        'min_days': 7,
+                        'remember': 5,
+                        'warn_age': 14,
+                    }
+                })
+
+                # Verify new fields were included in the PUT request
+                config = payload_sent['data']['f5-openconfig-aaa-password-policy:password-policy']['config']
+                assert config.get('min-days') == 7
+                assert config.get('remember') == 5
+                assert config.get('warn-age') == 14
+
+
+def test_password_policy_new_fields_omitted_on_1_8_3():
+    """Test that new password policy fields are omitted on F5OS 1.8.3."""
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    password_policy=dict(
+                        max_age=90,
+                        min_days=7,
+                        remember=5,
+                        warn_age=14,
+                    )
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+
+                mgr = ModuleManager(module=module)
+                mgr.client.software_version = '1.8.3'
+
+                payload_sent = {}
+
+                def capture_put(uri, data=None):
+                    payload_sent['data'] = data
+                    return {'code': 200}
+
+                mgr.client.put = Mock(side_effect=capture_put)
+
+                # Call _set_password_policy
+                mgr._set_password_policy({
+                    'password_policy': {
+                        'max_age': 90,
+                        'min_days': 7,
+                        'remember': 5,
+                        'warn_age': 14,
+                    }
+                })
+
+                # Verify new fields were NOT included in the PUT request
+                config = payload_sent['data']['f5-openconfig-aaa-password-policy:password-policy']['config']
+                assert 'min-days' not in config
+                assert 'remember' not in config
+                assert 'warn-age' not in config
+                # But existing fields should still be present
+                assert config.get('max-age') == 90
+
+
+def test_password_policy_new_fields_with_old_fields():
+    """Test new fields work alongside existing fields."""
+    with patch.multiple(AnsibleModule, exit_json=exit_json, fail_json=fail_json):
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.F5Client'):
+            with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+                set_module_args(dict(
+                    password_policy=dict(
+                        apply_to_root=True,
+                        max_age=90,
+                        min_length=16,
+                        min_days=7,
+                        remember=5,
+                        warn_age=14,
+                    )
+                ))
+                spec = ArgumentSpec()
+                module = AnsibleModule(
+                    argument_spec=spec.argument_spec,
+                    supports_check_mode=spec.supports_check_mode,
+                )
+
+                mgr = ModuleManager(module=module)
+                mgr.client.software_version = '2.0.0'
+
+                payload_sent = {}
+
+                def capture_put(uri, data=None):
+                    payload_sent['data'] = data
+                    return {'code': 200}
+
+                mgr.client.put = Mock(side_effect=capture_put)
+
+                # Call _set_password_policy
+                mgr._set_password_policy({
+                    'password_policy': {
+                        'apply_to_root': True,
+                        'max_age': 90,
+                        'min_length': 16,
+                        'min_days': 7,
+                        'remember': 5,
+                        'warn_age': 14,
+                    }
+                })
+
+                # Verify all fields are present
+                config = payload_sent['data']['f5-openconfig-aaa-password-policy:password-policy']['config']
+                assert config.get('apply-to-root') is True
+                assert config.get('max-age') == 90
+                assert config.get('min-length') == 16
+                assert config.get('min-days') == 7
+                assert config.get('remember') == 5
+                assert config.get('warn-age') == 14
+
+
+class TestVersionHandling(unittest.TestCase):
+    def test_password_policy_gated_fields_raise_when_version_unknown(self):
+        set_module_args(dict(
+            password_policy={'min_days': 1},
+            state='present'
+        ))
+
+        spec = ArgumentSpec()
+        module = AnsibleModule(
+            argument_spec=spec.argument_spec,
+            supports_check_mode=spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.software_version = None
+        mm.exists = Mock(return_value=False)
+        mm.client.put = Mock(return_value={'code': 200})
+
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+            with self.assertRaises(F5ModuleError):
+                mm.exec_module()
+
+    def test_password_policy_gated_fields_omitted_when_version_unknown(self):
+        set_module_args(dict(
+            password_policy={'max_age': 30},
+            state='present'
+        ))
+
+        spec = ArgumentSpec()
+        module = AnsibleModule(
+            argument_spec=spec.argument_spec,
+            supports_check_mode=spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.software_version = None
+        mm.exists = Mock(return_value=False)
+        mm.client.put = Mock(return_value={'code': 200})
+
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_auth.send_teem'):
+            results = mm.exec_module()
+        self.assertTrue(results['changed'])

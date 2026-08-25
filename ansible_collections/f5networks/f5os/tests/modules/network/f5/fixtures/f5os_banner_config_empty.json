@@ -1,0 +1,5 @@
+{
+    "openconfig-system:config": {
+        "hostname": "r10900.f5demo.net"
+    }
+}
