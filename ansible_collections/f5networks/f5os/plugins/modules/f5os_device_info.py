@@ -43,6 +43,11 @@ options:
       - tls
       - restconf-token
       - allowed-ips
+      - system-health
+      - active-alerts
+      - hardware-status
+      - software-health
+      - audit-logs
       - "!all"
       - "!interfaces"
       - "!lag-interfaces"
@@ -61,6 +66,11 @@ options:
       - "!tls"
       - "!restconf-token"
       - "!allowed-ips"
+      - "!system-health"
+      - "!active-alerts"
+      - "!hardware-status"
+      - "!software-health"
+      - "!audit-logs"
     aliases: ['include']
 author:
   - Ravinder Reddy (@chinthalapalli)
@@ -772,6 +782,190 @@ system_info:
           sample: 1.3.2-9645
       sample: hash/dictionary of values
   sample: hash/dictionary of values
+system_health:
+  description: System health information from hardware components.
+  returned: When C(system-health) is specified in C(gather_subset).
+  type: list
+  elements: dict
+  contains:
+    name:
+      description: Name of the component.
+      returned: queried
+      type: str
+      sample: appliance
+    hardware:
+      description: List of hardware subsystems and their health status.
+      returned: queried
+      type: list
+      elements: dict
+      contains:
+        key:
+          description: Hardware subsystem key identifier.
+          returned: queried
+          type: str
+          sample: cpu
+        name:
+          description: Display name of the hardware subsystem.
+          returned: queried
+          type: str
+          sample: CPU
+        health:
+          description: Health status of the hardware subsystem.
+          returned: queried
+          type: str
+          sample: ok
+        severity:
+          description: Severity level of the hardware subsystem status.
+          returned: queried
+          type: str
+          sample: INFO
+        attributes:
+          description: List of detailed attributes for this hardware subsystem.
+          returned: queried
+          type: list
+          elements: dict
+          contains:
+            name:
+              description: Attribute name.
+              returned: queried
+              type: str
+              sample: cpu-usage
+            description:
+              description: Human-readable description of the attribute.
+              returned: queried
+              type: str
+              sample: CPU utilization percentage
+            health:
+              description: Health status of this attribute.
+              returned: queried
+              type: str
+              sample: ok
+            severity:
+              description: Severity level of this attribute.
+              returned: queried
+              type: str
+              sample: INFO
+            value:
+              description: Current value of the attribute.
+              returned: queried
+              type: str
+              sample: "12"
+            updated_at:
+              description: Timestamp when the attribute was last updated.
+              returned: queried
+              type: str
+              sample: "2024-01-15T09:30:00Z"
+active_alerts:
+  description: Active alerts on the system.
+  returned: When C(active-alerts) is specified in C(gather_subset).
+  type: list
+  elements: dict
+  contains:
+    source:
+      description: Source of the alert.
+      returned: queried
+      type: str
+      sample: appliance
+    severity:
+      description: Severity level of the alert.
+      returned: queried
+      type: str
+      sample: CRITICAL
+    description:
+      description: Description of the alert condition.
+      returned: queried
+      type: str
+      sample: PSU 2 is not present
+    timestamp:
+      description: Timestamp of when the alert was raised.
+      returned: queried
+      type: str
+      sample: "2024-01-15T09:30:00Z"
+hardware_status:
+  description: Hardware component status including PSU, CPU, temperature, memory, and storage.
+  returned: When C(hardware-status) is specified in C(gather_subset).
+  type: list
+  elements: dict
+  contains:
+    name:
+      description: Name of the hardware component.
+      returned: queried
+      type: str
+      sample: platform
+    serial_no:
+      description: Serial number of the component.
+      returned: queried
+      type: str
+      sample: f5-abcd-efgh
+    temperature:
+      description: Temperature readings for the component.
+      returned: queried
+      type: dict
+    memory:
+      description: Memory usage for the component.
+      returned: queried
+      type: dict
+software_health:
+  description: Cluster node and service health status.
+  returned: When C(software-health) is specified in C(gather_subset).
+  type: list
+  elements: dict
+  contains:
+    name:
+      description: Name of the cluster node.
+      returned: queried
+      type: str
+      sample: node-1
+    status:
+      description: Health status of the node.
+      returned: queried
+      type: str
+      sample: ok
+    ha_role:
+      description: HA role of the node.
+      returned: queried
+      type: str
+      sample: active
+    services:
+      description: List of services and their status.
+      returned: queried
+      type: list
+      elements: dict
+audit_logs:
+  description: Audit log configuration.
+  returned: When C(audit-logs) is specified in C(gather_subset).
+  type: dict
+  contains:
+    enabled:
+      description: Whether audit logging is enabled.
+      returned: queried
+      type: bool
+      sample: true
+    remote_forwarding:
+      description: Remote forwarding configuration for audit logs.
+      returned: queried
+      type: dict
+      contains:
+        enabled:
+          description: Whether remote forwarding is enabled.
+          returned: queried
+          type: bool
+          sample: true
+        host:
+          description: Remote syslog host address.
+          returned: queried
+          type: str
+          sample: "10.10.10.100"
+        port:
+          description: Remote syslog port.
+          returned: queried
+          type: int
+          sample: 514
+        protocol:
+          description: Transport protocol for remote forwarding.
+          returned: queried
+          type: str
+          sample: udp
 '''
 
 import datetime
@@ -1737,7 +1931,7 @@ class InterfacesParameters(BaseParameters):
             raw_counters = self._values['openconfig-if-ethernet:ethernet']['state']['counters']
             mapped_names = {
                 'in-mac-control-frames': 'in_mac_control_frames',
-                'in-mac-pause-frames': 'in_mac-pause-frames',
+                'in-mac-pause-frames': 'in_mac_pause_frames',
                 'in-oversize-frames': 'in_oversize_frames',
                 'in-jabber-frames': 'in_jabber_frames',
                 'in-fragment-frames': 'in_fragment_frames',
@@ -2220,6 +2414,314 @@ class SystemInfoFactManager(BaseManager):
     #     return result
 
 
+class SystemHealthParameters(BaseParameters):
+    api_map = {}
+
+    returnables = [
+        'components',
+    ]
+
+    @property
+    def components(self):
+        health = self._values.get('f5-system-health:health', {})
+        if not health:
+            return []
+        comps = health.get('components', {}).get('component', [])
+        results = []
+        for comp in comps:
+            item = dict(name=comp.get('name'))
+            hardware = []
+            for hw in comp.get('hardware', []):
+                hw_item = dict(
+                    key=hw.get('key'),
+                    name=hw.get('state', {}).get('name'),
+                    health=hw.get('state', {}).get('health'),
+                    severity=hw.get('state', {}).get('severity'),
+                )
+                attrs = []
+                for attr in hw.get('attributes', {}).get('attribute', []):
+                    attrs.append(dict(
+                        name=attr.get('name'),
+                        description=attr.get('description'),
+                        health=attr.get('health'),
+                        severity=attr.get('severity'),
+                        value=attr.get('value'),
+                        updated_at=attr.get('updatedAt'),
+                    ))
+                hw_item['attributes'] = attrs
+                hardware.append(hw_item)
+            item['hardware'] = hardware
+            results.append(item)
+        return results
+
+
+class SystemHealthFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(SystemHealthFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(system_health=facts)
+        return result
+
+    def _exec_module(self):
+        collection = self.read_collection_from_device()
+        params = SystemHealthParameters(params=collection)
+        return params.components
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/f5-system-health:health"
+        response = self.client.get(uri)
+        if response['code'] == 204:
+            return {}
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']
+
+
+class ActiveAlertsParameters(BaseParameters):
+    api_map = {}
+
+    returnables = [
+        'alerts',
+    ]
+
+    @property
+    def alerts(self):
+        alert_data = self._values.get('f5-alert:alert', {})
+        if not alert_data:
+            return []
+        alerts = alert_data.get('alert', [])
+        results = []
+        for alert in alerts:
+            results.append(dict(
+                source=alert.get('source'),
+                resource=alert.get('resource'),
+                severity=alert.get('severity'),
+                description=alert.get('description'),
+                timestamp=alert.get('timestamp'),
+            ))
+        return results
+
+
+class ActiveAlertsFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(ActiveAlertsFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(active_alerts=facts)
+        return result
+
+    def _exec_module(self):
+        collection = self.read_collection_from_device()
+        params = ActiveAlertsParameters(params=collection)
+        return params.alerts
+
+    def read_collection_from_device(self):
+        uri = "/f5-alert:alert"
+        response = self.client.get(uri)
+        if response['code'] == 204:
+            return {}
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']
+
+
+class HardwareStatusParameters(BaseParameters):
+    api_map = {}
+
+    returnables = [
+        'components',
+    ]
+
+    @property
+    def components(self):
+        comps = self._values.get('openconfig-platform:components', {}).get('component', [])
+        if not comps:
+            return []
+        results = []
+        for comp in comps:
+            state = comp.get('state', {})
+            if state.get('empty', False):
+                continue
+            item = dict(
+                name=comp.get('name'),
+                type=state.get('type'),
+                description=state.get('description'),
+                serial_no=state.get('serial-no'),
+                part_no=state.get('part-no'),
+                oper_status=state.get('oper-status'),
+            )
+            if 'f5-platform:temperature' in state:
+                temp = state['f5-platform:temperature']
+                item['temperature'] = dict(
+                    current=float(temp.get('current') or 0),
+                    average=float(temp.get('average') or 0),
+                    minimum=float(temp.get('minimum') or 0),
+                    maximum=float(temp.get('maximum') or 0),
+                )
+            if 'f5-platform:memory' in state:
+                mem = state['f5-platform:memory']
+                item['memory'] = dict(
+                    available=int(mem.get('available') or 0),
+                    free=int(mem.get('free') or 0),
+                    used_percent=mem.get('used-percent') or 0,
+                )
+            result_item = {k: v for k, v in item.items() if v is not None}
+            results.append(result_item)
+        return results
+
+
+class HardwareStatusFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(HardwareStatusFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(hardware_status=facts)
+        return result
+
+    def _exec_module(self):
+        collection = self.read_collection_from_device()
+        params = HardwareStatusParameters(params=collection)
+        return params.components
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-platform:components"
+        response = self.client.get(uri)
+        if response['code'] == 204:
+            return {}
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']
+
+
+class SoftwareHealthParameters(BaseParameters):
+    api_map = {}
+
+    returnables = [
+        'nodes',
+    ]
+
+    @property
+    def nodes(self):
+        cluster = self._values.get('f5-cluster:cluster', {})
+        if not cluster:
+            return []
+        nodes = cluster.get('nodes', {}).get('node', [])
+        results = []
+        for node in nodes:
+            state = node.get('state', {})
+            services = []
+            for svc in state.get('service-status', []):
+                services.append(dict(
+                    name=svc.get('name'),
+                    status=svc.get('status'),
+                ))
+            results.append(dict(
+                name=state.get('name'),
+                status=state.get('status'),
+                ha_role=state.get('ha-role'),
+                services=services,
+            ))
+        return results
+
+
+class SoftwareHealthFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(SoftwareHealthFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(software_health=facts)
+        return result
+
+    def _exec_module(self):
+        collection = self.read_collection_from_device()
+        params = SoftwareHealthParameters(params=collection)
+        return params.nodes
+
+    def read_collection_from_device(self):
+        uri = "/f5-cluster:cluster"
+        response = self.client.get(uri)
+        if response['code'] == 204:
+            return {}
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']
+
+
+class AuditLogsParameters(BaseParameters):
+    api_map = {}
+
+    returnables = [
+        'enabled',
+        'remote_forwarding',
+    ]
+
+    @property
+    def enabled(self):
+        audit = self._values.get('f5-openconfig-system-logging:audit-log', {})
+        if not audit:
+            return None
+        return audit.get('config', {}).get('enabled')
+
+    @property
+    def remote_forwarding(self):
+        audit = self._values.get('f5-openconfig-system-logging:audit-log', {})
+        if not audit:
+            return None
+        fwd = audit.get('config', {}).get('remote-forwarding', {}).get('config', {})
+        if not fwd:
+            return None
+        return dict(
+            enabled=fwd.get('enabled'),
+            host=fwd.get('host'),
+            port=fwd.get('port'),
+            protocol=fwd.get('protocol'),
+        )
+
+
+class AuditLogsFactManager(BaseManager):
+    def __init__(self, *args, **kwargs):
+        self.client = kwargs.get('client', None)
+        self.module = kwargs.get('module', None)
+        super(AuditLogsFactManager, self).__init__(**kwargs)
+
+    def exec_module(self):
+        facts = self._exec_module()
+        result = dict(audit_logs=facts)
+        return result
+
+    def _exec_module(self):
+        collection = self.read_collection_from_device()
+        params = AuditLogsParameters(params=collection)
+        result = dict()
+        if params.enabled is not None:
+            result['enabled'] = params.enabled
+        if params.remote_forwarding is not None:
+            result['remote_forwarding'] = params.remote_forwarding
+        return result
+
+    def read_collection_from_device(self):
+        uri = "/openconfig-system:system/logging/f5-openconfig-system-logging:audit-log"
+        response = self.client.get(uri)
+        if response['code'] == 204:
+            return {}
+        if response['code'] not in [200, 201, 202]:
+            raise F5ModuleError(response['contents'])
+        return response['contents']
+
+
 class ModuleManager(object):
     def __init__(self, *args, **kwargs):
         self.module = kwargs.get('module', None)
@@ -2243,7 +2745,12 @@ class ModuleManager(object):
             'tenants-info': TenantsInfoFactManager,
             'snmp-info': SnmpFactManager,
             'qos-info': QosFactManager,
-            'system-info': SystemInfoFactManager
+            'system-info': SystemInfoFactManager,
+            'system-health': SystemHealthFactManager,
+            'active-alerts': ActiveAlertsFactManager,
+            'hardware-status': HardwareStatusFactManager,
+            'software-health': SoftwareHealthFactManager,
+            'audit-logs': AuditLogsFactManager,
         }
 
     def exec_module(self):
@@ -2356,6 +2863,11 @@ class ArgumentSpec(object):
                     'restconf-token',
                     'allowed-ips',
                     'tls',
+                    'system-health',
+                    'active-alerts',
+                    'hardware-status',
+                    'software-health',
+                    'audit-logs',
                     # Negations of meta choices
                     '!all',
 
@@ -2377,6 +2889,11 @@ class ArgumentSpec(object):
                     '!restconf-token',
                     '!allowed-ips',
                     '!tls',
+                    '!system-health',
+                    '!active-alerts',
+                    '!hardware-status',
+                    '!software-health',
+                    '!audit-logs',
                 ]
             ),
         )

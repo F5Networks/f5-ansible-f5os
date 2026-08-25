@@ -1,0 +1,1 @@
+{"f5-openconfig-system-logging:audit-log":{"config":{"enabled":true,"remote-forwarding":{"config":{"enabled":true,"host":"10.10.10.100","port":514,"protocol":"udp"}}}}}

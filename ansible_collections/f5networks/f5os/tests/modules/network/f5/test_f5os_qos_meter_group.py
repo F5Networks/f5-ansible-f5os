@@ -203,3 +203,248 @@ class TestManager(unittest.TestCase):
 
         self.assertTrue(result.exception.args[0]['failed'])
         self.assertIn('This module has failed', result.exception.args[0]['msg'])
+
+    def test_update_no_changes(self):
+        set_module_args(dict(
+            name="test_meter",
+            meters=[
+                dict(name="dummy2", weight=1),
+            ],
+            interfaces=["1.0", "lag-prod"],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        existing_meter = load_fixture('f5os_qos_meter_group.json')
+        qos_interfaces = load_fixture('f5os_qos_interfaces.json')
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200},
+            {'code': 200, 'contents': existing_meter},
+            {'code': 200, 'contents': qos_interfaces}
+        ])
+
+        results = mm.exec_module()
+        self.assertFalse(results['changed'])
+
+    def test_absent_not_exists(self):
+        set_module_args(dict(
+            name="test_meter",
+            state="absent",
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value={'code': 404})
+
+        results = mm.exec_module()
+        self.assertFalse(results['changed'])
+
+    def test_remove_still_exists(self):
+        set_module_args(dict(
+            name="test_meter",
+            state="absent",
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        qos_interfaces = load_fixture('f5os_qos_interfaces.json')
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200},
+            {'code': 200, 'contents': qos_interfaces},
+            {'code': 200},
+        ])
+        mm.client.delete = Mock(return_value={'code': 200})
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('Failed to delete the resource', err.exception.args[0])
+
+    def test_exists_error(self):
+        set_module_args(dict(
+            name="test_meter",
+            meters=[dict(name="m1", weight=1)],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value={'code': 400, 'contents': 'exists error'})
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('exists error', err.exception.args[0])
+
+    def test_create_on_device_error(self):
+        set_module_args(dict(
+            name="test_meter",
+            meters=[dict(name="m1", weight=1)],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value={'code': 404})
+        mm.client.post = Mock(return_value={'code': 400, 'contents': 'create error'})
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('create error', err.exception.args[0])
+
+    def test_patch_interfaces_error(self):
+        set_module_args(dict(
+            name="test_meter",
+            meters=[dict(name="m1", weight=1)],
+            interfaces=["1.0"],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value={'code': 404})
+        mm.client.post = Mock(return_value={'code': 200, 'contents': 'OK'})
+        mm.client.patch = Mock(return_value={'code': 400, 'contents': 'patch intf error'})
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('patch intf error', err.exception.args[0])
+
+    def test_update_on_device_error(self):
+        set_module_args(dict(
+            name="test_meter",
+            meters=[
+                dict(name="dummy_meter1", weight=2),
+                dict(name="dummy_meter2", weight=3),
+            ],
+            interfaces=["1.0", "2.0"],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        existing_meter = load_fixture('f5os_qos_meter_group.json')
+        qos_interfaces = load_fixture('f5os_qos_interfaces.json')
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200},
+            {'code': 200, 'contents': existing_meter},
+            {'code': 200, 'contents': qos_interfaces}
+        ])
+        mm.client.put = Mock(return_value={'code': 400, 'contents': 'update error'})
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('update error', err.exception.args[0])
+
+    def test_remove_qos_interfaces_error(self):
+        set_module_args(dict(
+            name="test_meter",
+            state="absent",
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        qos_interfaces = load_fixture('f5os_qos_interfaces.json')
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value={'code': 200, 'contents': qos_interfaces})
+        mm.client.delete = Mock(return_value={'code': 400, 'contents': 'remove intf error'})
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('remove intf error', err.exception.args[0])
+
+    def test_remove_from_device_delete_error(self):
+        set_module_args(dict(
+            name="test_meter",
+            state="absent",
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        # Interfaces fixture has no entries matching "test_meter"
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(side_effect=[True, False])
+        mm.client.get = Mock(return_value={
+            'code': 200, 'contents': {'f5-qos:interface': []}
+        })
+        mm.client.delete = Mock(return_value={'code': 400, 'contents': 'delete error'})
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('delete error', err.exception.args[0])
+
+    def test_read_current_qos_interfaces_error(self):
+        set_module_args(dict(
+            name="test_meter",
+            meters=[
+                dict(name="dummy_meter1", weight=2),
+            ],
+            interfaces=["1.0"],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        existing_meter = load_fixture('f5os_qos_meter_group.json')
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200},
+            {'code': 200, 'contents': existing_meter},
+            {'code': 400, 'contents': 'read intf error'}
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('read intf error', err.exception.args[0])
+
+    def test_read_current_from_device_error(self):
+        set_module_args(dict(
+            name="test_meter",
+            meters=[dict(name="m1", weight=2)],
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(side_effect=[
+            {'code': 200},
+            {'code': 400, 'contents': 'read device error'}
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('read device error', err.exception.args[0])

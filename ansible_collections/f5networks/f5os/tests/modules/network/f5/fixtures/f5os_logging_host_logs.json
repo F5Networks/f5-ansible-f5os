@@ -1,0 +1,1 @@
+{"f5-openconfig-system-logging:host-logs":{"config":{"remote-forwarding":{"enabled":true},"selectors":{"selector":[{"facility":"openconfig-system-logging:LOCAL0","severity":"INFORMATIONAL"},{"facility":"openconfig-system-logging:AUTHPRIV","severity":"NOTICE"}]},"files":{"file":[{"name":"ansible.log"},{"name":"audit/"}]}}}}

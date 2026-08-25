@@ -1,0 +1,1 @@
+{"f5-cluster:cluster":{"nodes":{"node":[{"name":"node-1","config":{"enabled":true},"state":{"name":"node-1","status":"ok","ha-role":"active","service-status":[{"name":"platform-mgr","status":"running"},{"name":"system-mgr","status":"running"},{"name":"lacpd","status":"running"}]}}]}}}

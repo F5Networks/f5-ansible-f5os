@@ -14,7 +14,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_lag
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_lag import (
-    ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager
+    ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager, Difference
 )
 
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
@@ -587,3 +587,127 @@ class TestManager(unittest.TestCase):
             mm._is_lag_member('1.3')
 
         self.assertIn('internal server error', err.exception.args[0])
+
+    def test_difference_compare_and_default(self):
+        want = Mock()
+        want.native_vlan = 100
+        want.trunk_vlans = [10, 20]
+        want.lag_type = 'LACP'
+        have = Mock()
+        have.native_vlan = 100
+        have.trunk_vlans = [10, 20]
+        have.lag_type = 'STATIC'
+
+        diff = Difference(want=want, have=have)
+
+        # compare dispatches to __default for lag_type (no property)
+        result = diff.compare('lag_type')
+        self.assertEqual(result, 'LACP')
+
+    def test_difference_native_vlan_removal(self):
+        want = Mock()
+        want.native_vlan = None
+        have = Mock()
+        have.native_vlan = 100
+
+        diff = Difference(want=want, have=have)
+        result = diff.native_vlan
+        self.assertEqual(result, {'native_vlan': None})
+
+    def test_difference_trunk_vlans_both_empty(self):
+        want = Mock()
+        want.trunk_vlans = []
+        have = Mock()
+        have.trunk_vlans = []
+
+        diff = Difference(want=want, have=have)
+        self.assertIsNone(diff.trunk_vlans)
+
+    def test_difference_trunk_vlans_want_empty_have_not(self):
+        want = Mock()
+        want.trunk_vlans = []
+        have = Mock()
+        have.trunk_vlans = [10, 20]
+
+        diff = Difference(want=want, have=have)
+        self.assertEqual(diff.trunk_vlans, [])
+
+    def test_populate_vlans_native_without_config(self):
+        params = {'native_vlan': 100}
+        intf = {
+            'openconfig-if-aggregate:aggregation': {
+                'openconfig-vlan:switched-vlan': {}
+            }
+        }
+        result = ModuleManager._populate_vlans(params, intf)
+        expected_config = {'native-vlan': 100}
+        self.assertEqual(
+            result['openconfig-if-aggregate:aggregation']['openconfig-vlan:switched-vlan']['config'],
+            expected_config
+        )
+
+    def test_build_vlan_config_empty_with_have_trunk(self, *args):
+        set_module_args(dict(
+            name='foobar',
+            trunk_vlans=[10, 20],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.want = Mock()
+        mm.want.native_vlan = None
+        mm.have = Mock()
+        mm.have.trunk_vlans = [30, 40]
+
+        result = mm._build_vlan_config({'trunk_vlans': None, 'native_vlan': None})
+        self.assertEqual(result, {'trunk-vlans': [30, 40]})
+
+    def test_build_vlan_config_empty_no_have_trunk(self, *args):
+        set_module_args(dict(
+            name='foobar',
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.want = Mock()
+        mm.want.native_vlan = None
+        mm.have = Mock()
+        mm.have.trunk_vlans = None
+
+        result = mm._build_vlan_config({'trunk_vlans': None, 'native_vlan': None})
+        self.assertEqual(result, {'trunk-vlans': []})
+
+    def test_remove_from_device_error(self, *args):
+        set_module_args(dict(
+            name='foobar',
+            state='absent'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.have = Mock()
+        mm.have.config_members = None
+        mm.have.lag_type = 'STATIC'
+        mm.read_current_from_device = Mock(return_value=mm.have)
+        mm.client.delete = Mock(return_value=dict(code=500, contents='delete error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.remove_from_device()
+        self.assertIn('delete error', err.exception.args[0])

@@ -21,6 +21,8 @@ from ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_console_ena
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
+from ansible_collections.f5networks.f5os.plugins.modules import f5os_tenant_console_enable
+
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
 fixture_data = {}
@@ -40,6 +42,8 @@ def load_fixture(name):
 def set_module_args(args):
     args = json.dumps({'ANSIBLE_MODULE_ARGS': args})
     basic._ANSIBLE_ARGS = to_bytes(args)
+    if hasattr(basic, '_ANSIBLE_PROFILE'):
+        basic._ANSIBLE_PROFILE = 'legacy'
 
 
 class TestParameters:
@@ -198,4 +202,191 @@ class TestManager:
         mm = ModuleManager(module=module)
         mm.exists = MagicMock(side_effect=F5ModuleError('Test error'))
         with pytest.raises(F5ModuleError) as ex:
+            mm.exec_module()
+
+    def test_exists_true(self):
+        set_module_args(dict(tenant_username='test', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=200, contents={}))
+        assert mm.exists() is True
+
+    def test_exists_false(self):
+        set_module_args(dict(tenant_username='test', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=404, contents={}))
+        assert mm.exists() is False
+
+    def test_exists_error(self):
+        set_module_args(dict(tenant_username='test', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=500, contents='server error'))
+        with pytest.raises(F5ModuleError):
+            mm.exists()
+
+    def test_create_on_device(self):
+        set_module_args(dict(tenant_username='newuser', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.patch = MagicMock(return_value=dict(code=204, contents={}))
+        mm.exists = MagicMock(return_value=False)
+        results = mm.exec_module()
+        assert results['changed'] is True
+
+    def test_create_with_password(self):
+        set_module_args(dict(tenant_username='newuser', console_user_password='pass123', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.patch = MagicMock(return_value=dict(code=204, contents={}))
+        mm.client.post = MagicMock(return_value=dict(code=204, contents={}))
+        mm.exists = MagicMock(return_value=False)
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_console_enable.time.sleep'):
+            results = mm.exec_module()
+        assert results['changed'] is True
+        mm.client.post.assert_called_once()
+
+    def test_create_fails(self):
+        set_module_args(dict(tenant_username='newuser', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.patch = MagicMock(return_value=dict(code=500, contents='error'))
+        mm.exists = MagicMock(return_value=False)
+        with pytest.raises(F5ModuleError):
+            mm.exec_module()
+
+    def test_update_on_device(self):
+        set_module_args(dict(tenant_username='test', state='locked'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=200, contents={
+            'f5-system-aaa:user': [{'username': 'test', 'config': {'role': 'tenant-console', 'expiry-status': 'enabled'}}]
+        }))
+        mm.client.patch = MagicMock(return_value=dict(code=204, contents={}))
+        mm.exists = MagicMock(return_value=True)
+        results = mm.exec_module()
+        assert results['changed'] is True
+
+    def test_update_with_password(self):
+        set_module_args(dict(tenant_username='test', console_user_password='newpass', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=200, contents={
+            'f5-system-aaa:user': [{'username': 'test', 'config': {'role': 'tenant-console', 'expiry-status': 'locked'}}]
+        }))
+        mm.client.patch = MagicMock(return_value=dict(code=204, contents={}))
+        mm.client.post = MagicMock(return_value=dict(code=204, contents={}))
+        mm.exists = MagicMock(return_value=True)
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_console_enable.time.sleep'):
+            results = mm.exec_module()
+        assert results['changed'] is True
+
+    def test_update_password_fails(self):
+        set_module_args(dict(tenant_username='test', console_user_password='newpass', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=200, contents={
+            'f5-system-aaa:user': [{'username': 'test', 'config': {'role': 'tenant-console', 'expiry-status': 'locked'}}]
+        }))
+        mm.client.patch = MagicMock(return_value=dict(code=204, contents={}))
+        mm.client.post = MagicMock(return_value=dict(code=500, contents='password error'))
+        mm.exists = MagicMock(return_value=True)
+        with patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_console_enable.time.sleep'):
+            with pytest.raises(F5ModuleError):
+                mm.exec_module()
+
+    def test_read_current_from_device_error(self):
+        set_module_args(dict(tenant_username='test', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=500, contents='read error'))
+        with pytest.raises(F5ModuleError):
+            mm.read_current_from_device()
+
+    def test_update_check_mode(self):
+        set_module_args(dict(tenant_username='test', state='locked', _ansible_check_mode=True))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=200, contents={
+            'f5-system-aaa:user': [{'username': 'test', 'config': {'role': 'tenant-console', 'expiry-status': 'enabled'}}]
+        }))
+        mm.exists = MagicMock(return_value=True)
+        results = mm.exec_module()
+        assert results['changed'] is True
+
+    def test_locked_not_exists(self):
+        set_module_args(dict(tenant_username='test', state='locked'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.exists = MagicMock(return_value=False)
+        results = mm.exec_module()
+        assert results['changed'] is False
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(tenant_username='test', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        result = {'__warnings': [{'msg': 'deprecated', 'version': '1.0'}]}
+        mm._announce_deprecations(result)
+        mm.client.module.deprecate.assert_called_once_with(msg='deprecated', version='1.0')
+
+    @patch.object(f5os_tenant_console_enable, 'Connection')
+    @patch.object(f5os_tenant_console_enable.ModuleManager, 'exec_module', MagicMock(return_value={'changed': False}))
+    def test_main_success(self, *args):
+        set_module_args(dict(tenant_username='test', state='enabled'))
+        with pytest.raises(SystemExit) as ex:
+            f5os_tenant_console_enable.main()
+        assert ex.value.code == 0
+
+    @patch.object(f5os_tenant_console_enable, 'Connection')
+    @patch.object(f5os_tenant_console_enable.ModuleManager, 'exec_module',
+                  MagicMock(side_effect=F5ModuleError('error')))
+    def test_main_failure(self, *args):
+        set_module_args(dict(tenant_username='test', state='enabled'))
+        with pytest.raises(SystemExit) as ex:
+            f5os_tenant_console_enable.main()
+        assert ex.value.code == 1
+
+    def test_generate_password(self):
+        set_module_args(dict(tenant_username='test', state='enabled'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        pwd = mm.generate_password(16)
+        assert len(pwd) == 16
+
+    def test_create_check_mode(self):
+        set_module_args(dict(tenant_username='newuser', state='enabled', _ansible_check_mode=True))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.exists = MagicMock(return_value=False)
+        results = mm.exec_module()
+        assert results['changed'] is True
+
+    def test_update_on_device_patch_fails(self):
+        set_module_args(dict(tenant_username='test', state='locked'))
+        module = AnsibleModule(argument_spec=ArgumentSpec().argument_spec, supports_check_mode=True)
+        mm = ModuleManager(module=module)
+        mm.client = MagicMock()
+        mm.client.get = MagicMock(return_value=dict(code=200, contents={
+            'f5-system-aaa:user': [{'username': 'test', 'config': {'role': 'tenant-console', 'expiry-status': 'enabled'}}]
+        }))
+        mm.client.patch = MagicMock(return_value=dict(code=500, contents='update error'))
+        mm.exists = MagicMock(return_value=True)
+        with pytest.raises(F5ModuleError):
             mm.exec_module()

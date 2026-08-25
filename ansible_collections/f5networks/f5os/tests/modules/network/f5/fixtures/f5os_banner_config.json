@@ -1,0 +1,7 @@
+{
+    "openconfig-system:config": {
+        "hostname": "r10900.f5demo.net",
+        "login-banner": "Unauthorized access is prohibited.",
+        "motd-banner": "Welcome to the F5OS platform."
+    }
+}

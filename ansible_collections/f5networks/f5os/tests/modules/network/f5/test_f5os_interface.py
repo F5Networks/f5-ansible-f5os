@@ -14,7 +14,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_interface
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_interface import (
-    ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager
+    ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager, Difference
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
@@ -412,3 +412,145 @@ class TestManager(unittest.TestCase):
             mm._vlans_exist_on_interface()
 
         self.assertIn('server error', err.exception.args[0])
+
+    def test_api_parameters_description_and_fec(self):
+        args = dict(
+            config=dict(
+                name='1/1.0',
+                type='iana-if-type:ethernetCsmacd',
+                enabled=True,
+                description='Test interface',
+            )
+        )
+        args['config']['f5-interface:forward-error-correction'] = 'rs-fec'
+
+        p = ApiParameters(params=args)
+
+        self.assertEqual(p.description, 'Test interface')
+        self.assertEqual(p.forward_error_correction, 'rs-fec')
+
+    def test_difference_enabled_no_change(self):
+        want = Mock()
+        want.enabled = True
+        have = Mock()
+        have.enabled = True
+
+        diff = Difference(want, have)
+
+        self.assertIsNone(diff.enabled)
+
+    @patch.object(f5os_interface, 'Connection')
+    @patch.object(f5os_interface, 'F5Client')
+    def test_f5os_interface_update_config(self, *args):
+        set_module_args(dict(
+            name='2/1.0',
+            enabled=False,
+            description='Updated desc',
+            forward_error_correction='enabled',
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.patch = Mock(return_value=dict(code=204, contents={}))
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_partition_interface.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        mm.client.patch.assert_called_once()
+
+    @patch.object(f5os_interface, 'Connection')
+    @patch.object(f5os_interface, 'F5Client')
+    def test_f5os_interface_update_config_patch_fails(self, *args):
+        set_module_args(dict(
+            name='2/1.0',
+            enabled=False,
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.patch = Mock(return_value=dict(code=500, contents='patch error'))
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_partition_interface.json')))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('patch error', err.exception.args[0])
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(
+            name='2/1.0',
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.platform = 'rSeries Platform'
+
+        result = {'__warnings': [{'msg': 'deprecated', 'version': '1.0'}]}
+        mm._announce_deprecations(result)
+
+        mm.client.module.deprecate.assert_called_once_with(msg='deprecated', version='1.0')
+        self.assertNotIn('__warnings', result)
+
+    @patch.object(f5os_interface, 'Connection')
+    @patch.object(f5os_interface, 'F5Client')
+    def test_update_check_mode(self, *args):
+        set_module_args(dict(
+            name='2/1.0',
+            enabled=False,
+            state='present',
+            _ansible_check_mode=True
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_partition_interface.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+
+    @patch.object(f5os_interface, 'Connection')
+    @patch.object(f5os_interface, 'F5Client')
+    def test_remove_check_mode(self, *args):
+        set_module_args(dict(
+            name='2/1.0',
+            state='absent',
+            _ansible_check_mode=True
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.platform = 'rSeries Platform'
+        mm._vlans_exist_on_interface = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_velos_partition_interface.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])

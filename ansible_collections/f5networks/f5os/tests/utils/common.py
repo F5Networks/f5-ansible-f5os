@@ -23,3 +23,29 @@ def connection_response(response, status=200, headers=None):
     response_text = json.dumps(response) if isinstance(response, dict) else response
     response_data = BytesIO(response_text.encode() if response_text else ''.encode())
     return response_mock, response_data
+
+
+def mock_httpapi_connection():
+    """Create a mock connection object with a real HttpApi plugin attached.
+
+    This replaces the previous pattern of using connection_loader.get()
+    which requires ansible.netcommon to be installed.
+    """
+    from ansible_collections.f5networks.f5os.plugins.httpapi.f5os import HttpApi
+
+    connection = Mock()
+    connection._auth = None
+    connection.send = Mock()
+    connection.get_option = Mock(return_value=None)
+    connection._log_messages = Mock()
+
+    httpapi = HttpApi(connection)
+    connection.httpapi = httpapi
+
+    # Mock plugin-level option lookup so tests don't require a real Ansible config context.
+    httpapi.get_option = Mock(side_effect=lambda opt: {
+        'send_telemetry': True,
+        'forward_proxy_headers': {},
+    }.get(opt, None))
+
+    return connection

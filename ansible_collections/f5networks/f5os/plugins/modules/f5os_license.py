@@ -54,6 +54,10 @@ notes:
   - License deactivation/Revokation is not supported for F5OS devices/not supported in this module.
   - This module supports only automatic license activation using the registration key.
   - license can't be installed on Standby
+  - C(proxy_server) is passed to license-install operations for activation requests and does not manage the
+    system proxy configuration used by C(f5os_proxy_server).
+  - License activation flow uses RESTCONF action endpoints under C(f5-system-licensing-install:*) with
+    POST operations.
 author:
   - Ravinder Reddy (@chinthalapalli)
 '''

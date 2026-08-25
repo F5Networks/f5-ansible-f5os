@@ -14,7 +14,10 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_device_info
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info import (
-    Parameters, ArgumentSpec, ModuleManager, InterfacesParameters, PartitionSoftwareInfoParameters
+    Parameters, ArgumentSpec, ModuleManager, InterfacesParameters, PartitionSoftwareInfoParameters,
+    SystemHealthParameters, ActiveAlertsParameters, HardwareStatusParameters,
+    SoftwareHealthParameters, AuditLogsParameters, AllowedIPsParameters,
+    LicenseInfoParameters,
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
@@ -1885,3 +1888,739 @@ class TestSystemInfoModuleManager(unittest.TestCase):
 
         self.assertIsNone(mock_part.os_version)
         self.assertIsNone(mock_part.service_version)
+
+
+class TestSystemHealthManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_system_health_facts(self, *args):
+        set_module_args(dict(
+            gather_subset=['system-health']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('system-health')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('f5os_system_health.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(len(results['system_health']), 1)
+        self.assertEqual(results['system_health'][0]['name'], 'appliance')
+        self.assertEqual(len(results['system_health'][0]['hardware']), 5)
+        hw0 = results['system_health'][0]['hardware'][0]
+        self.assertEqual(hw0['name'], 'CPU')
+        self.assertEqual(hw0['health'], 'ok')
+        attr0 = hw0['attributes'][0]
+        self.assertEqual(attr0['severity'], 'info')
+        self.assertEqual(attr0['updated_at'], '2024-01-15T10:00:00Z')
+
+    def test_get_system_health_facts_empty(self, *args):
+        set_module_args(dict(
+            gather_subset=['system-health']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('system-health')
+        vm.client.get = Mock(return_value=dict(code=204))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(results['system_health'], [])
+
+    def test_get_system_health_facts_raises(self, *args):
+        set_module_args(dict(
+            gather_subset=['system-health']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('system-health')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_system_health_parameters_empty(self):
+        p = SystemHealthParameters(params={})
+        self.assertEqual(p.components, [])
+
+
+class TestActiveAlertsManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_active_alerts_facts(self, *args):
+        set_module_args(dict(
+            gather_subset=['active-alerts']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('active-alerts')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('f5os_system_alerts.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(len(results['active_alerts']), 2)
+        self.assertEqual(results['active_alerts'][0]['severity'], 'CRITICAL')
+        self.assertEqual(results['active_alerts'][0]['description'], 'PSU 2 is not present')
+        self.assertEqual(results['active_alerts'][1]['severity'], 'WARNING')
+
+    def test_get_active_alerts_facts_empty(self, *args):
+        set_module_args(dict(
+            gather_subset=['active-alerts']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('active-alerts')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('f5os_system_alerts_empty.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(results['active_alerts'], [])
+
+    def test_get_active_alerts_facts_204(self, *args):
+        set_module_args(dict(
+            gather_subset=['active-alerts']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('active-alerts')
+        vm.client.get = Mock(return_value=dict(code=204))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(results['active_alerts'], [])
+
+    def test_get_active_alerts_facts_raises(self, *args):
+        set_module_args(dict(
+            gather_subset=['active-alerts']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('active-alerts')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_active_alerts_parameters_empty(self):
+        p = ActiveAlertsParameters(params={})
+        self.assertEqual(p.alerts, [])
+
+
+class TestHardwareStatusManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_hardware_status_facts_rseries(self, *args):
+        set_module_args(dict(
+            gather_subset=['hardware-status']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('hardware-status')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_rseries_components_info.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertTrue(len(results['hardware_status']) > 0)
+        names = [c['name'] for c in results['hardware_status']]
+        self.assertIn('platform', names)
+        platform = next(c for c in results['hardware_status'] if c['name'] == 'platform')
+        self.assertIn('temperature', platform)
+        self.assertIn('memory', platform)
+
+    def test_get_hardware_status_facts_empty(self, *args):
+        set_module_args(dict(
+            gather_subset=['hardware-status']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('hardware-status')
+        vm.client.get = Mock(return_value=dict(code=204))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(results['hardware_status'], [])
+
+    def test_get_hardware_status_facts_raises(self, *args):
+        set_module_args(dict(
+            gather_subset=['hardware-status']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('hardware-status')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_hardware_status_parameters_empty(self):
+        p = HardwareStatusParameters(params={})
+        self.assertEqual(p.components, [])
+
+
+class TestSoftwareHealthManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_software_health_facts(self, *args):
+        set_module_args(dict(
+            gather_subset=['software-health']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('software-health')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('f5os_cluster_health.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(len(results['software_health']), 1)
+        self.assertEqual(results['software_health'][0]['name'], 'node-1')
+        self.assertEqual(results['software_health'][0]['status'], 'ok')
+        self.assertEqual(results['software_health'][0]['ha_role'], 'active')
+        self.assertEqual(len(results['software_health'][0]['services']), 3)
+        self.assertEqual(results['software_health'][0]['services'][0]['name'], 'platform-mgr')
+        self.assertEqual(results['software_health'][0]['services'][0]['status'], 'running')
+
+    def test_get_software_health_facts_empty(self, *args):
+        set_module_args(dict(
+            gather_subset=['software-health']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('software-health')
+        vm.client.get = Mock(return_value=dict(code=204))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(results['software_health'], [])
+
+    def test_get_software_health_facts_raises(self, *args):
+        set_module_args(dict(
+            gather_subset=['software-health']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('software-health')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_software_health_parameters_empty(self):
+        p = SoftwareHealthParameters(params={})
+        self.assertEqual(p.nodes, [])
+
+
+class TestAuditLogsManager(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_device_info.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+
+    def test_get_audit_logs_facts(self, *args):
+        set_module_args(dict(
+            gather_subset=['audit-logs']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('audit-logs')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('f5os_audit_log_config.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertTrue(results['audit_logs']['enabled'])
+        self.assertDictEqual(results['audit_logs']['remote_forwarding'], {
+            'enabled': True,
+            'host': '10.10.10.100',
+            'port': 514,
+            'protocol': 'udp',
+        })
+
+    def test_get_audit_logs_facts_disabled(self, *args):
+        set_module_args(dict(
+            gather_subset=['audit-logs']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('audit-logs')
+        vm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('f5os_audit_log_disabled.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertFalse(results['audit_logs']['enabled'])
+        self.assertNotIn('remote_forwarding', results['audit_logs'])
+
+    def test_get_audit_logs_facts_empty(self, *args):
+        set_module_args(dict(
+            gather_subset=['audit-logs']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('audit-logs')
+        vm.client.get = Mock(return_value=dict(code=204))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['queried'])
+        self.assertEqual(results['audit_logs'], {})
+
+    def test_get_audit_logs_facts_raises(self, *args):
+        set_module_args(dict(
+            gather_subset=['audit-logs']
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('audit-logs')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_audit_logs_parameters_empty(self):
+        p = AuditLogsParameters(params={})
+        self.assertIsNone(p.enabled)
+        self.assertIsNone(p.remote_forwarding)
+
+    def test_get_fdb_facts_raises(self, *args):
+        set_module_args(dict(gather_subset=['fdb']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('fdb')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_get_users_facts_raises(self, *args):
+        set_module_args(dict(gather_subset=['users']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('users')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_get_server_groups_facts_raises(self, *args):
+        set_module_args(dict(gather_subset=['server-groups']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('server-groups')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_get_tls_facts_raises(self, *args):
+        set_module_args(dict(gather_subset=['tls']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('tls')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_get_restconf_token_facts_raises(self, *args):
+        set_module_args(dict(gather_subset=['restconf-token']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('restconf-token')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_get_allowed_ips_facts_raises(self, *args):
+        set_module_args(dict(gather_subset=['allowed-ips']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('allowed-ips')
+        vm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('server error', err.exception.args[0])
+
+    def test_get_controller_images_read_collection_raises(self, *args):
+        set_module_args(dict(gather_subset=['controller-images']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('controller-images')
+        vm.client.platform = 'Velos Controller'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=500, contents='collection error'),
+        ])
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('collection error', err.exception.args[0])
+
+    def test_get_partition_images_read_collection_raises(self, *args):
+        set_module_args(dict(gather_subset=['partition-images']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('partition-images')
+        vm.client.platform = 'Velos Controller'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=500, contents='collection error'),
+        ])
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('collection error', err.exception.args[0])
+
+    def test_get_partitions_info_204(self, *args):
+        set_module_args(dict(gather_subset=['partitions-info']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('partitions-info')
+        vm.client.platform = 'Velos Controller'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=204, contents={}),
+        ])
+        results = mm.exec_module()
+        self.assertTrue(results['queried'])
+
+    def test_get_partitions_info_read_collection_raises(self, *args):
+        set_module_args(dict(gather_subset=['partitions-info']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('partitions-info')
+        vm.client.platform = 'Velos Controller'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=500, contents='collection error'),
+        ])
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('collection error', err.exception.args[0])
+
+    def test_get_tenant_images_read_collection_raises(self, *args):
+        set_module_args(dict(gather_subset=['tenant-images']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('tenant-images')
+        vm.client.platform = 'rSeries Platform'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=500, contents='collection error'),
+        ])
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('collection error', err.exception.args[0])
+
+    def test_get_tenants_info_read_collection_raises(self, *args):
+        set_module_args(dict(gather_subset=['tenants-info']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('tenants-info')
+        vm.client.platform = 'rSeries Platform'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=500, contents='collection error'),
+        ])
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('collection error', err.exception.args[0])
+
+    def test_get_snmp_info_read_collection_raises(self, *args):
+        set_module_args(dict(gather_subset=['snmp-info']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('snmp-info')
+        vm.client.platform = 'rSeries Platform'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=500, contents='collection error'),
+        ])
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('collection error', err.exception.args[0])
+
+    def test_get_qos_info_204(self, *args):
+        set_module_args(dict(gather_subset=['qos-info']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('qos-info')
+        vm.client.platform = 'Velos Partition'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=204, contents={}),
+        ])
+        results = mm.exec_module()
+        self.assertTrue(results['queried'])
+
+    def test_get_qos_info_read_collection_raises(self, *args):
+        set_module_args(dict(gather_subset=['qos-info']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        vm = mm.get_manager('qos-info')
+        vm.client.platform = 'Velos Partition'
+        vm.client.get = Mock(side_effect=[
+            dict(code=200, contents={'openconfig-system:state': {}}),
+            dict(code=500, contents='collection error'),
+        ])
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('collection error', err.exception.args[0])
+
+    def test_allowed_ips_type_none(self):
+        p = AllowedIPsParameters(params=dict(config=dict(something='else')))
+        self.assertIsNone(p.type)
+
+    def test_interfaces_port_speed_from_config(self):
+        p = InterfacesParameters(params={
+            'openconfig-if-ethernet:ethernet': {
+                'config': {'port-speed': 'port-speed:SPEED_10G'}
+            },
+            'state': {}
+        })
+        self.assertIsNotNone(p.port_speed)
+
+    def test_interfaces_l2_counters_no_state(self):
+        p = InterfacesParameters(params={
+            'openconfig-if-ethernet:ethernet': {'config': {}},
+            'state': {}
+        })
+        self.assertIsNone(p.l2_counters)
+
+    def test_license_info_config_none(self):
+        p = LicenseInfoParameters(params={
+            'config': None,
+            'state': {
+                'registration-key': {'base': 'ABCDE-FGHIJ'},
+                'license': 'Service check date 2024-01-01\nLicense date 2024-01-01'
+            }
+        })
+        self.assertEqual(p.base_registration_key, 'ABCDE-FGHIJ')
+        self.assertIsNone(p.dossier)
+
+    def test_hardware_components_empty_skipped(self):
+        p = HardwareStatusParameters(params={
+            'openconfig-platform:components': {
+                'component': [
+                    {'name': 'slot1', 'state': {'empty': True}},
+                    {'name': 'slot2', 'state': {'type': 'CPU', 'description': 'test'}},
+                ]
+            }
+        })
+        comps = p.components
+        self.assertEqual(len(comps), 1)
+        self.assertEqual(comps[0]['name'], 'slot2')
+
+    def test_execute_managers_warn_on_empty_error(self, *args):
+        set_module_args(dict(gather_subset=['fdb']))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        fake_manager = Mock()
+        fake_manager.exec_module = Mock(side_effect=F5ModuleError(''))
+        fake_manager.__class__.__name__ = 'FdbFactManager'
+        mm.get_manager = Mock(return_value=fake_manager)
+        module.warn = Mock()
+        results = mm.exec_module()
+        module.warn.assert_called_once()

@@ -139,8 +139,8 @@ paramiko_logger = logging.getLogger("paramiko.transport")
 setattr(paramiko_logger, 'disabled', True)
 
 
-def hard_timeout(module, want, start):  # pragma: no cover
-    elapsed = datetime.datetime.now(datetime.UTC) - start
+def hard_timeout(module, want, start):
+    elapsed = datetime.datetime.now(getattr(datetime, 'UTC', datetime.timezone.utc)) - start
     module.fail_json(
         msg=want.msg or "Timeout when waiting for Velos Partition", elapsed=elapsed.seconds
     )
@@ -163,13 +163,13 @@ class Parameters(AnsibleF5Parameters):
 
     ]
 
-    def to_return(self):  # pragma: no cover
+    def to_return(self):
         result = {}
         try:
             for returnable in self.returnables:
                 result[returnable] = getattr(self, returnable)
             result = self._filter_params(result)
-        except Exception:
+        except Exception:  # pragma: no cover
             raise
         return result
 
@@ -183,7 +183,7 @@ class ModuleManager(object):
         self.changes = Parameters()
         self.have = None
 
-    def _announce_deprecations(self, result):  # pragma: no cover
+    def _announce_deprecations(self, result):
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -220,20 +220,20 @@ class ModuleManager(object):
         # setup handler before scheduling signal, to eliminate a race
         # signal.alarm(int(self.want.timeout))
 
-        start = datetime.datetime.now(datetime.UTC)
+        start = datetime.datetime.now(getattr(datetime, 'UTC', datetime.timezone.utc))
         if self.want.delay:
             time.sleep(float(self.want.delay))
         end = start + datetime.timedelta(seconds=int(self.want.timeout))
 
         partition_state = self.wait_for_partition(start, end)
-        elapsed = datetime.datetime.now(datetime.UTC) - start
+        elapsed = datetime.datetime.now(getattr(datetime, 'UTC', datetime.timezone.utc)) - start
         self.changes.update({'elapsed': elapsed.seconds,
                              'partition_state': partition_state})
         return False
 
     def wait_for_partition(self, start, end):
         partition_state = {}
-        while datetime.datetime.now(datetime.UTC) < end:
+        while datetime.datetime.now(getattr(datetime, 'UTC', datetime.timezone.utc)) < end:
             time.sleep(int(self.want.sleep))
             try:
                 # The first test verifies that the tenant exists on the specified
@@ -258,7 +258,7 @@ class ModuleManager(object):
                 self.module.debug(str(ex))
                 continue
         else:
-            elapsed = datetime.datetime.now(datetime.UTC) - start
+            elapsed = datetime.datetime.now(getattr(datetime, 'UTC', datetime.timezone.utc)) - start
             self.module.fail_json(
                 msg=self.want.msg or "Timeout waiting for desired partition state", elapsed=elapsed.seconds,
                 partition_state=partition_state

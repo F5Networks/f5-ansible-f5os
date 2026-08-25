@@ -9,7 +9,7 @@ __metaclass__ = type
 import json
 import os
 import paramiko
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -445,3 +445,348 @@ class TestManager(unittest.TestCase):
             mm.read_tenant_from_device()
 
         self.assertIn('server error', err2.exception.args[0])
+
+    def test_tenant_api_ready_http_error_non_401(self):
+        set_module_args(dict(
+            name='foo',
+            state='api-ready',
+            timeout=100
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        tenant_data = {'config': {'mgmt-ip': '10.0.0.1', 'port': 443}}
+
+        with patch(
+            'ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_wait.open_url',
+            side_effect=[HTTPError('url', 500, 'Server Error', {}, None)]
+        ):
+            result = mm.tenant_api_ready(tenant_data)
+        self.assertFalse(result)
+
+    def test_tenant_api_ready_url_error_connection_refused(self):
+        set_module_args(dict(
+            name='foo',
+            state='api-ready',
+            timeout=100
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        tenant_data = {'config': {'mgmt-ip': '10.0.0.1', 'port': 443}}
+
+        with patch(
+            'ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_wait.open_url',
+            side_effect=[URLError('Connection refused')]
+        ):
+            result = mm.tenant_api_ready(tenant_data)
+        self.assertFalse(result)
+
+    def test_tenant_api_ready_url_error_other(self):
+        set_module_args(dict(
+            name='foo',
+            state='api-ready',
+            timeout=100
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        tenant_data = {'config': {'mgmt-ip': '10.0.0.1', 'port': 443}}
+
+        with patch(
+            'ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_wait.open_url',
+            side_effect=[URLError('Network unreachable')]
+        ):
+            with self.assertRaises(URLError):
+                mm.tenant_api_ready(tenant_data)
+
+    def test_api_root_ready_true(self):
+        set_module_args(dict(
+            name='foo',
+            state='api-ready',
+            timeout=100
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=200))
+        self.assertTrue(mm.api_root_ready())
+
+    def test_api_root_ready_false(self):
+        set_module_args(dict(
+            name='foo',
+            state='api-ready',
+            timeout=100
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.client.get = Mock(return_value=dict(code=503))
+        self.assertFalse(mm.api_root_ready())
+
+    def test_wait_api_ready_thread_sets_flag(self):
+        set_module_args(dict(
+            name='defaultbip',
+            state='api-ready',
+            sleep=1,
+            timeout=30
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.tenant_exists = Mock(return_value=True)
+        deployed = load_fixture('load_tenant_state_deployed.json')
+        mm.read_tenant_from_device = Mock(return_value=deployed)
+        mm.client.get = Mock(return_value=dict(code=200))
+
+        with patch(
+            'ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant_wait.open_url',
+            side_effect=[HTTPError('url', 401, 'Unauthorized', {}, None)]
+        ):
+            result = mm.exec_module()
+        self.assertFalse(result['changed'])
+
+    def test_instances_check_available_present(self):
+        """Pre-2.0.0: instances key present -> per-instance check is used, returns True."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '1.5.0'
+        tenant_state = {
+            'running-state': 'deployed',
+            'status': 'Running',
+            'instances': {'instance': [{'node': 1, 'phase': 'Running'}]}
+        }
+        self.assertTrue(mm._instances_check_available(tenant_state))
+
+    def test_instances_check_available_absent(self):
+        """2.0.0+: instances key absent -> returns False and emits a warning."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '2.0.0'
+        tenant_state = {
+            'running-state': 'deployed',
+            'status': 'Running',
+        }
+        with patch.object(module, 'warn') as mock_warn:
+            result = mm._instances_check_available(tenant_state)
+        self.assertFalse(result)
+        mock_warn.assert_called_once()
+        self.assertIn('2.0.0', mock_warn.call_args[0][0])
+
+    def test_instances_check_available_absent_warns_once(self):
+        """Warning is emitted only once even when the deployed check polls repeatedly."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '2.0.0'
+        tenant_state = {
+            'running-state': 'deployed',
+            'status': 'Running',
+        }
+        with patch.object(module, 'warn') as mock_warn:
+            first = mm._instances_check_available(tenant_state)
+            second = mm._instances_check_available(tenant_state)
+        self.assertFalse(first)
+        self.assertFalse(second)
+        mock_warn.assert_called_once()
+
+    def test_tenant_is_deployed_instances_present_all_running(self):
+        """Pre-2.0.0: all instances phase==running -> deployed returns True."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '1.5.0'
+        state = {
+            'running-state': 'deployed',
+            'status': 'Running',
+            'instances': {
+                'instance': [
+                    {'node': 1, 'phase': 'Running'},
+                    {'node': 2, 'phase': 'Running'}
+                ]
+            }
+        }
+        self.assertTrue(mm.tenant_is_deployed(state))
+
+    def test_tenant_is_deployed_instances_present_not_all_running(self):
+        """Pre-2.0.0: one instance phase!=running -> deployed returns False."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '1.5.0'
+        state = {
+            'running-state': 'deployed',
+            'status': 'Running',
+            'instances': {
+                'instance': [
+                    {'node': 1, 'phase': 'Running'},
+                    {'node': 2, 'phase': 'Starting'}
+                ]
+            }
+        }
+        self.assertFalse(mm.tenant_is_deployed(state))
+
+    def test_tenant_is_deployed_instances_present_but_empty(self):
+        """Pre-2.0.0: instances key present but empty list -> not deployed (guards against all([]) == True)."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '1.5.0'
+        state = {
+            'running-state': 'deployed',
+            'status': 'Running',
+            'instances': {'instance': []}
+        }
+        self.assertFalse(mm.tenant_is_deployed(state))
+
+    def test_tenant_is_deployed_v2_no_instances_running(self):
+        """2.0.0+: instances absent, running-state=deployed + status=running -> deployed."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '2.0.0'
+        state = {
+            'running-state': 'deployed',
+            'status': 'Running',
+        }
+        with patch.object(module, 'warn'):
+            result = mm.tenant_is_deployed(state)
+        self.assertTrue(result)
+
+    def test_tenant_is_deployed_v2_no_instances_not_running(self):
+        """2.0.0+: instances absent, status != running -> not deployed."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '2.0.0'
+        state = {
+            'running-state': 'deployed',
+            'status': 'Starting',
+        }
+        with patch.object(module, 'warn'):
+            result = mm.tenant_is_deployed(state)
+        self.assertFalse(result)
+
+    def test_wait_deployed_v2_fixture(self):
+        """End-to-end: 2.0.0 fixture (no instances) -> exec_module succeeds as deployed."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed'
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.tenant_exists = Mock(return_value=True)
+        deployed_v2 = load_fixture('load_tenant_state_deployed_v2.json')
+        mm.read_tenant_from_device = Mock(return_value=deployed_v2)
+        mm.client.platform = 'rSeries'
+        mm.client.software_version = '2.0.0'
+        results = mm.exec_module()
+        self.assertFalse(results['changed'])
+        self.assertEqual(mm.read_tenant_from_device.call_count, 1)
+
+    def test_wait_deployed_v2_not_yet_ready(self):
+        """End-to-end: 2.0.0 shape, status not yet 'running' -> timeout (does not falsely report deployed)."""
+        set_module_args(dict(
+            name='defaultbip',
+            state='deployed',
+            timeout=3
+        ))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.tenant_exists = Mock(return_value=True)
+        mm.client.platform = 'rSeries'
+        mm.client.software_version = '2.0.0'
+        # running-state is deployed but status is still 'Starting' - not ready yet
+        not_ready = {
+            'f5-tenants:tenant': [{
+                'config': {},
+                'state': {
+                    'running-state': 'deployed',
+                    'status': 'Starting',
+                }
+            }]
+        }
+        mm.read_tenant_from_device = Mock(return_value=not_ready)
+        with self.assertRaises(AnsibleFailJson) as err:
+            mm.exec_module()
+        self.assertIn('Timeout waiting for desired tenant state', err.exception.args[0]['msg'])

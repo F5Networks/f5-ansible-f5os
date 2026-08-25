@@ -4,6 +4,50 @@ F5Networks.F5OS Release Notes
 
 .. contents:: Topics
 
+v1.23.0
+=======
+
+Minor Changes
+-------------
+
+- f5os_appliance_mode - Added new module to enable or disable F5OS appliance mode on rSeries and VELOS partition devices.
+- f5os_audit_log - new module to manage audit log configuration on F5OS devices (https://jira.f5net.com/browse/COREBIP-42596).
+- f5os_auth - Improved auth_order handling when the authentication-method endpoint is unavailable or not configured. The module normalizes read/delete behavior for keypath-not-found/not-found responses and returns a clear actionable message for set/update operations.
+- f5os_auth: Added password_policy configuration options for F5OS 2.0.0+: min_days (minimum days between password changes), remember (number of previous passwords to remember), and warn_age (days before expiration to warn users). These fields are version-gated and omitted on F5OS 1.8.3.
+- f5os_auth_ldap - Added tls_ca_certificate parameter to configure LDAP TLS CA certificate and map it to the device tls_cacert setting.
+- f5os_auth_ldap - Added user_object_class and group_object_class parameters (lists of strings) for F5OS 2.0.0 and later, mapping to the user-object-class and group-object-class LDAP attributes. Both parameters are silently omitted on older F5OS versions.
+- f5os_banner - new module to manage login banner and Message of the Day (MoTD) on F5OS devices.
+- f5os_client_cert_auth - Added new module to manage client certificate authentication settings on F5OS rSeries and VELOS partition devices, with support for enabling/disabling client cert auth and configuring trusted CA bundles.
+- f5os_config_restore - Added new module to restore F5OS configuration from a backup file on rSeries and VELOS partition devices, with support for importing the backup file from a remote server prior to restore.
+- f5os_device_info - Added new gather_subset options system-health, active-alerts, hardware-status, software-health, and audit-logs for collecting system health, active alerts, hardware component status, cluster/service health, and audit log configuration from F5OS devices.
+- f5os_license - Added ``proxy_server`` parameter to support license activation through an HTTP proxy (F5OS-A 1.8.0+).
+- f5os_login_policy - new module to manage login policy settings (admin-role-limit, restconf-max-session-limit, ssh-max-session-limit) on F5OS 2.0.0 and later.
+- f5os_ntp_server - Added association_type, version, and port parameters for F5OS 2.0.0 and later, mapping to the association-type, version, and port NTP server config fields. All three parameters are silently omitted on older F5OS versions.
+- f5os_portgroup - Added new module to manage port group mode configuration on rSeries platforms.
+- f5os_proxy_server - Added new module to manage proxy server settings for licensing and iHealth uploads on F5OS rSeries and VELOS partition devices.
+- f5os_proxy_server - Manages proxy settings through the diagnostics proxy RESTCONF endpoint used by supported F5OS releases.
+- f5os_proxy_server - Prevents unsafe server/port-only updates when existing proxy credentials are configured but new credentials are omitted on replace-style APIs.
+- f5os_system_health_info - Added new read-only module to collect system health information including hardware component status, platform components, and active alerts from F5OS rSeries and VELOS partition devices, with support for filtering by component type.
+- f5os_tenant - add max_nodes parameter (int) to allow setting the maximum number of nodes a tenant may use; version-gated to F5OS 2.0.0 and later, silently omitted on older firmware.
+- httpapi f5os - Added ``forward_proxy_headers`` option to include custom HTTP headers in API requests, useful for proxy environments that require additional headers for logging or authentication.
+
+Bugfixes
+--------
+
+- f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added update_password parameter (always/on_create) to control bind password update behavior.
+
+New Modules
+-----------
+
+- f5networks.f5os.f5os_appliance_mode - Manage F5OS appliance mode on rSeries and VELOS partition devices
+- f5networks.f5os.f5os_audit_log - Manage audit logging on F5OS devices
+- f5networks.f5os.f5os_banner - Manage login banner and Message of the Day (MoTD) on F5OS devices
+- f5networks.f5os.f5os_client_cert_auth - Manage client certificate authentication on F5OS devices
+- f5networks.f5os.f5os_config_restore - Restore F5OS configuration from a backup file
+- f5networks.f5os.f5os_login_policy - Manage login policy settings on F5OS devices
+- f5networks.f5os.f5os_portgroup - Manage port group configuration on F5 rSeries devices
+- f5networks.f5os.f5os_proxy_server - Manage proxy server settings on F5OS devices
+- f5networks.f5os.f5os_system_health_info - Collect system health information from F5OS devices
 
 v1.22.0
 =======
@@ -34,12 +78,12 @@ Minor Changes
 Bugfixes
 --------
 
-- f5os_system_image_install - Fixed install status URI and spurious polling on rSeries.
-- f5os_system_image_install - Raise error when Velos Controller image version not found instead of looping until timeout.
-- f5os_system_image_install - Restore error on server errors (4xx/5xx) in exists check instead of silently returning False.
-- f5os_system_image_install - Raise error for unsupported platform in install status check instead of silently returning None.
 - f5os_device_info - Handle empty API errors for unsupported subsets when using gather_subset all.
 - f5os_facts - Narrow exception handling for software version retrieval and emit warning instead of silently swallowing errors.
+- f5os_system_image_install - Fixed install status URI and spurious polling on rSeries.
+- f5os_system_image_install - Raise error for unsupported platform in install status check instead of silently returning None.
+- f5os_system_image_install - Raise error when Velos Controller image version not found instead of looping until timeout.
+- f5os_system_image_install - Restore error on server errors (4xx/5xx) in exists check instead of silently returning False.
 
 New Modules
 -----------
@@ -139,7 +183,6 @@ Bugfixes
 New Modules
 -----------
 
-- f5networks.f5os.f5os_auth_ldap - Manage LDAP common configuration on F5OS systems.
 - f5networks.f5os.f5os_auth_server - Manage Auth Server Groups and Server inside it.
 - f5networks.f5os.f5os_fdb - Manage Layer 2 forwarding database (FDB) entry in the system
 - f5networks.f5os.f5os_qos_traffic_priority - Manage QoS Traffic Priorities on F5OS

@@ -1,0 +1,1 @@
+{"f5-alert:alert":{"alert":[{"source":"appliance","resource":"/system/health","severity":"CRITICAL","description":"PSU 2 is not present","timestamp":"2024-01-15T09:30:00Z"},{"source":"appliance","resource":"/system/health","severity":"WARNING","description":"Inlet temperature above threshold","timestamp":"2024-01-15T09:45:00Z"}]}}

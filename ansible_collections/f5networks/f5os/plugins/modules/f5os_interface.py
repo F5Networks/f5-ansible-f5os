@@ -344,7 +344,7 @@ class ModuleManager(object):
             return True
         return False
 
-    def _announce_deprecations(self, result):  # pragma: no cover
+    def _announce_deprecations(self, result):
         warnings = result.pop('__warnings', [])
         for warning in warnings:
             self.client.module.deprecate(
@@ -398,14 +398,14 @@ class ModuleManager(object):
         self.have = self.read_current_from_device()
         if not self.should_update():
             return False
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.update_on_device()
         return True
 
     def remove(self):
         self.have = self.read_current_from_device()
-        if self.module.check_mode:  # pragma: no cover
+        if self.module.check_mode:
             return True
         self.remove_from_device()
         return True

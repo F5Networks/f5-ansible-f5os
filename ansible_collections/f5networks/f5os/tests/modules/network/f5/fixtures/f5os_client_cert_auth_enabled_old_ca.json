@@ -1,0 +1,1 @@
+{"f5-openconfig-aaa-tls:client-cert-auth":{"config":{"enabled":true,"trusted-ca":"old-ca-bundle"}}}

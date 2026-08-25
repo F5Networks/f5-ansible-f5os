@@ -6,6 +6,7 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+import copy
 import json
 import os
 
@@ -607,3 +608,884 @@ class TestManager(unittest.TestCase):
         mm.exists = Mock(side_effect=[False, True])
         res3 = mm.absent()
         self.assertFalse(res3)
+
+    def test_exists_rstp_mode(self):
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        rstp_exists_response = {
+            'openconfig-spanning-tree:stp': {
+                'global': {
+                    'config': {
+                        'enabled-protocol': ['openconfig-spanning-tree-types:RSTP']
+                    }
+                }
+            }
+        }
+        mm.client.get = Mock(return_value=dict(code=200, contents=rstp_exists_response))
+
+        result = mm.exists()
+        self.assertTrue(result)
+
+    def test_exists_mstp_mode(self):
+        set_module_args(dict(
+            mode='mstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            mstp_instances=[dict(instance_id=1, bridge_priority=32768, vlans=[100])],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mstp_exists_response = {
+            'openconfig-spanning-tree:stp': {
+                'global': {
+                    'config': {
+                        'enabled-protocol': ['openconfig-spanning-tree-types:MSTP']
+                    }
+                }
+            }
+        }
+        mm.client.get = Mock(return_value=dict(code=200, contents=mstp_exists_response))
+
+        result = mm.exists()
+        self.assertTrue(result)
+
+    def test_enable_stp_protocol_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=1, port_priority=128),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(return_value=dict(code=400, contents='protocol error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('protocol error', err.exception.args[0])
+
+    def test_patch_stp_config_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=1, port_priority=128),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.patch = Mock(return_value=dict(code=400, contents='config error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('config error', err.exception.args[0])
+
+    def test_post_stp_interface_first_post_error(self):
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='2.0', cost=1, port_priority=128),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        rstp_fixture = copy.deepcopy(load_fixture('f5os_existing_rstp_config.json'))
+        rstp_intf = copy.deepcopy(load_fixture('f5os_rstp_interface.json'))
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='interface post error'),
+        ])
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=rstp_fixture),
+            dict(code=200, contents=rstp_intf),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('interface post error', err.exception.args[0])
+
+    def test_post_stp_interface_second_post_error(self):
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='2.0', cost=1, port_priority=128),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        rstp_fixture = copy.deepcopy(load_fixture('f5os_existing_rstp_config.json'))
+        rstp_intf = copy.deepcopy(load_fixture('f5os_rstp_interface.json'))
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='edge port error'),
+        ])
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=rstp_fixture),
+            dict(code=200, contents=rstp_intf),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('edge port error', err.exception.args[0])
+
+    def test_patch_stp_interface_first_patch_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=2, port_priority=144),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        stp_config = copy.deepcopy(load_fixture('f5os_stp_config.json'))
+        stp_interfaces = copy.deepcopy(load_fixture('f5os_stp_interfaces.json'))
+        stp_intf_config = copy.deepcopy(load_fixture('f5os_stp_interfaces_config.json'))
+        # Two read_current_from_device calls: one in update(), one in update_on_device()
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=stp_config),
+            dict(code=200, contents=stp_interfaces),
+            dict(code=200, contents=stp_intf_config),
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_stp_config.json'))),
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_stp_interfaces.json'))),
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_stp_interfaces_config.json'))),
+        ])
+        mm.client.patch = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='patch intf error'),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('patch intf error', err.exception.args[0])
+
+    def test_patch_stp_interface_second_patch_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=2, port_priority=144),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        stp_config = copy.deepcopy(load_fixture('f5os_stp_config.json'))
+        stp_interfaces = copy.deepcopy(load_fixture('f5os_stp_interfaces.json'))
+        stp_intf_config = copy.deepcopy(load_fixture('f5os_stp_interfaces_config.json'))
+        # Two read_current_from_device calls: one in update(), one in update_on_device()
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=stp_config),
+            dict(code=200, contents=stp_interfaces),
+            dict(code=200, contents=stp_intf_config),
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_stp_config.json'))),
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_stp_interfaces.json'))),
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_stp_interfaces_config.json'))),
+        ])
+        mm.client.patch = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='second patch error'),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('second patch error', err.exception.args[0])
+
+    def test_create_mstp_on_device_post_error(self):
+        set_module_args(dict(
+            mode='mstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            mstp_instances=[
+                dict(
+                    instance_id=1,
+                    bridge_priority=28672,
+                    vlans=[444, 555],
+                    interface=dict(
+                        name='1.0', cost=2, port_priority=128,
+                        edge_port='EDGE_DISABLE', link_type='SHARED',
+                    )
+                )
+            ],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='mstp post error'),
+        ])
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('mstp post error', err.exception.args[0])
+
+    def test_create_mstp_on_device_interfaces_post_error(self):
+        set_module_args(dict(
+            mode='mstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            mstp_instances=[
+                dict(
+                    instance_id=1,
+                    bridge_priority=28672,
+                    vlans=[444, 555],
+                    interface=dict(
+                        name='1.0', cost=2, port_priority=128,
+                        edge_port='EDGE_DISABLE', link_type='SHARED',
+                    )
+                )
+            ],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='mstp intf error'),
+        ])
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('mstp intf error', err.exception.args[0])
+
+    def test_create_on_device_with_existing_interfaces_in_have(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='2.0', cost=2, port_priority=128),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+        stp_config = copy.deepcopy(load_fixture('f5os_stp_config.json'))
+        stp_interfaces = copy.deepcopy(load_fixture('f5os_stp_interfaces.json'))
+        stp_intf_config = copy.deepcopy(load_fixture('f5os_stp_interfaces_config.json'))
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=stp_config),
+            dict(code=200, contents=stp_interfaces),
+            dict(code=200, contents=stp_intf_config),
+        ])
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+        # Post is called for the new interface since 2.0 is not in existing [1.0]
+        self.assertTrue(mm.client.post.called)
+
+    def test_update_no_changes_returns_false(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=20,
+            forwarding_delay=15,
+            hold_count=6,
+            bridge_priority=32768,
+            interfaces=dict(name='1.0', cost=1, port_priority=128,
+                            edge_port='EDGE_AUTO', link_type='P2P'),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        stp_config = copy.deepcopy(load_fixture('f5os_stp_config.json'))
+        stp_interfaces = copy.deepcopy(load_fixture('f5os_stp_interfaces.json'))
+        stp_intf_config = copy.deepcopy(load_fixture('f5os_stp_interfaces_config.json'))
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=stp_config),
+            dict(code=200, contents=stp_interfaces),
+            dict(code=200, contents=stp_intf_config),
+        ])
+
+        results = mm.exec_module()
+        self.assertFalse(results['changed'])
+
+    def test_remove_from_device_global_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            state='absent'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.delete = Mock(return_value=dict(code=400, contents='delete error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('delete error', err.exception.args[0])
+
+    def test_remove_from_device_interfaces_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            state='absent'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.delete = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='intf delete error'),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('intf delete error', err.exception.args[0])
+
+    def test_read_current_stp_config_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=2, port_priority=144),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=400, contents='read error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('read error', err.exception.args[0])
+
+    def test_read_current_stp_interfaces_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=2, port_priority=144),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        stp_config = load_fixture('f5os_stp_config.json')
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=stp_config),
+            dict(code=400, contents='interfaces error'),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('interfaces error', err.exception.args[0])
+
+    def test_read_current_stp_interface_detail_error(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=2, port_priority=144),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        stp_config = load_fixture('f5os_stp_config.json')
+        stp_interfaces = load_fixture('f5os_stp_interfaces.json')
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=stp_config),
+            dict(code=200, contents=stp_interfaces),
+            dict(code=400, contents='detail error'),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('detail error', err.exception.args[0])
+
+    def test_read_current_rstp_error(self):
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='2.0', cost=2, port_priority=128),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        # read_current_rstp accesses contents before checking code,
+        # so we need a valid structure with a bad code
+        bad_rstp = copy.deepcopy(load_fixture('f5os_existing_rstp_config.json'))
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=400, contents=bad_rstp))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('openconfig-spanning-tree:stp', str(err.exception.args[0]))
+
+    def test_read_current_rstp_interface_detail_error(self):
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=2, port_priority=144),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        rstp_fixture = copy.deepcopy(load_fixture('f5os_existing_rstp_config.json'))
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=rstp_fixture),
+            dict(code=400, contents='rstp intf detail error'),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('rstp intf detail error', err.exception.args[0])
+
+    def test_read_current_mstp_error(self):
+        set_module_args(dict(
+            mode='mstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            mstp_instances=[
+                dict(instance_id=1, bridge_priority=28672, vlans=[444, 555])
+            ],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=400, contents='mstp read error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('mstp read error', err.exception.args[0])
+
+    def test_update_on_device_new_interface_posts(self):
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(
+                name='3.0',
+                cost=2,
+                port_priority=128,
+                edge_port='EDGE_DISABLE',
+                link_type='SHARED',
+            ),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        existing_rstp_config = copy.deepcopy(load_fixture('f5os_existing_rstp_config.json'))
+        rstp_interface = copy.deepcopy(load_fixture('f5os_rstp_interface.json'))
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.post = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=existing_rstp_config),
+            dict(code=200, contents=rstp_interface),
+            dict(code=200, contents=copy.deepcopy(existing_rstp_config)),
+            dict(code=200, contents=copy.deepcopy(rstp_interface)),
+        ])
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+        # post is called for new interface
+        self.assertTrue(mm.client.post.called)
+
+
+class TestApiParameters(unittest.TestCase):
+    def test_api_parameters_hello_time_invalid(self):
+        from ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config import ApiParameters
+        params = {'hello-time': 'invalid'}
+        p = ApiParameters(params=params)
+        self.assertIsNone(p.hello_time)
+
+    def test_api_parameters_max_age_invalid(self):
+        from ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config import ApiParameters
+        params = {'max-age': 'invalid'}
+        p = ApiParameters(params=params)
+        self.assertIsNone(p.max_age)
+
+    def test_api_parameters_forwarding_delay_invalid(self):
+        from ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config import ApiParameters
+        params = {'forwarding-delay': None}
+        p = ApiParameters(params=params)
+        self.assertIsNone(p.forwarding_delay)
+
+    def test_api_parameters_hold_count_invalid(self):
+        from ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config import ApiParameters
+        params = {'hold-count': 'bad'}
+        p = ApiParameters(params=params)
+        self.assertIsNone(p.hold_count)
+
+    def test_api_parameters_bridge_priority_invalid(self):
+        from ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config import ApiParameters
+        params = {'bridge-priority': 'not_a_number'}
+        p = ApiParameters(params=params)
+        self.assertIsNone(p.bridge_priority)
+
+
+class TestDifference(unittest.TestCase):
+    def test_mstp_instances_want_set_have_none(self):
+        from ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config import (
+            Difference, ModuleParameters, ApiParameters
+        )
+        want = ModuleParameters(params=dict(
+            mode='mstp',
+            mstp_instances=[dict(instance_id=1, bridge_priority=32768, vlans=[100])]
+        ))
+        have = ApiParameters(params={})
+        diff = Difference(want, have)
+        result = diff.mstp_instances
+        self.assertIn('mstp_instances', result)
+
+    def test_interfaces_want_set_have_interfaces_none(self):
+        from ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config import (
+            Difference, ModuleParameters, ApiParameters
+        )
+        want = ModuleParameters(params=dict(
+            mode='stp',
+            interfaces=dict(name='1.0', cost=1, port_priority=128,
+                            edge_port='EDGE_AUTO', link_type='P2P')
+        ))
+        have = ApiParameters(params={})
+        diff = Difference(want, have)
+        result = diff.interfaces
+        self.assertIsNotNone(result)
+        self.assertEqual(result['name'], '1.0')
+
+
+class TestUpdateMstpErrors(unittest.TestCase):
+    def setUp(self):
+        self.spec = ArgumentSpec()
+        self.mock_module_helper = patch.multiple(AnsibleModule,
+                                                 exit_json=exit_json,
+                                                 fail_json=fail_json)
+        self.mock_module_helper.start()
+        self.p1 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config.F5Client')
+        self.m1 = self.p1.start()
+        self.m1.return_value = Mock()
+        self.p2 = patch('ansible_collections.f5networks.f5os.plugins.modules.f5os_stp_config.send_teem')
+        self.m2 = self.p2.start()
+        self.m2.return_value = True
+        fixture_data.clear()
+
+    def tearDown(self):
+        self.p1.stop()
+        self.p2.stop()
+        self.mock_module_helper.stop()
+
+    def test_update_mstp_instances_error(self):
+        set_module_args(dict(
+            mode='mstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            mstp_instances=[
+                dict(instance_id=1, bridge_priority=28672, vlans=[444, 555],
+                     interface=dict(name='2.0', cost=3, port_priority=128,
+                                    edge_port='EDGE_DISABLE', link_type='P2P'))
+            ],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        current_mstp = copy.deepcopy(load_fixture('f5os_mstp_config.json'))
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=current_mstp))
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.put = Mock(return_value=dict(code=400, contents='mstp put error'))
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('mstp put error', err.exception.args[0])
+
+    def test_update_mstp_interfaces_error(self):
+        set_module_args(dict(
+            mode='mstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            mstp_instances=[
+                dict(instance_id=1, bridge_priority=28672, vlans=[444, 555],
+                     interface=dict(name='2.0', cost=3, port_priority=128,
+                                    edge_port='EDGE_DISABLE', link_type='P2P'))
+            ],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        current_mstp = copy.deepcopy(load_fixture('f5os_mstp_config.json'))
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=current_mstp))
+        mm.client.put = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.patch = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='mstp intf patch error'),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('mstp intf patch error', err.exception.args[0])
+
+    def test_post_stp_interface_second_post_error_stp_mode(self):
+        set_module_args(dict(
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='2.0', cost=1, port_priority=128),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.post = Mock(side_effect=[
+            dict(code=204, contents=dict()),
+            dict(code=204, contents=dict()),
+            dict(code=400, contents='stp edge post error'),
+        ])
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_stp_config.json'))),
+            dict(code=204, contents=dict()),
+        ])
+
+        with self.assertRaises(F5ModuleError) as err:
+            mm.exec_module()
+        self.assertIn('stp edge post error', err.exception.args[0])
+
+    def test_patch_stp_interface_rstp_mode(self):
+        """Test patch_stp_interface with rstp mode to cover the rstp config_key branch."""
+        set_module_args(dict(
+            mode='rstp',
+            hello_time=2,
+            max_age=7,
+            forwarding_delay=16,
+            hold_count=7,
+            bridge_priority=28672,
+            interfaces=dict(name='1.0', cost=2, port_priority=144,
+                            edge_port='EDGE_DISABLE', link_type='SHARED'),
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+
+        existing_rstp = copy.deepcopy(load_fixture('f5os_existing_rstp_config.json'))
+        rstp_intf = copy.deepcopy(load_fixture('f5os_rstp_interface.json'))
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.patch = Mock(return_value=dict(code=204, contents=dict()))
+        mm.client.post = Mock(return_value=dict(code=204, contents=dict()))
+        # First read for should_update, second read inside update_on_device
+        mm.client.get = Mock(side_effect=[
+            dict(code=200, contents=existing_rstp),
+            dict(code=200, contents=rstp_intf),
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_existing_rstp_config.json'))),
+            dict(code=200, contents=copy.deepcopy(load_fixture('f5os_rstp_interface.json'))),
+        ])
+
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])

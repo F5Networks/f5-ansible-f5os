@@ -100,6 +100,27 @@ options:
             - Specifies the TLS key to be used for the LDAP search
             - Applies only when C(tls) is set to C(start_tls) or C(on).
         type: str
+    tls_ca_certificate:
+        description:
+            - Specifies the TLS CA certificate to be used for the LDAP search
+            - Applies only when C(tls) is set to C(start_tls) or C(on).
+        type: str
+    user_object_class:
+        description:
+            - Specifies the list of LDAP object classes used to identify user entries.
+            - Typical value is C(posixAccount).
+            - Requires F5OS 2.0.0 or later. Silently ignored on older versions.
+        type: list
+        elements: str
+        version_added: "1.23.0"
+    group_object_class:
+        description:
+            - Specifies the list of LDAP object classes used to identify group entries.
+            - Typical value is C(posixGroup).
+            - Requires F5OS 2.0.0 or later. Silently ignored on older versions.
+        type: list
+        elements: str
+        version_added: "1.23.0"
 
 notes:
     - This module makes a PUT request to the F5OS system to update the LDAP common configuration.
@@ -127,6 +148,9 @@ EXAMPLES = r'''
     tls: "start_tls"
     tls_certificate_validation: "demand"
     tls_ciphers: "HIGH:!aNULL:!MD5"
+    tls_certificate: "/path/to/cert.pem"
+    tls_key: "/path/to/key.pem"
+    tls_ca_certificate: "/path/to/ca.pem"
     active_directory: true
     unix_attributes: false
 
@@ -199,9 +223,23 @@ tls_key:
   description: TLS key to be used for the LDAP search.
   returned: changed
   type: str
+tls_ca_certificate:
+  description: TLS CA certificate to be used for the LDAP search.
+  returned: changed
+  type: str
+user_object_class:
+  description: List of LDAP object classes used to identify user entries.
+  returned: changed
+  type: list
+group_object_class:
+  description: List of LDAP object classes used to identify group entries.
+  returned: changed
+  type: list
 '''
 
 import datetime
+import re
+
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 
@@ -211,6 +249,14 @@ from ansible_collections.f5networks.f5os.plugins.module_utils.client import (
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import (
     F5ModuleError, AnsibleF5Parameters
 )
+
+
+def _parse_version(version_str):
+    """Parse a version string like '2.0.0' or '2.0.0-9817' into a (major, minor, patch) tuple."""
+    match = re.match(r'(\d+)\.(\d+)\.(\d+)', str(version_str))
+    if match:
+        return tuple(int(x) for x in match.groups())
+    return (0, 0, 0)
 
 
 class Parameters(AnsibleF5Parameters):
@@ -232,7 +278,10 @@ class Parameters(AnsibleF5Parameters):
         'active_directory',
         'unix_attributes',
         'tls_certificate',
-        'tls_key'
+        'tls_key',
+        'tls_ca_certificate',
+        'user_object_class',
+        'group_object_class',
     ]
 
     returnables = [
@@ -253,7 +302,10 @@ class Parameters(AnsibleF5Parameters):
         'active_directory',
         'unix_attributes',
         'tls_certificate',
-        'tls_key'
+        'tls_key',
+        'tls_ca_certificate',
+        'user_object_class',
+        'group_object_class',
     ]
 
 
@@ -349,6 +401,24 @@ class ApiParameters(Parameters):
             return self._values['tls_key']
         return None
 
+    @property
+    def tls_ca_certificate(self):
+        if 'tls_cacert' in self._values:
+            return self._values['tls_cacert']
+        return None
+
+    @property
+    def user_object_class(self):
+        if 'user-object-class' in self._values:
+            return self._values['user-object-class']
+        return None
+
+    @property
+    def group_object_class(self):
+        if 'group-object-class' in self._values:
+            return self._values['group-object-class']
+        return None
+
 
 class ModuleParameters(Parameters):
     pass
@@ -382,7 +452,7 @@ class Difference(object):  # pragma: no cover
         self.have = have
 
     def compare(self, param):
-        if param in ['tls_certificate_validation', 'tls_ciphers', 'tls_certificate', 'tls_key']:
+        if param in ['tls_certificate_validation', 'tls_ciphers', 'tls_certificate', 'tls_key', 'tls_ca_certificate']:
             return self.tls_params(param)
         if hasattr(self, param):
             return getattr(self, param)
@@ -435,9 +505,30 @@ class ModuleManager(object):
         if changed:
             self.changes = UsableChanges(params=changed)
 
-    def _update_changed_options(self):  # pragma: no cover
+    def _update_changed_options(self):
         diff = Difference(self.want, self.have)
-        updatables = Parameters.updatables
+        updatables = list(Parameters.updatables)
+        if not self._version_is_v2_or_later():
+            # warn user if they supplied v2-only fields on a pre-v2 device
+            try:
+                supplied_uoc = getattr(self.want, 'user_object_class') is not None
+                supplied_goc = getattr(self.want, 'group_object_class') is not None
+            except Exception:
+                supplied_uoc = False
+                supplied_goc = False
+            if (supplied_uoc or supplied_goc):
+                try:
+                    # prefer module.warn if available
+                    if hasattr(self.module, 'warn'):
+                        self.module.warn('user_object_class/group_object_class are supported on F5OS 2.0.0+'
+                                         ' and will be ignored on this device.')
+                    elif hasattr(self.client, 'module') and hasattr(self.client.module, 'warn'):
+                        self.client.module.warn('user_object_class/group_object_class are supported on F5OS 2.0.0+'
+                                                ' and will be ignored on this device.')
+                except Exception:
+                    # do not fail change detection for logging failures
+                    pass
+            updatables = [u for u in updatables if u not in ('user_object_class', 'group_object_class')]
         changed = dict()
         for k in updatables:
             change = diff.compare(k)
@@ -496,9 +587,29 @@ class ModuleManager(object):
         self.update_on_device()
         return True
 
+    def _version_is_v2_or_later(self):
+        """Return True when the device reports F5OS >= 2.0.0.
+
+        This method is defensive: on platforms where obtaining the software_version
+        may raise (e.g. Velos Partition), we treat the device as pre-v2 and return
+        False. The result is cached on the manager instance to avoid repeated
+        software_version lookups.
+        """
+        if hasattr(self, '_is_v2') and self._is_v2 is not None:
+            return self._is_v2
+        try:
+            version_str = self.client.software_version or ''
+        except (AttributeError, KeyError):
+            # plugin may not expose software_version on some platforms
+            self._is_v2 = False
+            return False
+        self._is_v2 = _parse_version(version_str) >= (2, 0, 0)
+        return self._is_v2
+
     def update_on_device(self):
         '''API communication to actually update the objects on the F5OS system'''
         params = self.changes.api_params()
+        v2_or_later = self._version_is_v2_or_later()
 
         base_uri = "/openconfig-system:system/aaa/authentication/f5-openconfig-aaa-ldap:ldap"
         payload = {
@@ -531,8 +642,20 @@ class ModuleManager(object):
                 else self.have.tls_certificate,
                 "tls_key": params.get("tls_key") if params.get("tls_key") is not None
                 else self.have.tls_key,
+                "tls_cacert": params.get("tls_ca_certificate") if params.get("tls_ca_certificate") is not None
+                else self.have.tls_ca_certificate
             }
         }
+
+        if v2_or_later:
+            uoc = params.get("user_object_class") if params.get("user_object_class") is not None \
+                else self.have.user_object_class
+            goc = params.get("group_object_class") if params.get("group_object_class") is not None \
+                else self.have.group_object_class
+            if uoc is not None:
+                payload["f5-openconfig-aaa-ldap:ldap"]["user-object-class"] = uoc
+            if goc is not None:
+                payload["f5-openconfig-aaa-ldap:ldap"]["group-object-class"] = goc
 
         keys_to_remove = [k for k, v in payload["f5-openconfig-aaa-ldap:ldap"].items()
                           if v is None or (isinstance(v, list) and (len(v) == 0 or v[0] is None))]
@@ -589,6 +712,9 @@ class ArgumentSpec(object):
             unix_attributes=dict(type='bool'),
             tls_certificate=dict(type='str'),
             tls_key=dict(type='str', no_log=True),
+            tls_ca_certificate=dict(type='str'),
+            user_object_class=dict(type='list', elements='str'),
+            group_object_class=dict(type='list', elements='str'),
         )
         self.argument_spec = {}
         self.argument_spec.update(argument_spec)

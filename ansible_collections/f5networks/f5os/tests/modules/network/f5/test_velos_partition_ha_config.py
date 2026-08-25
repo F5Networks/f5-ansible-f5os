@@ -7,6 +7,7 @@ import os
 from ansible.module_utils.basic import AnsibleModule
 
 
+from ansible_collections.f5networks.f5os.plugins.modules import velos_partition_ha_config
 from ansible_collections.f5networks.f5os.plugins.modules.velos_partition_ha_config import (
     ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager
 )
@@ -17,7 +18,7 @@ from ansible_collections.f5networks.f5os.tests.compat.mock import (
     Mock, patch
 )
 from ansible_collections.f5networks.f5os.tests.modules.utils import (
-    set_module_args, exit_json, fail_json
+    set_module_args, exit_json, fail_json, AnsibleExitJson, AnsibleFailJson
 )
 
 
@@ -249,3 +250,100 @@ class TestManager(unittest.TestCase):
         mm._announce_deprecations = Mock()
         with self.assertRaises(F5ModuleError):
             mm.exec_module()
+
+    def test_exists_mode_mismatch(self):
+        set_module_args(dict(prefer_node='prefer-2', state='present'))
+        module = AnsibleModule(argument_spec=self.spec.argument_spec, supports_check_mode=self.spec.supports_check_mode)
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.get = Mock(return_value=dict(code=200, contents={
+            'f5-system-redundancy:config': {'mode': 'prefer-1', 'auto-failback': {'enabled': False, 'failback-delay': 30}}
+        }))
+        self.assertFalse(mm.exists())
+
+    def test_exists_auto_failback_mismatch(self):
+        set_module_args(dict(prefer_node='prefer-1', auto_failback=dict(enabled=True, failback_delay=60), state='present'))
+        module = AnsibleModule(argument_spec=self.spec.argument_spec, supports_check_mode=self.spec.supports_check_mode)
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.get = Mock(return_value=dict(code=200, contents={
+            'f5-system-redundancy:config': {'mode': 'prefer-1', 'auto-failback': {'enabled': False, 'failback-delay': 30}}
+        }))
+        self.assertFalse(mm.exists())
+
+    def test_exists_true(self):
+        set_module_args(dict(prefer_node='prefer-1', auto_failback=dict(enabled=False, failback_delay=30), state='present'))
+        module = AnsibleModule(argument_spec=self.spec.argument_spec, supports_check_mode=self.spec.supports_check_mode)
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.get = Mock(return_value=dict(code=200, contents={
+            'f5-system-redundancy:config': {'mode': 'prefer-1', 'auto-failback': {'enabled': False, 'failback-delay': 30}}
+        }))
+        self.assertTrue(mm.exists())
+
+    def test_exists_error(self):
+        set_module_args(dict(prefer_node='prefer-1', state='present'))
+        module = AnsibleModule(argument_spec=self.spec.argument_spec, supports_check_mode=self.spec.supports_check_mode)
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.get = Mock(return_value=dict(code=500, contents='server error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exists()
+
+    def test_create_on_device(self):
+        set_module_args(dict(prefer_node='prefer-2', auto_failback=dict(enabled=True, failback_delay=45), state='present'))
+        module = AnsibleModule(argument_spec=self.spec.argument_spec, supports_check_mode=self.spec.supports_check_mode)
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.get = Mock(return_value=dict(code=200, contents={
+            'f5-system-redundancy:config': {'mode': 'prefer-1', 'auto-failback': {'enabled': False, 'failback-delay': 30}}
+        }))
+        mm.client.put = Mock(return_value=dict(code=204, contents={}))
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_create_on_device_fails(self):
+        set_module_args(dict(prefer_node='prefer-2', auto_failback=dict(enabled=True, failback_delay=45), state='present'))
+        module = AnsibleModule(argument_spec=self.spec.argument_spec, supports_check_mode=self.spec.supports_check_mode)
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.get = Mock(return_value=dict(code=200, contents={
+            'f5-system-redundancy:config': {'mode': 'prefer-1', 'auto-failback': {'enabled': False, 'failback-delay': 30}}
+        }))
+        mm.client.put = Mock(return_value=dict(code=500, contents='put error'))
+        with self.assertRaises(F5ModuleError):
+            mm.exec_module()
+
+    def test_create_check_mode(self):
+        set_module_args(dict(prefer_node='prefer-2', state='present', _ansible_check_mode=True))
+        module = AnsibleModule(argument_spec=self.spec.argument_spec, supports_check_mode=self.spec.supports_check_mode)
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.get = Mock(return_value=dict(code=200, contents={
+            'f5-system-redundancy:config': {'mode': 'prefer-1', 'auto-failback': {'enabled': False, 'failback-delay': 30}}
+        }))
+        results = mm.exec_module()
+        self.assertTrue(results['changed'])
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(prefer_node='prefer-1', state='present'))
+        module = AnsibleModule(argument_spec=self.spec.argument_spec, supports_check_mode=self.spec.supports_check_mode)
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        result = {'__warnings': [{'msg': 'deprecated', 'version': '1.0'}]}
+        mm._announce_deprecations(result)
+        mm.client.module.deprecate.assert_called_once_with(msg='deprecated', version='1.0')
+
+    @patch.object(velos_partition_ha_config, 'Connection')
+    @patch.object(velos_partition_ha_config.ModuleManager, 'exec_module', Mock(return_value={'changed': False}))
+    def test_main_success(self, *args):
+        set_module_args(dict(prefer_node='prefer-1', state='present'))
+        with self.assertRaises(AnsibleExitJson):
+            velos_partition_ha_config.main()
+
+    @patch.object(velos_partition_ha_config, 'Connection')
+    @patch.object(velos_partition_ha_config.ModuleManager, 'exec_module', Mock(side_effect=F5ModuleError('fail')))
+    def test_main_failure(self, *args):
+        set_module_args(dict(prefer_node='prefer-1', state='present'))
+        with self.assertRaises(AnsibleFailJson):
+            velos_partition_ha_config.main()

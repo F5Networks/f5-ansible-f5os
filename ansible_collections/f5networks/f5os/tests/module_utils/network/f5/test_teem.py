@@ -16,8 +16,6 @@ from unittest import TestCase
 
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.six import StringIO
-from ansible.playbook.play_context import PlayContext
-from ansible.plugins.loader import connection_loader
 
 from ansible_collections.f5networks.f5os.plugins.module_utils.client import F5Client
 from ansible_collections.f5networks.f5os.plugins.module_utils.constants import TEEM_KEY
@@ -60,9 +58,11 @@ class FakeHTTPResponse:
 
 class TestTeemClient(TestCase):
     def setUp(self):
-        self.pc = PlayContext()
-        self.pc.network_os = "f5networks.f5os.f5os"
-        self.connection = connection_loader.get("ansible.netcommon.httpapi", self.pc, "/dev/null")
+        self.connection = Mock()
+        self.connection.httpapi = Mock()
+        self.connection.httpapi.send_request = Mock()
+        self.connection.httpapi.get_platform_type = Mock(return_value='rSeries Platform')
+        self.connection.httpapi.get_software_version = Mock(return_value='1.5.0')
         self.start_time = datetime.now().isoformat()
         self.fake_module = Mock()
         self.fake_module._name = 'fake_module'

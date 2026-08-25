@@ -12,6 +12,7 @@ import pytest
 
 from ansible.module_utils.basic import AnsibleModule
 
+from ansible_collections.f5networks.f5os.plugins.modules import f5os_user
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_user import (
     ArgumentSpec, ModuleManager, ApiParameters, ModuleParameters,
     UsableChanges, ReportableChanges, Difference
@@ -21,7 +22,9 @@ from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5Mo
 
 from ansible_collections.f5networks.f5os.tests.compat import unittest
 from ansible_collections.f5networks.f5os.tests.compat.mock import Mock, patch
-from ansible_collections.f5networks.f5os.tests.modules.utils import set_module_args
+from ansible_collections.f5networks.f5os.tests.modules.utils import (
+    set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
+)
 
 fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures')
 fixture_data = {}
@@ -747,3 +750,42 @@ class TestArgumentSpec(unittest.TestCase):
     def test_supports_check_mode(self):
         spec = ArgumentSpec()
         assert spec.supports_check_mode is True
+
+
+class TestMain(unittest.TestCase):
+    def setUp(self):
+        self.mock_module_helper = patch.multiple(AnsibleModule,
+                                                 exit_json=exit_json,
+                                                 fail_json=fail_json)
+        self.mock_module_helper.start()
+
+    def tearDown(self):
+        self.mock_module_helper.stop()
+
+    @patch.object(f5os_user, 'Connection')
+    @patch.object(f5os_user.ModuleManager, 'exec_module', Mock(return_value={'changed': False}))
+    def test_main_function_success(self, *args):
+        set_module_args(dict(
+            username='testuser',
+            role='operator',
+        ))
+
+        with pytest.raises(AnsibleExitJson) as result:
+            f5os_user.main()
+
+        assert result.value.args[0]['changed'] is False
+
+    @patch.object(f5os_user, 'Connection')
+    @patch.object(f5os_user.ModuleManager, 'exec_module',
+                  Mock(side_effect=F5ModuleError('This module has failed.')))
+    def test_main_function_failed(self, *args):
+        set_module_args(dict(
+            username='testuser',
+            role='operator',
+        ))
+
+        with pytest.raises(AnsibleFailJson) as result:
+            f5os_user.main()
+
+        assert result.value.args[0]['failed']
+        assert 'This module has failed' in result.value.args[0]['msg']

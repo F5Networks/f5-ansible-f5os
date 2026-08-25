@@ -24,6 +24,21 @@ options:
       - name: F5_TELEMETRY_OFF
     vars:
       - name: f5_telemetry
+  forward_proxy_headers:
+    description:
+      - A dictionary of custom HTTP headers to include in API requests to F5OS devices.
+      - These headers are merged into every outbound API request. For plain HTTP targets
+        they are visible to any intermediary proxy; for HTTPS targets they travel inside
+        the encrypted tunnel and are not visible to the proxy.
+      - Per-request headers (e.g. Content-Type, X-Auth-Token) take precedence over
+        forward proxy headers when the same header name appears in both.
+    type: dict
+    default: {}
+    vars:
+      - name: f5os_forward_proxy_headers
+    env:
+      - name: F5OS_FORWARD_PROXY_HEADERS
+    version_added: "1.23.0"
 version_added: "1.0.0"
 author:
   - Ravinder Reddy (@chinthalapalli)
@@ -97,6 +112,15 @@ class HttpApi(HttpApiBase):
             url = url.replace(ROOT, '/api/data') if port == 443 else url
         # allow for empty json to be passed as payload, useful for some endpoints
         data = json.dumps(body) if body or body == {} else None
+        # Merge forward proxy headers into the request headers
+        proxy_headers = self.get_forward_proxy_headers()
+        if proxy_headers:
+            req_headers = kwargs.get('headers', {})
+            if req_headers is None:
+                req_headers = {}
+            merged = dict(proxy_headers)
+            merged.update(req_headers)
+            kwargs['headers'] = merged
         retries = 3
         err_dict = dict()
         for r1 in range(retries):
@@ -143,6 +167,15 @@ class HttpApi(HttpApiBase):
 
     def telemetry(self):
         return self.get_option('send_telemetry')
+
+    def get_forward_proxy_headers(self):
+        """Return configured forward proxy headers or empty dict."""
+        headers = self.get_option('forward_proxy_headers')
+        # Defensive guard: Ansible option schema enforces type=dict with default={},
+        # but env var injection or direct programmatic access can bypass validation.
+        if headers and isinstance(headers, dict):
+            return dict(headers)
+        return {}
 
     def _set_platform_type(self):
         velos_uri = ROOT + "/openconfig-platform:components/component=platform/state/description"

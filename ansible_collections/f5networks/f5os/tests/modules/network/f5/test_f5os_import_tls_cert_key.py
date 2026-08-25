@@ -7,7 +7,7 @@ from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5Mo
 
 # Import the classes to test
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_import_tls_cert_key import (
-    ModuleManager, ModuleParameters, ApiParameters, Difference, ArgumentSpec, F5ModuleError
+    ModuleManager, ModuleParameters, ApiParameters, UsableChanges, Difference, ArgumentSpec, F5ModuleError
 )
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_import_tls_cert_key import Parameters
 
@@ -178,13 +178,9 @@ def test_argument_spec_defaults():
     assert spec.argument_spec['state']['default'] == 'present'
 
 
-def test_present_calls_update():
+def test_present_calls_update(monkeypatch):
     called = {}
 
-    class MonkeyPatch:
-        def setattr(self, obj, name, value):
-            setattr(obj, name, value)
-    monkeypatch = MonkeyPatch()
     dummy = dummy_module(module_params())
     dm = ModuleManager(module=dummy, connection=DummyConnection())
 
@@ -197,13 +193,9 @@ def test_present_calls_update():
     assert called['update']
 
 
-def test_absent_calls_remove():
+def test_absent_calls_remove(monkeypatch):
     called = {}
 
-    class MonkeyPatch:
-        def setattr(self, obj, name, value):
-            setattr(obj, name, value)
-    monkeypatch = MonkeyPatch()
     dummy = dummy_module(module_params())
     dm = ModuleManager(module=dummy, connection=DummyConnection())
 
@@ -221,22 +213,18 @@ def test_absent_calls_remove():
     assert called['remove']
 
 
-def test_exec_module_present():
+def test_exec_module_present(monkeypatch):
 
-    class MonkeyPatch:
-        def setattr(self, obj, name, value):
-            setattr(obj, name, value)
-    monkeypatch = MonkeyPatch()
     dummy = dummy_module(module_params())
     dm = ModuleManager(module=dummy, connection=DummyConnection())
     monkeypatch.setattr(ModuleManager, "present", lambda self: True)
     monkeypatch.setattr(ModuleManager, "absent", lambda self: False)
     monkeypatch.setattr(ModuleManager, "_announce_deprecations", lambda self, result: None)
-    monkeypatch.setattr(ModuleManager, "changes", ApiParameters(params={
+    dm.changes = UsableChanges(params={
         'certificate': 'CERTDATA',
         'key': 'KEYDATA',
         'key_passphrase': 'PASSPHRASE'
-    }))
+    })
     dm.want = ModuleParameters({
         'certificate': 'CERTDATA',
         'key': 'KEYDATA',
@@ -253,18 +241,14 @@ def test_exec_module_present():
         assert result['key_passphrase'] == 'PASSPHRASE'
 
 
-def test_exec_module_absent():
+def test_exec_module_absent(monkeypatch):
 
-    class MonkeyPatch:
-        def setattr(self, obj, name, value):
-            setattr(obj, name, value)
-    monkeypatch = MonkeyPatch()
     dummy = dummy_module(module_params())
     dm = ModuleManager(module=dummy, connection=DummyConnection())
     monkeypatch.setattr(ModuleManager, "present", lambda self: False)
     monkeypatch.setattr(ModuleManager, "absent", lambda self: True)
     monkeypatch.setattr(ModuleManager, "_announce_deprecations", lambda self, result: None)
-    monkeypatch.setattr(ModuleManager, "changes", ApiParameters(params={}))
+    dm.changes = UsableChanges(params={})
     dm.want = ModuleParameters({
         'certificate': 'CERTDATA',
         'key': 'KEYDATA',
@@ -399,19 +383,8 @@ def test_read_current_from_device_failure():
         pass
 
 
-# Patch helper for tests
-class MonkeyPatch:
-    def setattr(self, target, attribute, value):
-        import sys
-        parts = target.split('.')
-        mod = sys.modules[parts[0]]
-        for part in parts[1:-1]:
-            mod = getattr(mod, part)
-        setattr(mod, parts[-1], value)
-
-
 # Move all update_changed_options tests to top-level
-def test_update_changed_options_no_changes():
+def test_update_changed_options_no_changes(monkeypatch):
     # Setup: want and have are the same, so no changes
     params = {
         'certificate': 'CERTDATA',
@@ -428,10 +401,8 @@ def test_update_changed_options_no_changes():
         def __init__(self, params=None):
             self.params = params
 
-    monkeypatch = MonkeyPatch()
     monkeypatch.setattr(
-        "ansible_collections.f5networks.f5os.plugins.modules.f5os_import_tls_cert_key",
-        "UsableChanges",
+        "ansible_collections.f5networks.f5os.plugins.modules.f5os_import_tls_cert_key.UsableChanges",
         DummyUsableChanges
     )
     result = dm._update_changed_options()
@@ -439,7 +410,7 @@ def test_update_changed_options_no_changes():
     assert "[DEBUG] Changed options: {}" in dummy._warnings
 
 
-def test_update_changed_options_with_changes():
+def test_update_changed_options_with_changes(monkeypatch):
     # Setup: want and have differ, so changes should be detected
     want_params = {
         'certificate': 'CERTDATA',
@@ -460,10 +431,8 @@ def test_update_changed_options_with_changes():
     class DummyUsableChanges:
         def __init__(self, params=None):
             changed_params.update(params or {})
-    monkeypatch = MonkeyPatch()
     monkeypatch.setattr(
-        "ansible_collections.f5networks.f5os.plugins.modules.f5os_import_tls_cert_key",
-        "UsableChanges",
+        "ansible_collections.f5networks.f5os.plugins.modules.f5os_import_tls_cert_key.UsableChanges",
         DummyUsableChanges
     )
     result = dm._update_changed_options()
@@ -475,7 +444,7 @@ def test_update_changed_options_with_changes():
     assert "[DEBUG] Changed options: " in dummy._warnings[-1]
 
 
-def test_update_changed_options_ignores_none():
+def test_update_changed_options_ignores_none(monkeypatch):
     # Setup: want has None for updatables, should be ignored
     want_params = {
         'certificate': None,
@@ -496,10 +465,8 @@ def test_update_changed_options_ignores_none():
     class DummyUsableChanges:
         def __init__(self, params=None):
             changed_params.update(params or {})
-    monkeypatch = MonkeyPatch()
     monkeypatch.setattr(
-        "ansible_collections.f5networks.f5os.plugins.modules.f5os_import_tls_cert_key",
-        "UsableChanges",
+        "ansible_collections.f5networks.f5os.plugins.modules.f5os_import_tls_cert_key.UsableChanges",
         DummyUsableChanges
     )
     result = dm._update_changed_options()
@@ -535,28 +502,6 @@ def test_update_check_mode(monkeypatch):
     assert "[DEBUG] Check mode enabled, skipping update." in dummy._warnings
 
 
-def test_remove_check_mode(monkeypatch):
-    # Setup: check_mode is True, should skip remove
-    dummy = dummy_module(module_params())
-    dummy.check_mode = True
-    dm = ModuleManager(module=dummy, connection=DummyConnection())
-    monkeypatch.setattr(dm, "exists", lambda: True)
-    monkeypatch.setattr(dm, "remove_from_device", lambda: True)
-    result = dm.remove()
-    assert result is True
-    assert "[DEBUG] Check mode enabled, skipping remove." in dummy._warnings
-
-
-def test_remove_resource_not_exist(monkeypatch):
-    # Setup: resource does not exist, should skip remove_from_device
-    dummy = dummy_module(module_params())
-    dm = ModuleManager(module=dummy, connection=DummyConnection())
-    monkeypatch.setattr(dm, "exists", lambda: False)
-    result = dm.remove()
-    assert result is False
-    assert "[DEBUG] Resource does not exist, nothing to remove." in dummy._warnings
-
-
 def test_should_update_needed(monkeypatch):
     # Setup: _update_changed_options returns True, should_update returns True and logs
     dummy = dummy_module(module_params())
@@ -577,10 +522,6 @@ def test_should_update_not_needed(monkeypatch):
     assert result is False
     assert "[DEBUG] Checking if update is needed." in dummy._warnings
     assert "[DEBUG] No update needed." in dummy._warnings
-    # Setup: resource exists, check_mode is False, remove_from_device called
-    dummy = dummy_module(module_params())
-    dm = ModuleManager(module=dummy, connection=DummyConnection())
-    monkeypatch.setattr(dm, "exists", lambda: True)
 
 
 def test_remove_check_mode(monkeypatch):
@@ -619,26 +560,3 @@ def test_remove_calls_remove_from_device(monkeypatch):
     result = dm.remove()
     assert result is True
     assert called['remove_from_device']
-
-
-# --- should_update tests ---
-def test_should_update_needed(monkeypatch):
-    # Setup: _update_changed_options returns True, should_update returns True and logs
-    dummy = dummy_module(module_params())
-    dm = ModuleManager(module=dummy, connection=DummyConnection())
-    monkeypatch.setattr(dm, "_update_changed_options", lambda: True)
-    result = dm.should_update()
-    assert result is True
-    assert "[DEBUG] Checking if update is needed." in dummy._warnings
-    assert "[DEBUG] Update is needed." in dummy._warnings
-
-
-def test_should_update_not_needed(monkeypatch):
-    # Setup: _update_changed_options returns False, should_update returns False and logs
-    dummy = dummy_module(module_params())
-    dm = ModuleManager(module=dummy, connection=DummyConnection())
-    monkeypatch.setattr(dm, "_update_changed_options", lambda: False)
-    result = dm.should_update()
-    assert result is False
-    assert "[DEBUG] Checking if update is needed." in dummy._warnings
-    assert "[DEBUG] No update needed." in dummy._warnings

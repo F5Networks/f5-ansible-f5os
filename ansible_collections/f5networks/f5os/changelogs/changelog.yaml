@@ -26,13 +26,15 @@ releases:
     - description: Manage VELOS chassis partitions
       name: velos_partition
       namespace: ''
-    - description: Provides access to VELOS chassis partition user authentication methods
+    - description: Provides access to VELOS chassis partition user authentication
+        methods
       name: velos_partition_change_password
       namespace: ''
     - description: Manage VELOS chassis partition images
       name: velos_partition_image
       namespace: ''
-    - description: Wait for a VELOS chassis partition to match a condition before continuing
+    - description: Wait for a VELOS chassis partition to match a condition before
+        continuing
       name: velos_partition_wait
       namespace: ''
     plugins:
@@ -47,10 +49,13 @@ releases:
       - f5os_device_info - removed legacy functions and corrected TEEM call placement
       - f5os_interface - fixed invalid if statement in validate_vlan_ids function
       - f5os_lag - fixed invalid if statement in validate_vlan_ids function
-      - velos_partition - fixed remove_slot_from_partition method throwing exception when slots parameter was none
+      - velos_partition - fixed remove_slot_from_partition method throwing exception
+        when slots parameter was none
       minor_changes:
-      - velos_partition - refactored ipv4_mgmt_address, ipv4_mgmt_gateway, ipv6_mgmt_address and ipv6_mgmt_gateway properties
-      - velos_partition - refactored mgmt-ip parameter parsing in update_on_device method
+      - velos_partition - refactored ipv4_mgmt_address, ipv4_mgmt_gateway, ipv6_mgmt_address
+        and ipv6_mgmt_gateway properties
+      - velos_partition - refactored mgmt-ip parameter parsing in update_on_device
+        method
     fragments:
     - minor-bug-fixes.yaml
     release_date: '2022-12-20'
@@ -58,15 +63,17 @@ releases:
     changes:
       bugfixes:
       - f5os.py - fixed error parsing method to act on JSONDecoder errors
-      - f5os_device_info.py - fixed client instantiation in the module so send_teem calls are successful
+      - f5os_device_info.py - fixed client instantiation in the module so send_teem
+        calls are successful
     fragments:
     - fix-plugin.yaml
     release_date: '2023-03-15'
   1.1.0:
     changes:
       minor_changes:
-      - velos_partition_image - fixed invalid internal destination folder, changed progress check functions, added remote_host
-        and remote_path as mandatory parameters for checking import status
+      - velos_partition_image - fixed invalid internal destination folder, changed
+        progress check functions, added remote_host and remote_path as mandatory parameters
+        for checking import status
     fragments:
     - rework-velos-partition-image.yaml
     release_date: '2023-04-26'
@@ -116,7 +123,8 @@ releases:
       bugfixes:
       - f5os_lag - fixed a bug that used to occur while adding trunk or native vlans
       minor_changes:
-      - f5os_tenant - added a new parameter, virtual_disk_size, to set the virtual disk size of the tenant
+      - f5os_tenant - added a new parameter, virtual_disk_size, to set the virtual
+        disk size of the tenant
     fragments:
     - lag_bugfix.yaml
     - tenant_virtual_disk_size_param.yaml
@@ -124,7 +132,8 @@ releases:
   1.13.0:
     changes:
       bugfixes:
-      - f5os_system_image_import - bug fixed for importing system image in versions less than 1.7
+      - f5os_system_image_import - bug fixed for importing system image in versions
+        less than 1.7
       minor_changes:
       - f5os_ntp_server - added a new parameter, prefer, iburst
     fragments:
@@ -134,8 +143,8 @@ releases:
   1.14.0:
     changes:
       major_changes:
-      - f5os_snmp - allowed module to work for VELOS system controllers, added IPv6 support, fixed issues for multiple SNMP
-        targets, community and users.
+      - f5os_snmp - allowed module to work for VELOS system controllers, added IPv6
+        support, fixed issues for multiple SNMP targets, community and users.
       minor_changes:
       - f5os_ntp_server - added support to enable/disable NTP service and NTP Authentication
       - f5os_stp_config - added support for mstp
@@ -151,13 +160,16 @@ releases:
   1.15.0:
     changes:
       bugfixes:
-      - f5os_lag - Issue Fixes - Remove all Vlans (Trunk Vlans, Native Vlans) from Lag.
+      - f5os_lag - Issue Fixes - Remove all Vlans (Trunk Vlans, Native Vlans) from
+        Lag.
       major_changes:
       - f5os_auth - Depreciated Server Groups and Servers.
-      - f5os_auth_server - Added new module f5os_auth_server to manage Server Groups and Servers.
+      - f5os_auth_server - Added new module f5os_auth_server to manage Server Groups
+        and Servers.
       minor_changes:
       - f5os_fdb - Add support for f5os_fdb module
-      - f5os_interface - added support to update Enabled (Interface State), Description, and Forward Error Correction on f5os_interface.
+      - f5os_interface - added support to update Enabled (Interface State), Description,
+        and Forward Error Correction on f5os_interface.
       - f5os_qos_traffic_priority - Add new module, f5os_qos_traffic_priority.
     fragments:
     - add-fdb-module.yaml
@@ -183,8 +195,10 @@ releases:
       - removed unused packages from collections
       minor_changes:
       - rseries_management_interfaces - Added Management Interfaces Module for rSeries.
-      - velos_controller_management_interfaces - Added Management Interfaces Module for Velos Controller.
-      - velos_partition - Added configuration-volume, images-volume & shared-volume fields to Velos Partition Module.
+      - velos_controller_management_interfaces - Added Management Interfaces Module
+        for Velos Controller.
+      - velos_partition - Added configuration-volume, images-volume & shared-volume
+        fields to Velos Partition Module.
     fragments:
     - added_management_interfaces_modules.yaml
     - added_volume_fields_velos_partition.yaml
@@ -216,12 +230,14 @@ releases:
       major_changes:
       - f5os_device_info - Added Support for collecting QOS info on F5OS platfroms
       - f5os_device_info - Added Support for collecting SNMP info on F5OS platfroms
-      - f5os_ha_active_controller - Added new module `f5os_ha_active_controller` to manage high availability active controller
-        configuration on F5OS devices.
-      - f5os_tenant_wait - Added a background thread to check `/api/` to check on liveness.
-      - f5os_tenant_wait - The `sleep` parameter now only delays after a failed check, not before the first check.
-      - f5os_tenant_wait - Updated documentation and provided real-world playbook examples for usage and conditional task
-        execution.
+      - f5os_ha_active_controller - Added new module `f5os_ha_active_controller` to
+        manage high availability active controller configuration on F5OS devices.
+      - f5os_tenant_wait - Added a background thread to check `/api/` to check on
+        liveness.
+      - f5os_tenant_wait - The `sleep` parameter now only delays after a failed check,
+        not before the first check.
+      - f5os_tenant_wait - Updated documentation and provided real-world playbook
+        examples for usage and conditional task execution.
     fragments:
     - f5os-device-info-changes.yaml
     - f5os-ha-config.yaml
@@ -241,10 +257,13 @@ releases:
     changes:
       major_changes:
       - f5os_auth_ldap - Added support for LDAP configuration management in F5OS.
-      - f5os_import_tls_cert_key - Added a new module to import TLS certificates and keys onto F5OS devices.
+      - f5os_import_tls_cert_key - Added a new module to import TLS certificates and
+        keys onto F5OS devices.
       minor_changes:
-      - f5os_device_info - Added Allowed Ips, Rest config token and TLS information for F5OS devices.
-      - f5os_device_info - Added server-groups, users and fdb information collection for F5OS devices.
+      - f5os_device_info - Added Allowed Ips, Rest config token and TLS information
+        for F5OS devices.
+      - f5os_device_info - Added server-groups, users and fdb information collection
+        for F5OS devices.
       - fixed issues for ansible automation hub
       - improved testing for f5os_user module
     fragments:
@@ -253,11 +272,164 @@ releases:
     - added_tls_rest_token_allowed_ips.yaml
     - added_user_server_group_fdb.yaml
     release_date: '2025-08-14'
+  1.21.0:
+    changes:
+      bugfixes:
+      - f5os_device_info - Handle empty API errors for unsupported subsets when using
+        gather_subset all.
+      - f5os_facts - Narrow exception handling for software version retrieval and
+        emit warning instead of silently swallowing errors.
+      - f5os_system_image_install - Fixed install status URI and spurious polling
+        on rSeries.
+      - f5os_system_image_install - Raise error for unsupported platform in install
+        status check instead of silently returning None.
+      - f5os_system_image_install - Raise error when Velos Controller image version
+        not found instead of looping until timeout.
+      - f5os_system_image_install - Restore error on server errors (4xx/5xx) in exists
+        check instead of silently returning False.
+      major_changes:
+      - f5os_facts - Added new module for collecting basic platform and version facts
+        from F5OS devices.
+      minor_changes:
+      - f5os httpapi plugin - Added get_capabilities support and software version
+        detection during login.
+    fragments:
+    - v1.21.0.yaml
+    modules:
+    - description: Collect facts from F5OS devices
+      name: f5os_facts
+      namespace: ''
+    release_date: '2025-08-19'
+  1.22.0:
+    changes:
+      bugfixes:
+      - f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added
+        update_password parameter (always/on_create) to control bind password update
+        behavior.
+      minor_changes:
+      - f5os_license - Added ``proxy_server`` parameter to support license activation
+        through an HTTP proxy (F5OS-A 1.8.0+).
+    fragments:
+    - v1.22.0.yaml
+    release_date: '2026-05-20'
+  1.23.0:
+    changes:
+      bugfixes:
+      - f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added
+        update_password parameter (always/on_create) to control bind password update
+        behavior.
+      minor_changes:
+      - f5os_appliance_mode - Added new module to enable or disable F5OS appliance
+        mode on rSeries and VELOS partition devices.
+      - f5os_audit_log - new module to manage audit log configuration on F5OS devices
+        (https://jira.f5net.com/browse/COREBIP-42596).
+      - f5os_auth - Improved auth_order handling when the authentication-method endpoint
+        is unavailable or not configured. The module normalizes read/delete behavior
+        for keypath-not-found/not-found responses and returns a clear actionable message
+        for set/update operations.
+      - 'f5os_auth: Added password_policy configuration options for F5OS 2.0.0+: min_days
+        (minimum days between password changes), remember (number of previous passwords
+        to remember), and warn_age (days before expiration to warn users). These fields
+        are version-gated and omitted on F5OS 1.8.3.'
+      - f5os_auth_ldap - Added tls_ca_certificate parameter to configure LDAP TLS
+        CA certificate and map it to the device tls_cacert setting.
+      - f5os_auth_ldap - Added user_object_class and group_object_class parameters
+        (lists of strings) for F5OS 2.0.0 and later, mapping to the user-object-class
+        and group-object-class LDAP attributes. Both parameters are silently omitted
+        on older F5OS versions.
+      - f5os_banner - new module to manage login banner and Message of the Day (MoTD)
+        on F5OS devices.
+      - f5os_client_cert_auth - Added new module to manage client certificate authentication
+        settings on F5OS rSeries and VELOS partition devices, with support for enabling/disabling
+        client cert auth and configuring trusted CA bundles.
+      - f5os_config_restore - Added new module to restore F5OS configuration from
+        a backup file on rSeries and VELOS partition devices, with support for importing
+        the backup file from a remote server prior to restore.
+      - f5os_device_info - Added new gather_subset options system-health, active-alerts,
+        hardware-status, software-health, and audit-logs for collecting system health,
+        active alerts, hardware component status, cluster/service health, and audit
+        log configuration from F5OS devices.
+      - f5os_license - Added ``proxy_server`` parameter to support license activation
+        through an HTTP proxy (F5OS-A 1.8.0+).
+      - f5os_login_policy - new module to manage login policy settings (admin-role-limit,
+        restconf-max-session-limit, ssh-max-session-limit) on F5OS 2.0.0 and later.
+      - f5os_ntp_server - Added association_type, version, and port parameters for
+        F5OS 2.0.0 and later, mapping to the association-type, version, and port NTP
+        server config fields. All three parameters are silently omitted on older F5OS
+        versions.
+      - f5os_portgroup - Added new module to manage port group mode configuration
+        on rSeries platforms.
+      - f5os_proxy_server - Added new module to manage proxy server settings for licensing
+        and iHealth uploads on F5OS rSeries and VELOS partition devices.
+      - f5os_proxy_server - Manages proxy settings through the diagnostics proxy RESTCONF
+        endpoint used by supported F5OS releases.
+      - f5os_proxy_server - Prevents unsafe server/port-only updates when existing
+        proxy credentials are configured but new credentials are omitted on replace-style
+        APIs.
+      - f5os_system_health_info - Added new read-only module to collect system health
+        information including hardware component status, platform components, and
+        active alerts from F5OS rSeries and VELOS partition devices, with support
+        for filtering by component type.
+      - f5os_tenant - add max_nodes parameter (int) to allow setting the maximum number
+        of nodes a tenant may use; version-gated to F5OS 2.0.0 and later, silently
+        omitted on older firmware.
+      - httpapi f5os - Added ``forward_proxy_headers`` option to include custom HTTP
+        headers in API requests, useful for proxy environments that require additional
+        headers for logging or authentication.
+    fragments:
+    - add-f5os-appliance-mode.yaml
+    - add-f5os-audit-log.yaml
+    - add-f5os-auth-ldap-ca-cert.yaml
+    - add-f5os-auth-ldap-object-class.yaml
+    - add-f5os-auth-password-policy-fields.yaml
+    - add-f5os-banner.yaml
+    - add-f5os-client-cert-auth.yaml
+    - add-f5os-config-restore.yaml
+    - add-f5os-login-policy.yaml
+    - add-f5os-ntp-server-v2-fields.yaml
+    - add-f5os-portgroup.yaml
+    - add-f5os-proxy-server.yaml
+    - add-f5os-system-health-info.yaml
+    - add-f5os-tenant-max-nodes.yaml
+    - add-forward-proxy-headers.yaml
+    - enhance-f5os-device-info-subsets.yaml
+    - fix-f5os-auth-order-endpoint-capability.yaml
+    - v1.22.0.yaml
+    modules:
+    - description: Manage F5OS appliance mode on rSeries and VELOS partition devices
+      name: f5os_appliance_mode
+      namespace: ''
+    - description: Manage audit logging on F5OS devices
+      name: f5os_audit_log
+      namespace: ''
+    - description: Manage login banner and Message of the Day (MoTD) on F5OS devices
+      name: f5os_banner
+      namespace: ''
+    - description: Manage client certificate authentication on F5OS devices
+      name: f5os_client_cert_auth
+      namespace: ''
+    - description: Restore F5OS configuration from a backup file
+      name: f5os_config_restore
+      namespace: ''
+    - description: Manage login policy settings on F5OS devices
+      name: f5os_login_policy
+      namespace: ''
+    - description: Manage port group configuration on F5 rSeries devices
+      name: f5os_portgroup
+      namespace: ''
+    - description: Manage proxy server settings on F5OS devices
+      name: f5os_proxy_server
+      namespace: ''
+    - description: Collect system health information from F5OS devices
+      name: f5os_system_health_info
+      namespace: ''
+    release_date: '2026-08-24'
   1.3.0:
     changes:
       minor_changes:
       - f5os.py - set the ROOT of url to /api/data if the port is 443
-      - f5os_config_backup.py - removed scp and sftp choices for protocol parameter until they are fully supported
+      - f5os_config_backup.py - removed scp and sftp choices for protocol parameter
+        until they are fully supported
     fragments:
     - remove-scp-sftp.yaml
     - set-url-root-according-to-port.yaml
@@ -265,7 +437,8 @@ releases:
   1.4.0:
     changes:
       bugfixes:
-      - f5os_device_info - fixed issue with license information on F5OS 1.5.0 and above
+      - f5os_device_info - fixed issue with license information on F5OS 1.5.0 and
+        above
       minor_changes:
       - f5os_device_info - add Link Aggregate Group information
     fragments:
@@ -276,24 +449,27 @@ releases:
       minor_changes:
       - client.py - added client property to return software version of the F5OS platform
       - f5os.py - added code to fetch the software version of the F5OS platform
-      - teem.py - added a new field, f5SoftwareVersion to the teem data, and changed the field, F5OSPlatform to f5Platform
+      - teem.py - added a new field, f5SoftwareVersion to the teem data, and changed
+        the field, F5OSPlatform to f5Platform
     fragments:
     - teem-add-software-version-field.yaml
     release_date: '2023-11-23'
   1.6.0:
     changes:
       bugfixes:
-      - f5os_lag.py - fixed a bug related to creating lacp lag interface and added two new parameters, mode and interval
+      - f5os_lag.py - fixed a bug related to creating lacp lag interface and added
+        two new parameters, mode and interval
     fragments:
     - lacp_lag_bugfix_and_added_params.yaml
     release_date: '2024-02-12'
   1.7.0:
     changes:
       bugfixes:
-      - f5os_tenant_wait - fixed a bug that resulted in the module going in infinite loop whenever the delay was more than
-        30 seconds
+      - f5os_tenant_wait - fixed a bug that resulted in the module going in infinite
+        loop whenever the delay was more than 30 seconds
       minor_changes:
-      - f5os_tenant_wait.py - added code to verify whether the tenant is reachable via the API
+      - f5os_tenant_wait.py - added code to verify whether the tenant is reachable
+        via the API
     fragments:
     - added-api-ready-to-tenant-wait.yaml
     - tenant-wait-longer-delay-bugfix.yaml
@@ -324,43 +500,11 @@ releases:
     - f5os_lldp_config.yaml
     - f5os_stp_config.yaml
     modules:
-    - description: Manage SNMP Communities, Users, and Targets using openAPI on F5OS based systems
+    - description: Manage SNMP Communities, Users, and Targets using openAPI on F5OS
+        based systems
       name: f5os_snmp
       namespace: ''
     - description: Manage Users and roles on F5OS based systems
       name: f5os_user
       namespace: ''
     release_date: '2024-06-21'
-  1.22.0:
-    changes:
-      minor_changes:
-      - f5os_license - Added ``proxy_server`` parameter to support license activation through an HTTP proxy (F5OS-A 1.8.0+).
-      bugfixes:
-      - f5os_auth_ldap - Fixed bind_password parameter being silently ignored. Added update_password parameter (always/on_create)
-        to control bind password update behavior.
-    fragments:
-    - v1.22.0.yaml
-    release_date: '2026-05-20'
-  1.21.0:
-    changes:
-      major_changes:
-      - f5os_facts - Added new module for collecting basic platform and version facts from F5OS devices.
-      minor_changes:
-      - f5os httpapi plugin - Added get_capabilities support and software version detection during login.
-      bugfixes:
-      - f5os_system_image_install - Fixed install status URI and spurious polling on rSeries.
-      - f5os_system_image_install - Raise error when Velos Controller image version not found instead of looping until timeout.
-      - f5os_system_image_install - Restore error on server errors (4xx/5xx) in exists check instead of silently returning
-        False.
-      - f5os_system_image_install - Raise error for unsupported platform in install status check instead of silently returning
-        None.
-      - f5os_device_info - Handle empty API errors for unsupported subsets when using gather_subset all.
-      - f5os_facts - Narrow exception handling for software version retrieval and emit warning instead of silently swallowing
-        errors.
-    fragments:
-    - v1.21.0.yaml
-    modules:
-    - description: Collect facts from F5OS devices
-      name: f5os_facts
-      namespace: ''
-    release_date: '2025-08-19'

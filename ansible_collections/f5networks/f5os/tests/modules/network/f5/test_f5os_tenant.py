@@ -13,7 +13,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ansible_collections.f5networks.f5os.plugins.modules import f5os_tenant
 from ansible_collections.f5networks.f5os.plugins.modules.f5os_tenant import (
-    ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager
+    ModuleParameters, ApiParameters, ArgumentSpec, ModuleManager, Difference
 )
 from ansible_collections.f5networks.f5os.plugins.module_utils.common import F5ModuleError
 
@@ -57,6 +57,7 @@ class TestParameters(unittest.TestCase):
             mgmt_ip='127.0.0.1',
             mgmt_prefix=24,
             mgmt_gateway='127.0.0.254',
+            mgmt_vlan=100,
             vlans=[245],
             cpu_cores=2,
             memory=7680,
@@ -72,6 +73,7 @@ class TestParameters(unittest.TestCase):
         self.assertListEqual(p.nodes, [1])
         self.assertEqual(p.mgmt_ip, '127.0.0.1')
         self.assertEqual(p.mgmt_gateway, '127.0.0.254')
+        self.assertEqual(p.mgmt_vlan, 100)
         self.assertListEqual(p.vlans, [245])
         self.assertEqual(p.cpu_cores, 2)
         self.assertEqual(p.memory, 7680)
@@ -95,6 +97,17 @@ class TestParameters(unittest.TestCase):
         self.assertEqual(p.cryptos, 'disabled')
         self.assertEqual(p.running_state, 'configured')
 
+    def test_api_parameters_mgmt_vlan_namespaced(self):
+        args = dict(
+            name='tenant1',
+            nodes=[1],
+            image='BIGIP-14.1.4.1-0.0.4.ALL-VELOS.qcow2.zip.bundle',
+            **{'f5-tenant-mgmt-vlan:mgmt-vlan': 100}
+        )
+
+        p = ApiParameters(params=args)
+        self.assertEqual(p.mgmt_vlan, 100)
+
     def test_missing_parameters(self):
         p = ApiParameters(params=dict())
 
@@ -105,6 +118,18 @@ class TestParameters(unittest.TestCase):
 
         self.assertIsNone(p.vlans)
         self.assertIsNone(p.name)
+        self.assertIsNone(p.mgmt_vlan)
+
+    def test_module_parameters_invalid_mgmt_vlan(self):
+        args = dict(
+            mgmt_vlan=5000
+        )
+        p = ModuleParameters(params=args)
+
+        with self.assertRaises(F5ModuleError) as err:
+            p.mgmt_vlan()
+
+        self.assertIn("Valid 'mgmt_vlan' id must be in range 0 - 4095", err.exception.args[0])
 
     def test_module_parameters_invalid_mgmt_ip(self):
         args = dict(
@@ -249,6 +274,139 @@ class TestManager(unittest.TestCase):
         results = mm.exec_module()
         self.assertTrue(results['changed'])
         self.assertDictEqual(mm.client.post.call_args[1]['data'], expected)
+
+    def test_tenant_create_with_mgmt_vlan_velos(self, *args):
+        set_module_args(dict(
+            name='foo',
+            image_name='BIGIP-14.1.4.1-0.0.4.ALL-VELOS.qcow2.zip.bundle',
+            nodes=[1],
+            mgmt_ip='10.144.140.151',
+            mgmt_prefix=24,
+            mgmt_gateway='10.144.140.254',
+            mgmt_vlan=100,
+            vlans=[444],
+            cpu_cores=2,
+            memory=7680,
+            cryptos='enabled',
+            running_state='configured',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.platform = 'Velos Partition'
+        mm.client.post = Mock(return_value=dict(code=201, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        payload = mm.client.post.call_args[1]['data']
+        self.assertEqual(payload['tenant'][0]['config']['f5-tenant-mgmt-vlan:mgmt-vlan'], 100)
+
+    def test_tenant_create_with_mgmt_vlan_rseries_pre_v2_omitted(self, *args):
+        """mgmt_vlan is omitted on rSeries when F5OS < 2.0.0."""
+        set_module_args(dict(
+            name='foo',
+            image_name='BIGIP-14.1.4.1-0.0.4.ALL-VELOS.qcow2.zip.bundle',
+            nodes=[1],
+            mgmt_ip='10.144.140.151',
+            mgmt_prefix=24,
+            mgmt_gateway='10.144.140.254',
+            mgmt_vlan=100,
+            vlans=[444],
+            cpu_cores=2,
+            memory=7680,
+            cryptos='enabled',
+            running_state='configured',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '1.9.0'
+        mm.client.post = Mock(return_value=dict(code=201, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        payload = mm.client.post.call_args[1]['data']
+        self.assertNotIn('f5-tenant-mgmt-vlan:mgmt-vlan', payload['tenant'][0]['config'])
+
+    def test_tenant_create_with_mgmt_vlan_rseries_v2_included(self, *args):
+        """mgmt_vlan is sent on rSeries when F5OS >= 2.0.0."""
+        set_module_args(dict(
+            name='foo',
+            image_name='BIGIP-14.1.4.1-0.0.4.ALL-VELOS.qcow2.zip.bundle',
+            nodes=[1],
+            mgmt_ip='10.144.140.151',
+            mgmt_prefix=24,
+            mgmt_gateway='10.144.140.254',
+            mgmt_vlan=100,
+            vlans=[444],
+            cpu_cores=2,
+            memory=7680,
+            cryptos='enabled',
+            running_state='configured',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0'
+        mm.client.post = Mock(return_value=dict(code=201, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        payload = mm.client.post.call_args[1]['data']
+        self.assertEqual(payload['tenant'][0]['config']['f5-tenant-mgmt-vlan:mgmt-vlan'], 100)
+
+    def test_mgmt_vlan_supported_velos(self, *args):
+        set_module_args(dict(name='foo', nodes=[1], state='present'))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'Velos Partition'
+        mm.client.software_version = '1.8.0'
+        self.assertTrue(mm._mgmt_vlan_supported())
+
+    def test_mgmt_vlan_supported_rseries_v2(self, *args):
+        set_module_args(dict(name='foo', nodes=[1], state='present'))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0'
+        self.assertTrue(mm._mgmt_vlan_supported())
+
+    def test_mgmt_vlan_not_supported_rseries_pre_v2(self, *args):
+        set_module_args(dict(name='foo', nodes=[1], state='present'))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '1.9.0'
+        self.assertFalse(mm._mgmt_vlan_supported())
 
     def test_tenant_create_fails(self, *args):
         set_module_args(dict(
@@ -498,3 +656,367 @@ class TestManager(unittest.TestCase):
         mm._update_changed_options = Mock(return_value=False)
         mm.read_current_from_device = Mock(return_value=dict())
         self.assertFalse(mm.update())
+
+    def test_module_parameters_nodes_none(self):
+        p = ModuleParameters(params=dict(nodes=None))
+        self.assertIsNone(p.nodes)
+
+    def test_module_parameters_mac_block_size(self):
+        p = ModuleParameters(params=dict(mac_block_size=4))
+        self.assertEqual(p.mac_block_size, {'f5-tenant-l2-inline:mac-block-size': 4})
+
+    def test_difference_virtual_disk_size(self):
+        want = Mock()
+        want.virtual_disk_size = {'size': 100}
+        have = Mock()
+        have.virtual_disk_size = {'size': 50}
+
+        diff = Difference(want, have)
+        result = diff.virtual_disk_size
+
+        self.assertEqual(result, {'virtual_disk_size': {'size': 100}})
+
+    def test_difference_virtual_disk_size_no_change(self):
+        want = Mock()
+        want.virtual_disk_size = {'size': 100}
+        have = Mock()
+        have.virtual_disk_size = {'size': 100}
+
+        diff = Difference(want, have)
+        self.assertIsNone(diff.virtual_disk_size)
+
+    def test_difference_virtual_disk_size_have_none(self):
+        want = Mock()
+        want.virtual_disk_size = {'size': 100}
+        have = Mock()
+        have.virtual_disk_size = None
+
+        diff = Difference(want, have)
+        self.assertEqual(diff.virtual_disk_size, {'size': 100})
+
+    def test_difference_mac_block_size(self):
+        want = Mock()
+        want.mac_block_size = {'f5-tenant-l2-inline:mac-block-size': 4}
+        have = Mock()
+        have.mac_block_size = {'f5-tenant-l2-inline:mac-block-size': 2}
+
+        diff = Difference(want, have)
+        result = diff.mac_block_size
+
+        self.assertEqual(result, {'mac_block_size': {'f5-tenant-l2-inline:mac-block-size': 4}})
+
+    def test_difference_mac_block_size_have_none(self):
+        want = Mock()
+        want.mac_block_size = {'f5-tenant-l2-inline:mac-block-size': 4}
+        have = Mock()
+        have.mac_block_size = None
+
+        diff = Difference(want, have)
+        self.assertEqual(diff.mac_block_size, {'f5-tenant-l2-inline:mac-block-size': 4})
+
+    def test_difference_mac_block_size_no_change(self):
+        want = Mock()
+        want.mac_block_size = {'f5-tenant-l2-inline:mac-block-size': 4}
+        have = Mock()
+        have.mac_block_size = {'f5-tenant-l2-inline:mac-block-size': 4}
+
+        diff = Difference(want, have)
+        self.assertIsNone(diff.mac_block_size)
+
+    def test_announce_deprecations(self):
+        set_module_args(dict(
+            name='foo',
+            nodes=[1],
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+
+        result = {'__warnings': [{'msg': 'deprecated', 'version': '1.0'}]}
+        mm._announce_deprecations(result)
+
+        mm.client.module.deprecate.assert_called_once_with(msg='deprecated', version='1.0')
+
+    @patch.object(f5os_tenant, 'Connection')
+    @patch.object(f5os_tenant, 'F5Client')
+    def test_create_check_mode(self, *args):
+        set_module_args(dict(
+            name='foo',
+            image_name='BIGIP-14.1.4.1-0.0.4.ALL-VELOS.qcow2.zip.bundle',
+            nodes=[1],
+            mgmt_ip='10.10.10.10',
+            mgmt_prefix=24,
+            mgmt_gateway='10.10.10.1',
+            vlans=[444],
+            state='present',
+            _ansible_check_mode=True
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=False)
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+
+    @patch.object(f5os_tenant, 'Connection')
+    @patch.object(f5os_tenant, 'F5Client')
+    def test_update_check_mode(self, *args):
+        set_module_args(dict(
+            name='foo',
+            nodes=[1],
+            running_state='deployed',
+            state='present',
+            _ansible_check_mode=True
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_tenant_status_configured.json')))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+
+    @patch.object(f5os_tenant, 'Connection')
+    @patch.object(f5os_tenant, 'F5Client')
+    def test_remove_check_mode(self, *args):
+        set_module_args(dict(
+            name='foo',
+            nodes=[1],
+            state='absent',
+            _ansible_check_mode=True
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=True)
+        mm.read_current_from_device = Mock(return_value=ApiParameters(params=dict()))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+
+    @patch.object(f5os_tenant, 'Connection')
+    @patch.object(f5os_tenant, 'F5Client')
+    def test_update_running_state_configured(self, *args):
+        set_module_args(dict(
+            name='foo',
+            nodes=[1],
+            running_state='provisioned',
+            state='present'
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode
+        )
+        mm = ModuleManager(module=module)
+        mm.client = Mock()
+        mm.client.platform = 'rSeries Platform'
+        mm.exists = Mock(return_value=True)
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_tenant_status_configured.json')))
+        mm.client.put = Mock(return_value=dict(code=204, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+
+    def test_tenant_create_with_max_nodes_v2(self, *args):
+        """max_nodes is included in create payload on F5OS >= 2.0.0."""
+        set_module_args(dict(
+            name='foo',
+            image_name='BIGIP-14.1.4.1-0.0.4.ALL-VELOS.qcow2.zip.bundle',
+            nodes=[1],
+            mgmt_ip='10.144.140.151',
+            mgmt_prefix=24,
+            mgmt_gateway='10.144.140.254',
+            vlans=[444],
+            cpu_cores=2,
+            memory=7680,
+            cryptos='enabled',
+            max_nodes=2,
+            running_state='configured',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0'
+        mm.client.post = Mock(return_value=dict(code=201, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        payload = mm.client.post.call_args[1]['data']
+        self.assertEqual(payload['tenant'][0]['config']['max-nodes'], 2)
+
+    def test_tenant_create_max_nodes_omitted_on_pre_v2(self, *args):
+        """max_nodes is silently omitted from create payload on F5OS < 2.0.0."""
+        set_module_args(dict(
+            name='foo',
+            image_name='BIGIP-14.1.4.1-0.0.4.ALL-VELOS.qcow2.zip.bundle',
+            nodes=[1],
+            mgmt_ip='10.144.140.151',
+            mgmt_prefix=24,
+            mgmt_gateway='10.144.140.254',
+            vlans=[444],
+            cpu_cores=2,
+            memory=7680,
+            cryptos='enabled',
+            max_nodes=2,
+            running_state='configured',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=False)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '1.8.3'
+        mm.client.post = Mock(return_value=dict(code=201, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        payload = mm.client.post.call_args[1]['data']
+        self.assertNotIn('max-nodes', payload['tenant'][0]['config'])
+
+    def test_tenant_update_with_max_nodes_v2(self, *args):
+        """max_nodes is sent in update payload on F5OS >= 2.0.0."""
+        set_module_args(dict(
+            name='foo',
+            nodes=[1],
+            max_nodes=2,
+            state='present',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0'
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_tenant_status_configured.json')))
+        mm.client.put = Mock(return_value=dict(code=204, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertTrue(results['changed'])
+        put_urls = [call[0][0] for call in mm.client.put.call_args_list]
+        self.assertIn('/f5-tenants:tenants/tenant=foo/config/max-nodes', put_urls)
+
+    def test_tenant_update_max_nodes_omitted_on_pre_v2(self, *args):
+        """max_nodes is silently omitted from update payload on F5OS < 2.0.0."""
+        set_module_args(dict(
+            name='foo',
+            nodes=[1],
+            max_nodes=2,
+            state='present',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '1.8.3'
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_tenant_status_configured.json')))
+        mm.client.put = Mock(return_value=dict(code=204, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertFalse(results['changed'])
+        put_urls = [call[0][0] for call in mm.client.put.call_args_list]
+        self.assertNotIn('/f5-tenants:tenants/tenant=foo/config/max-nodes', put_urls)
+
+    def test_tenant_read_max_nodes_from_device_v2(self, *args):
+        """max_nodes round-trips correctly when read back from a v2.0.0 device."""
+        set_module_args(dict(
+            name='foo',
+            nodes=[1],
+            max_nodes=2,
+            state='present',
+        ))
+
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+
+        mm = ModuleManager(module=module)
+        mm.exists = Mock(return_value=True)
+        mm.client.platform = 'rSeries Platform'
+        mm.client.software_version = '2.0.0'
+        mm.client.get = Mock(return_value=dict(code=200, contents=load_fixture('load_tenant_status_configured_v2.json')))
+        mm.client.put = Mock(return_value=dict(code=204, contents={}))
+
+        results = mm.exec_module()
+
+        self.assertFalse(results['changed'])
+
+    def test_version_gte_2_true(self, *args):
+        set_module_args(dict(name='foo', nodes=[1], state='present'))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '2.0.0'
+        self.assertTrue(mm._version_gte_2())
+
+    def test_version_gte_2_false(self, *args):
+        set_module_args(dict(name='foo', nodes=[1], state='present'))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = '1.8.3'
+        self.assertFalse(mm._version_gte_2())
+
+    def test_version_gte_2_exception_returns_false(self, *args):
+        set_module_args(dict(name='foo', nodes=[1], state='present'))
+        module = AnsibleModule(
+            argument_spec=self.spec.argument_spec,
+            supports_check_mode=self.spec.supports_check_mode,
+        )
+        mm = ModuleManager(module=module)
+        mm.client.software_version = None
+        self.assertFalse(mm._version_gte_2())
